@@ -1,0 +1,43 @@
+name: "Playground"
+
+on:
+  workflow_dispatch:
+    inputs:
+      run:
+        description: Command to run
+        required: true
+      workspace:
+        description: Workspace to select
+        required: true
+
+jobs:
+  playground:
+    name: "Playground"
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      TF_WORKSPACE: ${{ inputs.workspace }}
+      GITHUB_APP_ID: ${{ secrets[format('TF_GITHUB_APP_ID_{0}', inputs.workspace)] }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_GITHUB_APP_INSTALLATION_ID_{0}', inputs.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_GITHUB_APP_PEM_FILE_{0}', inputs.workspace)] }}
+      TF_VAR_write_delay_ms: 300
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.4
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+      - name: Play
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ${{ github.event.inputs.run }}

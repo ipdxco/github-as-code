@@ -1,0 +1,119 @@
+name: "Sync"
+
+on:
+  workflow_dispatch:
+    inputs:
+      workspaces:
+        description: Space separated list of workspaces to sync (leave blank to sync all)
+        required: false
+
+jobs:
+  prepare:
+    name: "Prepare"
+    runs-on: ubuntu-latest
+    outputs:
+      workspaces: ${{ steps.workspaces.outputs.this }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Discover workspaces
+        id: workspaces
+        run: |
+          if [[ -z '${{ inputs.workspaces }}' ]]; then
+            workspaces="$(ls github | jq --raw-input '[.]' | jq -sc add)"
+          else
+            workspaces="$(echo '${{ inputs.workspaces }}' | jq --raw-input 'split(" ")')"
+          fi
+          echo "::set-output name=this::$workspaces"
+  sync:
+    needs: [prepare]
+    if: needs.prepare.outputs.workspaces != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
+    name: "Sync"
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      TF_WORKSPACE: ${{ matrix.workspace }}
+      GITHUB_APP_ID: ${{ secrets[format('TF_GITHUB_APP_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      TF_VAR_write_delay_ms: 300
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.4
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: terraform
+      - name: Sync
+        run: ./scripts/sync.sh
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git_branch='${{ github.ref_name }}-sync-${{ env.TF_WORKSPACE }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com>'
+          git config --global user.name '${{ github.actor }}'
+          git checkout -B "$git_branch"
+          git add --all
+          git diff-index --quiet HEAD || git commit --message='sync ${{ env.TF_WORKSPACE }} (#${{ github.run_number }})'
+          git push origin "$git_branch" --force
+  pull_request:
+    needs: [prepare, sync]
+    if: needs.prepare.outputs.workspaces != ''
+    name: "Pull request"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          protected="$(gh api 'repos/{owner}/{repo}/branches/${{ github.ref_name }}' --jq '.protected')"
+
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com>'
+          git config --global user.name '${{ github.actor }}'
+
+          if [[ "$protected" == 'true' ]]; then
+            git_branch='${{ github.ref_name }}-sync'
+          else
+            git_branch='${{ github.ref_name }}'
+          fi
+
+          git checkout -B "$git_branch"
+
+          while read workspace; do
+            workspace_branch="${{ github.ref_name }}-sync-$workspace"
+            git fetch origin "$workspace_branch"
+            git merge --strategy-option=theirs "origin/$workspace_branch"
+            git push origin --delete "$workspace_branch"
+          done <<< "$(jq -r '.[]' <<< '${{ needs.prepare.outputs.workspaces }}')"
+
+          if [[ "$protected" == 'true' ]]; then
+            git push origin "$git_branch" --force
+            if [[ ! -z "$(git diff --name-only '${{ github.ref_name }}')" ]]; then
+              state="$(gh pr view "$git_branch" --json state --jq .state 2> /dev/null || echo '')"
+              if [[ "$state" != 'OPEN' ]]; then
+                gh pr create --body 'Close and reopen this PR to force checks to run.' --head "$git_branch" --base '${{ github.ref_name }}' --fill
+              fi
+            fi
+          else
+            git push origin "$git_branch"
+          fi
