@@ -70,9 +70,9 @@ resource "github_repository" "this" {
     # @resources.repository.ignore_changes
     ignore_changes = [
       allow_auto_merge,
-      # allow_merge_commit,
-      # allow_rebase_merge,
-      # allow_squash_merge,
+      allow_merge_commit,
+      allow_rebase_merge,
+      allow_squash_merge,
       archive_on_destroy,
       archived,
       auto_init,
@@ -197,15 +197,15 @@ resource "github_branch_protection" "this" {
       require_conversation_resolution,
       require_signed_commits,
       required_linear_history,
-      # required_pull_request_reviews,
+      required_pull_request_reviews,
       required_pull_request_reviews[0].dismiss_stale_reviews,
       required_pull_request_reviews[0].dismissal_restrictions,
       required_pull_request_reviews[0].require_code_owner_reviews,
       required_pull_request_reviews[0].required_approving_review_count,
       required_pull_request_reviews[0].restrict_dismissals,
-      # required_status_checks,
-      # required_status_checks[0].contexts,
-      # required_status_checks[0].strict
+      required_status_checks,
+      required_status_checks[0].contexts,
+      required_status_checks[0].strict
     ]
   }
 }

@@ -1,0 +1,8 @@
+name: "Update"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    uses: protocol/github-mgmt-template/.github/workflows/update.reusable.yml

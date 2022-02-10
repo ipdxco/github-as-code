@@ -89,7 +89,10 @@ state="$(terraform show -json)"
 while read resource; do
   required="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.required\K.*?=' | tr -d '[:space:]')"
   required="$(jq 'split("=")' <<< '"'"${required:0:-1}"'"')"
-  ignore_changes="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  ignore_changes="$(cat "$root/terraform/resources_override.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  if [[ -z "$ignore_changes" ]]; then
+    ignore_changes="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  fi
   ignore_changes="$(jq 'split(",") | map(select(startswith("#") | not))' <<< '"'"${ignore_changes:1:-1}"'"')"
   ignore="$(echo "$required" "$ignore_changes" | jq -s 'add')"
   ignore_string="$(jq -r 'map(".\(.)") | join(", ")' <<< "$ignore")"
