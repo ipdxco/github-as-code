@@ -5,4 +5,4 @@ on:
 
 jobs:
   update:
-    uses: protocol/github-mgmt-template/.github/workflows/update.reusable.yml
+    uses: protocol/github-mgmt-template/.github/workflows/update_reusable.yml@master

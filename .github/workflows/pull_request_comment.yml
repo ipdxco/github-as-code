@@ -1,0 +1,52 @@
+name: "Pull Request: Comment"
+
+on:
+  workflow_run:
+    workflows:
+      - "Pull Request"
+    types:
+      - completed
+
+jobs:
+  comment:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    name: "Comment"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        with:
+          terraform_version: 1.1.4
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Initialize terraform
+        run: terraform init
+      - name: Download terraform plans
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run download ${{ github.event.workflow_run.id }} --repo ${{ github.repository }}
+      - name: Show terraform plans
+        run: |
+          echo 'COMMENT<<EOF' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          for plan in $(ls *.tfplan); do
+            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> $GITHUB_ENV
+            echo '```' >> $GITHUB_ENV
+            echo "$(terraform show "$plan")" >> $GITHUB_ENV
+            echo '```' >> $GITHUB_ENV
+            echo '</details>' >> $GITHUB_ENV
+          done
+          echo 'EOF' >> $GITHUB_ENV
+      - name: Comment on pull request
+        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
+        with:
+          message: |
+            Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
+
+            #### Terraform plans
+            ${{ env.COMMENT }}

@@ -99,7 +99,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 - [ ] [Clone the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
 - [ ] Replace placeholder strings in the clone - *the repository needs to be customised for the specific organisation it is supposed to manage*
     - [ ] Rename the `$GITHUB_ORGANIZATION_NAME` directory in `github` to the name of the GitHub organisation
-    - [ ] Replace `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH` with the name of the default branch in the repository in `.github/workflows/push.yml`
+    - [ ] Replace `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH` with the name of the default branch in the repository in `.github/workflows/push.yml` and `.github/workflows/pull_request.yml`
 - [ ] Push the changes to `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH`
 
 #### GitHub Management Sync Flow

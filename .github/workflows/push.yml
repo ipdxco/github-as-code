@@ -84,4 +84,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh run download -n ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan --repo ${{ github.repository }}
       - name: Terraform Apply
-        run: terraform apply -auto-approve -lock-timeout=0s -no-color .tfplan
+        run: terraform apply -auto-approve -lock-timeout=0s -no-color ${{ env.TF_WORKSPACE }}.tfplan

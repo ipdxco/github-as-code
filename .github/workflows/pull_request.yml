@@ -2,6 +2,8 @@ name: "Pull Request"
 
 on:
   pull_request:
+    branches:
+      - $GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH
   workflow_dispatch:
 
 jobs:
@@ -20,14 +22,6 @@ jobs:
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.]' | jq -sc add)"
-      - name: Comment on pull request
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
-        with:
-          message: |
-            Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
-
-            #### Terraform plans
       - name: Find sha for plan
         id: sha
         env:
@@ -80,29 +74,11 @@ jobs:
         working-directory: github/${{ env.TF_WORKSPACE }}
       - name: Plan terraform
         id: plan
-        run: terraform plan ${{ steps.target.outputs.this }} -refresh=false -out=.tfplan -no-color
-        continue-on-error: true
-      - name: Append plan to comment
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
-        with:
-          append: true
-          message: |
-            <details><summary>${{ env.TF_WORKSPACE }}</summary>
-
-            ```
-            ${{ steps.plan.outputs.stdout }}
-            ${{ steps.plan.outputs.stderr }}
-            ```
-
-            </details>
-      - name: Exit if terraform plan failed
-        if: steps.plan.outputs.exitcode != 0
-        run: exit ${{ steps.plan.outputs.exitcode }}
+        run: terraform plan ${{ steps.target.outputs.this }} -refresh=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
       - name: Upload terraform plan
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan
-          path: terraform/.tfplan
+          path: terraform/${{ env.TF_WORKSPACE }}.tfplan
           if-no-files-found: error
           retention-days: 90
