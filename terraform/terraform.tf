@@ -1,12 +1,5 @@
 terraform {
-  backend "remote" {
-    hostname     = "app.terraform.io"
-    organization = "galargh"
-
-    workspaces {
-      prefix = "org_"
-    }
-  }
+  backend "s3" {}
 
   required_providers {
     github = {

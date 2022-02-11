@@ -2,7 +2,7 @@ output "team" {
   value = [
     for team in data.github_organization_teams.this.teams :
     {
-      id = team.id
+      id    = team.id
       index = team.name
     }
   ]
@@ -12,7 +12,7 @@ output "repository" {
   value = [
     for name in data.github_repositories.this.names :
     {
-      id = name
+      id    = name
       index = name
     }
   ]
@@ -24,7 +24,7 @@ output "team_repository" {
     [
       for repository in team.repositories :
       {
-        id = "${team.id}:${repository}"
+        id    = "${team.id}:${repository}"
         index = "${team.name}${local.separator}${repository}"
       }
     ]
@@ -37,7 +37,7 @@ output "team_membership" {
     [
       for member in team.members :
       {
-        id = "${team.id}:${member}"
+        id    = "${team.id}:${member}"
         index = "${team.name}${local.separator}${member}"
       }
     ]
@@ -48,7 +48,7 @@ output "membership" {
   value = [
     for member in data.github_organization.this.members :
     {
-      id = "${local.organization}:${member}"
+      id    = "${local.organization}:${member}"
       index = member
     }
   ]
@@ -60,7 +60,7 @@ output "repository_collaborator" {
     [
       for collaborator in collaborators.collaborator :
       {
-        id = "${repository}:${collaborator.login}"
+        id    = "${repository}:${collaborator.login}"
         index = "${repository}${local.separator}${collaborator.login}"
       }
     ]
@@ -76,7 +76,7 @@ output "branch_protection" {
       # if it is needed before that, we can write our own custom GraphQL query to retrieve patterns
       for branch in config.branches :
       {
-        id = "${repository}:${branch.name}"
+        id    = "${repository}:${branch.name}"
         index = "${repository}${local.separator}${branch.name}"
       } if branch.protected
     ]

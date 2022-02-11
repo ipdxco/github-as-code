@@ -1,0 +1,12 @@
+name: "Update"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    uses: protocol/github-mgmt-template/.github/workflows/update_reusable.yml@master
+    secrets:
+      GITHUB_APP_ID: ${{ secrets.GH_RW_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets.GH_RW_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.GH_RW_GITHUB_APP_PEM_FILE }}

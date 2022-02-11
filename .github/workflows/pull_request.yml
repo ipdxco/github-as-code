@@ -1,44 +1,43 @@
 name: "Pull Request"
 
 on:
-  pull_request:
+  pull_request_target:
   workflow_dispatch:
 
 jobs:
   prepare:
+    if: github.ref_name == github.event.repository.default_branch &&
+        github.event.repository.is_template == false
     name: "Prepare"
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
-      sha: ${{ steps.sha.outputs.this }}
+      repository: ${{ steps.github.outputs.repository }}
+      sha: ${{ steps.github.outputs.sha }}
     defaults:
       run:
         shell: bash
     steps:
+      - name: Find repository and sha to checkout
+        id: github
+        run: |
+          if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
+            repository='${{ github.repository }}'
+            sha='${{ github.sha }}'
+          else
+            repository='${{ github.event.pull_request.head.repo.full_name }}'
+            sha='${{ github.event.pull_request.head.sha }}'
+          fi
+          echo "::set-output name=repository::$repository"
+          echo "::set-output name=sha::$sha"
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          repository: ${{ steps.github.outputs.repository }}
+          ref: ${{ steps.github.outputs.sha }}
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.]' | jq -sc add)"
-      - name: Comment on pull request
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
-        with:
-          message: |
-            Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
-
-            #### Terraform plans
-      - name: Find sha for plan
-        id: sha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ '${{ github.event_name }}' == 'pull_request' ]]; then
-            sha='${{ github.event.pull_request.head.sha }}'
-          else
-            sha='${{ github.sha }}'
-          fi
-          echo "::set-output name=this::$sha"
   plan:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
@@ -52,9 +51,11 @@ jobs:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_WORKSPACE: ${{ matrix.workspace }}
-      GITHUB_APP_ID: ${{ secrets[format('TF_GITHUB_APP_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RO_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets[format('TF_RO_GITHUB_APP_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_RO_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_RO_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
       TF_VAR_write_delay_ms: 300
     defaults:
       run:
@@ -63,13 +64,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          repository: ${{ needs.prepare.outputs.repository }}
+          ref: ${{ needs.prepare.outputs.sha }}
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
           terraform_version: 1.1.4
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Initialize terraform
         run: terraform init
+      - name: Check terraform lock
+        if: github.event_name == 'pull_request_target'
+        run: git diff --exit-code .terraform.lock.hcl
       - name: Format terraform
         run: terraform fmt -check
       - name: Validate terraform
@@ -80,29 +86,64 @@ jobs:
         working-directory: github/${{ env.TF_WORKSPACE }}
       - name: Plan terraform
         id: plan
-        run: terraform plan ${{ steps.target.outputs.this }} -refresh=false -out=.tfplan -no-color
-        continue-on-error: true
-      - name: Append plan to comment
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
-        with:
-          append: true
-          message: |
-            <details><summary>${{ env.TF_WORKSPACE }}</summary>
-
-            ```
-            ${{ steps.plan.outputs.stdout }}
-            ${{ steps.plan.outputs.stderr }}
-            ```
-
-            </details>
-      - name: Exit if terraform plan failed
-        if: steps.plan.outputs.exitcode != 0
-        run: exit ${{ steps.plan.outputs.exitcode }}
+        run: terraform plan ${{ steps.target.outputs.this }} -refresh=false -lock=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
       - name: Upload terraform plan
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan
-          path: terraform/.tfplan
+          path: terraform/${{ env.TF_WORKSPACE }}.tfplan
           if-no-files-found: error
           retention-days: 90
+  comment:
+    needs: [prepare, plan]
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      pull-requests: write
+    name: "Comment"
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RO_AWS_SECRET_ACCESS_KEY }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ needs.prepare.outputs.repository }}
+          ref: ${{ needs.prepare.outputs.sha }}
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        with:
+          terraform_version: 1.1.4
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+      - name: Download terraform plans
+        uses: actions/download-artifact@v2
+        with:
+          path: terraform
+      - name: Show terraform plans
+        run: |
+          echo 'COMMENT<<EOF' >> $GITHUB_ENV
+          for plan in $(find . -type f -name '*.tfplan'); do
+            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> $GITHUB_ENV
+            echo '' >> $GITHUB_ENV
+            echo '```' >> $GITHUB_ENV
+            echo "$(terraform show -no-color "$plan" 2>&1)" >> $GITHUB_ENV
+            echo '```' >> $GITHUB_ENV
+            echo '' >> $GITHUB_ENV
+            echo '</details>' >> $GITHUB_ENV
+          done
+          echo 'EOF' >> $GITHUB_ENV
+      - name: Comment on pull request
+        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
+        with:
+          number: ${{ github.event.pull_request.number }}
+          message: |
+            Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
+
+            #### Terraform plans
+            ${{ env.COMMENT }}

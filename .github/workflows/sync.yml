@@ -6,6 +6,10 @@ on:
       workspaces:
         description: Space separated list of workspaces to sync (leave blank to sync all)
         required: false
+      lock:
+        description: Whether to acquire terraform state lock during sync
+        required: false
+        default: "true"
 
 jobs:
   prepare:
@@ -22,15 +26,17 @@ jobs:
       - name: Discover workspaces
         id: workspaces
         run: |
-          if [[ -z '${{ inputs.workspaces }}' ]]; then
+          if [[ -z '${{ github.event.inputs.workspaces }}' ]]; then
             workspaces="$(ls github | jq --raw-input '[.]' | jq -sc add)"
           else
-            workspaces="$(echo '${{ inputs.workspaces }}' | jq --raw-input 'split(" ")')"
+            workspaces="$(echo '${{ github.event.inputs.workspaces }}' | jq --raw-input 'split(" ")')"
           fi
           echo "::set-output name=this::$workspaces"
   sync:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -40,10 +46,12 @@ jobs:
     env:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
-      TF_WORKSPACE: ${{ matrix.workspace }}
-      GITHUB_APP_ID: ${{ secrets[format('TF_GITHUB_APP_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      TF_LOCK: ${{ github.event.inputs.lock }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RW_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets[format('TF_RW_GITHUB_APP_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_RW_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
       TF_VAR_write_delay_ms: 300
     defaults:
       run:
@@ -55,19 +63,22 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.1.4
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
           terraform_wrapper: false
       - name: Initialize terraform
         run: terraform init
         working-directory: terraform
+      - name: Select terraform workspace
+        run: |
+          terraform workspace select '${{ matrix.workspace }}' || terraform workspace new '${{ matrix.workspace }}'
+          echo 'TF_WORKSPACE=${{ matrix.workspace }}' >> $GITHUB_ENV
+        working-directory: terraform
       - name: Sync
         run: ./scripts/sync.sh
+      - uses: ./.github/actions/git-config-user
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git_branch='${{ github.ref_name }}-sync-${{ env.TF_WORKSPACE }}'
-          git config --global user.email '${{ github.actor }}@users.noreply.github.com>'
-          git config --global user.name '${{ github.actor }}'
           git checkout -B "$git_branch"
           git add --all
           git diff-index --quiet HEAD || git commit --message='sync ${{ env.TF_WORKSPACE }} (#${{ github.run_number }})'
@@ -81,39 +92,27 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Generate app token
+        id: token
+        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        with:
+          app_id: ${{ secrets.GH_RW_GITHUB_APP_ID }}
+          installation_id: ${{ secrets.GH_RW_GITHUB_APP_INSTALLATION_ID }}
+          private_key: ${{ secrets.GH_RW_GITHUB_APP_PEM_FILE }}
       - name: Checkout
         uses: actions/checkout@v2
-      - env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          protected="$(gh api 'repos/{owner}/{repo}/branches/${{ github.ref_name }}' --jq '.protected')"
-
-          git config --global user.email '${{ github.actor }}@users.noreply.github.com>'
-          git config --global user.name '${{ github.actor }}'
-
-          if [[ "$protected" == 'true' ]]; then
-            git_branch='${{ github.ref_name }}-sync'
-          else
-            git_branch='${{ github.ref_name }}'
-          fi
-
-          git checkout -B "$git_branch"
-
+        with:
+          token: ${{ steps.token.outputs.token }}
+      - uses: ./.github/actions/git-config-user
+      - run: |
           while read workspace; do
             workspace_branch="${{ github.ref_name }}-sync-$workspace"
             git fetch origin "$workspace_branch"
             git merge --strategy-option=theirs "origin/$workspace_branch"
             git push origin --delete "$workspace_branch"
           done <<< "$(jq -r '.[]' <<< '${{ needs.prepare.outputs.workspaces }}')"
-
-          if [[ "$protected" == 'true' ]]; then
-            git push origin "$git_branch" --force
-            if [[ ! -z "$(git diff --name-only '${{ github.ref_name }}')" ]]; then
-              state="$(gh pr view "$git_branch" --json state --jq .state 2> /dev/null || echo '')"
-              if [[ "$state" != 'OPEN' ]]; then
-                gh pr create --body 'Close and reopen this PR to force checks to run.' --head "$git_branch" --base '${{ github.ref_name }}' --fill
-              fi
-            fi
-          else
-            git push origin "$git_branch"
-          fi
+      - uses: ./.github/actions/git-push
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        with:
+          suffix: sync
