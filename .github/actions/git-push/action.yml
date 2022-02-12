@@ -1,5 +1,5 @@
-name: "Push to a git branch "
-description: "Push to a git branch"
+name: Push to a git branch
+description: Push to a git branch
 
 inputs:
   suffix:

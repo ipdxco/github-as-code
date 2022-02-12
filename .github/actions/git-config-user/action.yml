@@ -1,5 +1,5 @@
-name: "Configure git user"
-description: "Configure git user"
+name: Configure git user
+description: Configure git user
 
 runs:
   using: composite

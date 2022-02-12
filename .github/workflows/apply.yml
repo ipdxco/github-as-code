@@ -1,4 +1,4 @@
-name: "Push"
+name: Apply
 
 on:
   push:
@@ -8,7 +8,7 @@ jobs:
   prepare:
     if: github.ref_name == github.event.repository.default_branch &&
         github.event.repository.is_template == false
-    name: "Prepare"
+    name: Prepare
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
-    name: "Apply"
+    name: Apply
     runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: 1

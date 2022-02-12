@@ -1,35 +1,52 @@
-name: "Pull Request"
+name: Plan
 
 on:
-  pull_request_target:
+  workflow_run:
+    workflows:
+      - "Plan (pre)"
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
   prepare:
-    if: github.ref_name == github.event.repository.default_branch &&
-        github.event.repository.is_template == false
-    name: "Prepare"
+    if: (github.event_name == 'workflow_dispatch' &&
+        github.ref_name == github.event.repository.default_branch &&
+        github.event.repository.is_template == false) ||
+        (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success')
+    permissions:
+      statuses: write
+    name: Prepare
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
       repository: ${{ steps.github.outputs.repository }}
       sha: ${{ steps.github.outputs.sha }}
+      number: ${{ steps.github.outputs.number }}
     defaults:
       run:
         shell: bash
     steps:
       - name: Find repository and sha to checkout
         id: github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
             repository='${{ github.repository }}'
             sha='${{ github.sha }}'
-          else
-            repository='${{ github.event.pull_request.head.repo.full_name }}'
-            sha='${{ github.event.pull_request.head.sha }}'
+          elif [[ '${{ github.event_name }}' == 'workflow_run' ]]; then
+            repository='${{ github.event.workflow_run.head_repository.full_name }}'
+            sha='${{ github.event.workflow_run.head_commit.id }}'
+            number="$(gh run view '${{ github.event.workflow_run.id }}' --repo '${{ github.repository }}' | grep -Pom1 '#\K[0-9]+')"
           fi
           echo "::set-output name=repository::$repository"
           echo "::set-output name=sha::$sha"
+          echo "::set-output name=number::$number"
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api 'repos/${{ github.repository }}/statuses/${{ steps.github.outputs.sha }}' -f context='Plan' -f state='pending' -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -45,7 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
-    name: "Plan"
+    name: Plan
     runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: 1
@@ -74,7 +91,7 @@ jobs:
       - name: Initialize terraform
         run: terraform init
       - name: Check terraform lock
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'workflow_run'
         run: git diff --exit-code .terraform.lock.hcl
       - name: Format terraform
         run: terraform fmt -check
@@ -96,10 +113,10 @@ jobs:
           retention-days: 90
   comment:
     needs: [prepare, plan]
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'workflow_run'
     permissions:
       pull-requests: write
-    name: "Comment"
+    name: Comment
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.TF_RO_AWS_ACCESS_KEY_ID }}
@@ -141,7 +158,7 @@ jobs:
       - name: Comment on pull request
         uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
         with:
-          number: ${{ github.event.pull_request.number }}
+          number: ${{ needs.prepare.outputs.number }}
           message: |
             Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
 
