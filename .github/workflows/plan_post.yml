@@ -21,5 +21,6 @@ jobs:
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sha="$(gh run view --verbose '${{ github.event.workflow_run.id }}' --repo '${{ github.repository }}' | grep -Pom1 'repos/${{ github.repository }}/statuses/\K[a-z0-9]+')"
+          sha="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs' --jq '.jobs[] | .steps[] | .name | select(startswith("Run sha="))')"
+          sha="${sha#Run sha=}"
           gh api "repos/${{ github.repository }}/statuses/$sha" -f context='Plan' -f state='${{ github.event.workflow_run.conclusion }}' -f target_url='${{ github.event.workflow_run.html_url }}'
