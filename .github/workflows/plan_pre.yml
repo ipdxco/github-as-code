@@ -1,0 +1,13 @@
+name: "Plan (pre)"
+
+on:
+  pull_request:
+
+jobs:
+  trigger:
+    if: github.event.pull_request.base.ref == github.event.repository.default_branch &&
+        github.event.repository.is_template == false
+    name: "Trigger"
+    runs-on: ubuntu-latest
+    steps:
+      - run: "true"

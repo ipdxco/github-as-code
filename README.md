@@ -7,12 +7,13 @@ This repository is meant to serve as a template for creating new repositories re
 - 2-way sync between GitHub Management and the actual GitHub configuration (including bootstrapping)
 - PR-based configuration change review process which guarantees the reviewed plan is the one being applied
 - control over what resources and what properties are managed by GitHub Management
+- auto-updates from the template repository
 
 ## How does it work?
 
 GitHub Management allows management of GitHub configuration as code. It uses Terraform and GitHub Actions to achieve this.
 
-The JSON configuration files for a specific organisation are stored in [github/$ORGANIZATION_NAME](github/$ORGANIZATION_NAME) directory. GitHub Management lets you manage multiple organizations from a single repository. It uses separate terraform workspaces per each organisation. The local workspaces are called like the organisations themselves while the remote Terraform Cloud workspaces get `org_` prefix added.
+The JSON configuration files for a specific organisation are stored in [github/$ORGANIZATION_NAME](github/$ORGANIZATION_NAME) directory. GitHub Management lets you manage multiple organizations from a single repository. It uses separate terraform workspaces per each organisation. The local workspaces are called like the organisations themselves. Each workspace has its state hosted in the remote [S3 backend](https://www.terraform.io/language/settings/backends/s3).
 
 The configuration files are named after the [GitHub Provider resources](https://registry.terraform.io/providers/integrations/github/latest/docs) they configure but are stripped of the `github_` prefix.
 
@@ -22,7 +23,7 @@ For example, [github_repository](https://registry.terraform.io/providers/integra
 
 Another example would be [github_branch_protection](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection#argument-reference) which has two required arguments - `repository_id` and `pattern`. In such case, the keys would be nested under each other. The keys in the top-level object in [branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) would be the IDs of the repositories owned by the organisation and their values would be objects with patterns of branch protection rules for that repository as keys. Where possible, the IDs in key values are replaced with more human friendly values. That's why, the actual top-level key values in [branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) would be repository names, not repository IDs.
 
-Whether resources of a specific type are managed via GitHub Management or not is controlled by the existence of the corresponding configuration files. If such a file exists, GitHub Management manages all the arguments and attributes of that resource type except for the ones specified in the `ignore_changes` lists in [terraform/resources.tf](terraform/resources.tf).
+Whether resources of a specific type are managed via GitHub Management or not is controlled by the existence of the corresponding configuration files. If such a file exists, GitHub Management manages all the arguments and attributes of that resource type except for the ones specified in the `ignore_changes` lists in [terraform/resources_override.tf](terraform/resources_override.tf) or [terraform/resources.tf](terraform/resources.tf).
 
 GitHub Management is capable of both applying the changes made to the JSON configuration files to the actual GitHub configuraiton state and of translating the current GitHub configuration state into the JSON configuration files.
 
@@ -36,7 +37,7 @@ Neither creating the terraform plan nor applying it refreshes the underlying ter
 
 The workflow for synchronising the current GitHub configuration state with JSON configuration files is as follows:
 1. Run the `Sync` GitHub Action workflow and wait for the PR to be created.
-1. If a PR was created, close and reopen it (because PRs created with the default `GITHUB_TOKEN` do not trigger workflows by default) and wait for the GitHub Action workflow triggered on PRs to comment on it with a terraform plan.
+1. If a PR was created, wait for the GitHub Action workflow triggered on PRs to comment on it with a terraform plan.
 1. Ensure that the plan introduces no changes.
 1. Merge the PR.
 
@@ -56,7 +57,7 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 
 ### Limitations
 
-Branch protection rules managed via GitHub Management cannot contain wildcards. They also have to match exactly one existing branch. This limitation comes from the fact that there is no GitHub API endpoint which returns a list of branch protection rule pattenrs for repository.
+Branch protection rules managed via GitHub Management cannot contain wildcards. They also have to match exactly one existing branch. This limitation comes from the fact that there is no GitHub API endpoint which returns a list of branch protection rule patterns for a repository.
 
 ## How to...
 
@@ -66,31 +67,124 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 - [ ] [Create a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template) from the template - *this is the place for GitHub Management to live in*
 
-#### Terraform Cloud
+#### AWS
 
-- [ ] [Create a Terraform Cloud workspace](https://www.terraform.io/cloud-docs/workspaces/creating) for `API-driven workflow` called `org_$GITHUB_ORGANIZATION_NAME` (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *this is where Terraform state for the organisation will be stored*
-- [ ] Change the [execution mode](https://www.terraform.io/cloud-docs/workspaces/settings#execution-mode) of the Terraform Cloud workspace to `Local` under `Settings > General Settings` - *remote execution has not been tested; it is also assumed that local execution will make requests to GitHub faster since they will be made from GitHub Action machines*
+- [ ] [Create a S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html) - *this is where Terraform states for the organisations will be stored*
+- [ ] [Create a DynamoDB table](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html) using `LockID` of type `String` as the partition key - *this is where Terraform state locks will be stored*
+- [ ] [Create 2 IAM policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_create.html) - *they are going to be attached to the users that GitHub Management is going to use to interact with AWS*
+    <details><summary>Read-only</summary>
+
+    ```
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Action": [
+            "s3:ListBucket"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:s3:::$S3_BUCKET_NAME"
+        },
+        {
+          "Action": [
+            "s3:GetObject"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:s3:::$S3_BUCKET_NAME/*"
+        },
+        {
+          "Action": [
+            "dynamodb:GetItem"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:dynamodb:*:*:table/$DYNAMO_DB_TABLE_NAME"
+        }
+      ]
+    }
+    ```
+    </details>
+    <details><summary>Read & Write</summary>
+
+    ```
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Action": [
+            "s3:ListBucket"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:s3:::$S3_BUCKET_NAME"
+        },
+        {
+          "Action": [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:DeleteObject"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:s3:::$S3_BUCKET_NAME/*"
+        },
+        {
+          "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:DeleteItem"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:dynamodb:*:*:table/$DYNAMO_DB_TABLE_NAME"
+        }
+      ]
+    }
+    ```
+    </details>
+- [ ] [Create 2 IAM Users](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) and save their `AWS_ACCESS_KEY_ID`s and `AWS_SECRET_ACCESS_KEY`s - *they are going to be used by GitHub Management to interact with AWS*
+    - [ ] one with read-only policy attached
+    - [ ] one with read & write policy attached
+- [ ] Modify [terraform/terraform_override.tf](terraform/terraform_override.tf) to reflect your AWS setup
 
 #### GitHub App
 
-- [ ] [Create a GitHub App](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *this is how terraform will be able to authenticate with GitHub*:
+*NOTE*: If you already have a GitHub App with required permissions you can install it in the target organisation instead.
+
+- [ ] [Create 3 GitHub Apps](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
+    <details><summary>terraform read-only</summary>
+
+    - `Repository permissions`
+        - `Administration`: `Read-only`
+        - `Contents`: `Read-only`
+        - `Metadata`: `Read-only`
+    - `Organization permissions`
+        - `Members`: `Read-only`
+    </details>
+    <details><summary>terraform read & write</summary>
+
     - `Repository permissions`
         - `Administration`: `Read & Write`
         - `Contents`: `Read & Write`
         - `Metadata`: `Read-only`
     - `Organization permissions`
         - `Members`: `Read & Write`
-- [ ] [Install the GitHub App](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
+    </details>
+    <details><summary>gh read & write</summary>
+    - `Repository permissions`
+        - `Contents`: `Read & Write`
+        - `Metadata`: `Read-only`
+        - `Pull requests`: `Read & Write`
+        - `Workflows`: `Read & Write`
+    </details>
+- [ ] [Install the terraform GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
+- [ ] [Install the gh GitHub App](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for the GitHub Management repository
 
 #### GitHub Organisation Secrets
 
 *NOTE*: If the repository is private and you're not on GitHub Enterprise, you're going to have to create repository secrets instead.
 
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organisation and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
-    - [ ] `TF_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-    - [ ] `TF_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-    - [ ] `TF_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-    - [ ] `TF_API_TOKEN`: Go to https://app.terraform.io/app/settings/tokens, click `Create an API Token` and copy the value that is eventually displayed
+    - [ ] `TF_RO_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
+    - [ ] `TF_RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_INSTALLATION_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
+    - [ ] `TF_RO_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_PEM_FILE`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
+    - [ ] `TF_RO_AWS_ACCESS_KEY_ID`, `TF_RW_AWS_ACCESS_KEY_ID`, `TF_RO_AWS_SECRET_ACCESS_KEY` and `TF_RW_AWS_SECRET_ACCESS_KEY`: Use the values generated during [AWS](#aws) setup
 
 #### GitHub Management Repository Setup
 
@@ -99,7 +193,6 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 - [ ] [Clone the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
 - [ ] Replace placeholder strings in the clone - *the repository needs to be customised for the specific organisation it is supposed to manage*
     - [ ] Rename the `$GITHUB_ORGANIZATION_NAME` directory in `github` to the name of the GitHub organisation
-    - [ ] Replace `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH` with the name of the default branch in the repository in `.github/workflows/push.yml`
 - [ ] Push the changes to `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH`
 
 #### GitHub Management Sync Flow
@@ -112,6 +205,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 *NOTE*: If you want to require PRs to be created but don't care about reviews, then change `required_approving_review_count` value to `0`. It seems for some reason the provider's default is `1` instead of `0`. The next `Sync` will remove this value from the configuration file and will leave an empty object inside `required_pull_request_reviews` which is the desired state.
 
+- [ ] Manually set  `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators` **AND** `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission` because it is impossible to control this value via terraform yet
 - [ ] Pull remote changes to the default branch
 - [ ] Enable merge commits, disable rebase and squash merges on the repository by making sure [github/$ORGANIZATION_NAME/repository.json](github/$ORGANIZATION_NAME/repository.json) contains the following entry:
     ```
@@ -133,8 +227,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
         "required_status_checks": [
           {
             "contexts": [
-              "Plan ($GITHUB_ORGANIZATION_NAME)",
-              "Prepare"
+              "Comment"
             ],
             "strict": true
           }
@@ -152,7 +245,6 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 ### ...add an organisation to be managed by GitHub Management?
 
-- [ ] Follow [How to get started with Terraform Cloud?](#terraform-cloud) to create a remote workspace
 - [ ] Follow [How to get started with GitHub App?](#github-app) to create a GitHub App for the organisation
 - [ ] Follow [How to get started with GitHub Organization Secrets?](#github-organisation-secrets) to set up secrets that GitHub Management is going to use
 - [ ] Create a new directory called like the organisation under [github](github) directory which is going to store the configuration files
@@ -188,7 +280,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 ### ...apply GitHub Management changes to GitHub?
 
 - [ ] [Create a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) from the branch to the default branch
-- [ ] Merge the pull request once the `Plan ($GITHUB_ORGANIZATION_NAME)` check passes and you verify the plan posted as a comment
+- [ ] Merge the pull request once the `Comment` check passes and you verify the plan posted as a comment
 - [ ] Confirm that the `Push` GitHub Action workflow run applied the plan by inspecting the output
 
 ### ...synchronize GitHub Management with GitHub?
@@ -200,5 +292,9 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 *Note*: `Sync` is also going to sort the keys in all the objects lexicographically.
 
 - [ ] Run `Sync` GitHub Action workflow from your desired `branch` - *this will import all the resources from the actual GitHub configuration state into GitHub Management*
-- [ ] Close and reopen the pull request that the `Sync` GitHub Action workflow run created or updated
-- [ ] Merge the pull request once the `Plan ($GITHUB_ORGANIZATION_NAME)` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
+- [ ] Merge the pull request that the workflow created once the `Comment` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
+
+### ...update GitHub Management?
+
+- [ ] Run `Update` GitHub Action workflow
+- [ ] Merge the pull request that the workflow created once the `Comment` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*

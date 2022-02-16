@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 set -u
@@ -33,6 +33,8 @@ root="$(realpath "$(dirname "$0")/..")"
 
 pushd "$root/terraform"
 
+lock="${TF_LOCK:-true}"
+
 organization="$(terraform workspace show)"
 
 separator="$(cat "$root/terraform/locals.tf" | tr -d '\n' | grep -oP 'separator\s*=\s*"\K[^"]*')"
@@ -48,9 +50,9 @@ done <<< "$(jq -r '.[]' <<< "$resources")"
 data_targets="$(jq -r 'unique | map("-target=data.\(.).this") | join(" ")' <<< "$data_targets")"
 
 echo "Refreshing resources"
-terraform refresh $resource_targets
+terraform refresh $resource_targets -lock=$lock
 echo "Applying data changes"
-terraform apply $data_targets -auto-approve
+terraform apply $data_targets -auto-approve -lock=$lock
 
 echo "Retrieving state"
 state="$(terraform show -json)"
@@ -71,14 +73,14 @@ while read resource; do
       id="$(jq -r 'map(select(.index == $index)) | .[0].id' --argjson index "$index" <<< "$remote_data")"
 
       echo "Importing $index ($id)"
-      terraform import "github_$resource.this[$index]" "$id"
+      terraform import "github_$resource.this[$index]" "$id" -lock=$lock
     fi
   done <<< "$(jq '. - $existing_indices | .[]' --argjson existing_indices "$existing_indices" <<< "$remote_indices")"
 
   while read index; do
     if [[ ! -z "$index" ]]; then
       echo "Removing $index"
-      terraform state rm "github_$resource.this[$index]"
+      terraform state rm "github_$resource.this[$index]" -lock=$lock
     fi
   done <<< "$(jq '. - $remote_indices | .[]' --argjson remote_indices "$remote_indices" <<< "$existing_indices")"
 done <<< "$(jq -r '.[]' <<< "$resources")"
@@ -89,7 +91,10 @@ state="$(terraform show -json)"
 while read resource; do
   required="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.required\K.*?=' | tr -d '[:space:]')"
   required="$(jq 'split("=")' <<< '"'"${required:0:-1}"'"')"
-  ignore_changes="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  ignore_changes="$(cat "$root/terraform/resources_override.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  if [[ -z "$ignore_changes" ]]; then
+    ignore_changes="$(cat "$root/terraform/resources.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.ignore_changesignore_changes=\K.*?[^0]\]' | tr -d '[:space:]')"
+  fi
   ignore_changes="$(jq 'split(",") | map(select(startswith("#") | not))' <<< '"'"${ignore_changes:1:-1}"'"')"
   ignore="$(echo "$required" "$ignore_changes" | jq -s 'add')"
   ignore_string="$(jq -r 'map(".\(.)") | join(", ")' <<< "$ignore")"

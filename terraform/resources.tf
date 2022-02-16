@@ -22,27 +22,27 @@ resource "github_repository" "this" {
   # @resources.repository.required
   name = each.key
 
-  allow_auto_merge       = try(each.value.allow_auto_merge, null)
-  allow_merge_commit     = try(each.value.allow_merge_commit, null)
-  allow_rebase_merge     = try(each.value.allow_rebase_merge, null)
-  allow_squash_merge     = try(each.value.allow_squash_merge, null)
-  archive_on_destroy   = try(each.value.archive_on_destroy, null)
-  archived             = try(each.value.archived, null)
-  auto_init              = try(each.value.auto_init, null)
+  allow_auto_merge   = try(each.value.allow_auto_merge, null)
+  allow_merge_commit = try(each.value.allow_merge_commit, null)
+  allow_rebase_merge = try(each.value.allow_rebase_merge, null)
+  allow_squash_merge = try(each.value.allow_squash_merge, null)
+  archive_on_destroy = try(each.value.archive_on_destroy, null)
+  archived           = try(each.value.archived, null)
+  auto_init          = try(each.value.auto_init, null)
   # default_branch         = try(each.value.default_branch, null)
   delete_branch_on_merge = try(each.value.delete_branch_on_merge, null)
-  description  = try(each.value.description, null)
+  description            = try(each.value.description, null)
   gitignore_template     = try(each.value.gitignore_template, null)
   has_downloads          = try(each.value.has_downloads, null)
   has_issues             = try(each.value.has_issues, null)
   has_projects           = try(each.value.has_projects, null)
   has_wiki               = try(each.value.has_wiki, null)
-  homepage_url = try(each.value.homepage_url, null)
+  homepage_url           = try(each.value.homepage_url, null)
   is_template            = try(each.value.is_template, null)
   license_template       = try(each.value.license_template, null)
   # private                = try(each.value.private, null)
   topics               = try(each.value.topics, null)
-  visibility             = try(each.value.visibility, null)
+  visibility           = try(each.value.visibility, null)
   vulnerability_alerts = try(each.value.vulnerability_alerts, null)
 
   dynamic "pages" {
@@ -70,9 +70,9 @@ resource "github_repository" "this" {
     # @resources.repository.ignore_changes
     ignore_changes = [
       allow_auto_merge,
-      # allow_merge_commit,
-      # allow_rebase_merge,
-      # allow_squash_merge,
+      allow_merge_commit,
+      allow_rebase_merge,
+      allow_squash_merge,
       archive_on_destroy,
       archived,
       auto_init,
@@ -197,15 +197,15 @@ resource "github_branch_protection" "this" {
       require_conversation_resolution,
       require_signed_commits,
       required_linear_history,
-      # required_pull_request_reviews,
+      required_pull_request_reviews,
       required_pull_request_reviews[0].dismiss_stale_reviews,
       required_pull_request_reviews[0].dismissal_restrictions,
       required_pull_request_reviews[0].require_code_owner_reviews,
       required_pull_request_reviews[0].required_approving_review_count,
       required_pull_request_reviews[0].restrict_dismissals,
-      # required_status_checks,
-      # required_status_checks[0].contexts,
-      # required_status_checks[0].strict
+      required_status_checks,
+      required_status_checks[0].contexts,
+      required_status_checks[0].strict
     ]
   }
 }

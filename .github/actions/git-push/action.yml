@@ -1,0 +1,39 @@
+name: Push to a git branch
+description: Push to a git branch
+
+inputs:
+  suffix:
+    description: Branch name suffix
+    required: true
+  working-directory:
+    description: Working directory
+    required: false
+    default: ${{ github.workspace }}
+
+runs:
+  using: composite
+  steps:
+    - run: |
+        protected="$(gh api 'repos/{owner}/{repo}/branches/${{ github.ref_name }}' --jq '.protected')"
+
+        if [[ "$protected" == 'true' ]]; then
+          git_branch='${{ github.ref_name }}-${{ inputs.suffix }}'
+        else
+          git_branch='${{ github.ref_name }}'
+        fi
+
+        git checkout -B "$git_branch"
+
+        if [[ "$protected" == 'true' ]]; then
+          git push origin "$git_branch" --force
+          if [[ ! -z "$(git diff --name-only 'origin/${{ github.ref_name }}')" ]]; then
+            state="$(gh pr view "$git_branch" --json state --jq .state 2> /dev/null || echo '')"
+            if [[ "$state" != 'OPEN' ]]; then
+              gh pr create --body 'The changes in this PR were made by a bot. Please review carefully.' --head "$git_branch" --base '${{ github.ref_name }}' --fill
+            fi
+          fi
+        else
+          git push origin "$git_branch"
+        fi
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

@@ -1,14 +1,14 @@
-name: "Push"
+name: Apply
 
 on:
   push:
-    branches:
-      - $GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH
   workflow_dispatch:
 
 jobs:
   prepare:
-    name: "Prepare"
+    if: github.ref_name == github.event.repository.default_branch &&
+        github.event.repository.is_template == false
+    name: Prepare
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
@@ -51,15 +51,17 @@ jobs:
       fail-fast: false
       matrix:
         workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
-    name: "Apply"
+    name: Apply
     runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_WORKSPACE: ${{ matrix.workspace }}
-      GITHUB_APP_ID: ${{ secrets[format('TF_GITHUB_APP_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RW_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets[format('TF_RW_GITHUB_APP_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_RW_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
       TF_VAR_write_delay_ms: 300
     defaults:
       run:
@@ -72,7 +74,6 @@ jobs:
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
           terraform_version: 1.1.4
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Initialize terraform
         run: terraform init
       - name: Retrieve targets from config
@@ -84,4 +85,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh run download -n ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan --repo ${{ github.repository }}
       - name: Terraform Apply
-        run: terraform apply -auto-approve -lock-timeout=0s -no-color .tfplan
+        run: terraform apply -auto-approve -lock-timeout=0s -no-color ${{ env.TF_WORKSPACE }}.tfplan
