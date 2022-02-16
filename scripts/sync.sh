@@ -3,7 +3,12 @@
 set -e
 set -u
 set -o pipefail
-# set -x
+
+debug="${TF_DEBUG:-false}"
+
+if [[ "$debug" == 'true' ]]; then
+  set -x
+fi
 
 if [[ " $@ " == ' -h ' || " $@ " == ' --help ' || " $@ " =~ ' -help ' ]]; then
   echo "Usage: $0 [options] [path]"
@@ -43,7 +48,7 @@ resource_targets="$(jq -r 'map("-target=github_\(.).this") | join(" ")' <<< "$re
 
 data_targets="[]"
 while read resource; do
-  data="$(cat "$root/terraform/data.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.datadata"\K.*?"' | tr -d '[:space:]')"
+  data="$(cat "$root/terraform/data.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.data[^"]+"\K.*?"' | tr -d '[:space:]')"
   data="$(jq 'split("\"")' <<< '"'"${data:0:-1}"'"')"
   data_targets="$(jq '$data + .' --argjson data "$data" <<< "$data_targets")"
 done <<< "$(jq -r '.[]' <<< "$resources")"
