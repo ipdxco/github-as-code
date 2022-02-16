@@ -17,6 +17,7 @@ jobs:
         github.event.workflow_run.conclusion == 'success')
     permissions:
       actions: read
+      contents: read
       statuses: write
     name: Prepare
     runs-on: ubuntu-latest
@@ -59,6 +60,8 @@ jobs:
   plan:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -116,6 +119,7 @@ jobs:
     needs: [prepare, plan]
     if: github.event_name == 'workflow_run'
     permissions:
+      contents: read
       pull-requests: write
     name: Comment
     runs-on: ubuntu-latest
