@@ -16,6 +16,7 @@ jobs:
         (github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success')
     permissions:
+      actions: read
       statuses: write
     name: Prepare
     runs-on: ubuntu-latest

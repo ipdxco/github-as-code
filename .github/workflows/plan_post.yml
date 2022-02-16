@@ -10,6 +10,7 @@ on:
 jobs:
   notify:
     permissions:
+      actions: read
       statuses: write
     name: "Notify"
     runs-on: ubuntu-latest
