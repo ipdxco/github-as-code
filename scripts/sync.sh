@@ -73,14 +73,14 @@ while read resource; do
       id="$(jq -r 'map(select(.index == $index)) | .[0].id' --argjson index "$index" <<< "$remote_data")"
 
       echo "Importing $index ($id)"
-      terraform import "github_$resource.this[$index]" "$id" -lock=$lock
+      terraform import -lock=$lock "github_$resource.this[$index]" "$id"
     fi
   done <<< "$(jq '. - $existing_indices | .[]' --argjson existing_indices "$existing_indices" <<< "$remote_indices")"
 
   while read index; do
     if [[ ! -z "$index" ]]; then
       echo "Removing $index"
-      terraform state rm "github_$resource.this[$index]" -lock=$lock
+      terraform state rm -lock=$lock "github_$resource.this[$index]"
     fi
   done <<< "$(jq '. - $remote_indices | .[]' --argjson remote_indices "$remote_indices" <<< "$existing_indices")"
 done <<< "$(jq -r '.[]' <<< "$resources")"
