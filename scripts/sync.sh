@@ -48,8 +48,8 @@ resource_targets="$(jq -r 'map("-target=github_\(.).this") | join(" ")' <<< "$re
 
 data_targets="[]"
 while read resource; do
-  data="$(cat "$root/terraform/data.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.data[^"]+"\K.*?"' | tr -d '[:space:]')"
-  data="$(jq 'split("\"")' <<< '"'"${data:0:-1}"'"')"
+  data="$(cat "$root/terraform/data.tf" | tr -d '[:space:]' | grep -oP '#@resources.'"$resource"'.data[^"]+"\K.*?"' | tr -d '[:space:]' | tr '"' ' ')"
+  data="$(jq 'split(" ")' <<< '"'"${data:0:-1}"'"')"
   data_targets="$(jq '$data + .' --argjson data "$data" <<< "$data_targets")"
 done <<< "$(jq -r '.[]' <<< "$resources")"
 data_targets="$(jq -r 'unique | map("-target=data.\(.).this") | join(" ")' <<< "$data_targets")"

@@ -64,7 +64,7 @@ output "repository_collaborator" {
         index = "${repository}${local.separator}${collaborator.login}"
       }
     ]
-  ])
+    ])
 }
 
 output "branch_protection" {
