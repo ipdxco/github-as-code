@@ -10,6 +10,7 @@ jobs:
         github.event.repository.is_template == false
     permissions:
       contents: read
+      issues: read
       pull-requests: read
     name: Prepare
     runs-on: ubuntu-latest
