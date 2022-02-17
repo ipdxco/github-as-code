@@ -205,6 +205,8 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 *NOTE*: If you want to require PRs to be created but don't care about reviews, then change `required_approving_review_count` value to `0`. It seems for some reason the provider's default is `1` instead of `0`. The next `Sync` will remove this value from the configuration file and will leave an empty object inside `required_pull_request_reviews` which is the desired state.
 
+*NOTE*: Branch protection rules are not available for private repositories on Free plan.
+
 - [ ] Manually set  `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators` **AND** `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission` because it is impossible to control this value via terraform yet
 - [ ] Pull remote changes to the default branch
 - [ ] Enable merge commits, disable rebase and squash merges on the repository by making sure [github/$ORGANIZATION_NAME/repository.json](github/$ORGANIZATION_NAME/repository.json) contains the following entry:
@@ -227,7 +229,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
         "required_status_checks": [
           {
             "contexts": [
-              "Comment"
+              "Plan"
             ],
             "strict": true
           }
