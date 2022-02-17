@@ -52,8 +52,8 @@ jobs:
     needs: [prepare]
     if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''
     permissions:
-      contents: read
       actions: read
+      contents: read
     strategy:
       fail-fast: false
       matrix:
