@@ -10,9 +10,11 @@ data "github_repositories" "this" {
 
 # @resources.repository_collaborator.data
 data "github_collaborators" "this" {
-  for_each   = toset(data.github_repositories.this.names)
-  owner      = local.organization
-  repository = each.value
+  for_each = toset(data.github_repositories.this.names)
+
+  owner       = local.organization
+  repository  = each.value
+  affiliation = "direct"
 }
 
 # @resources.branch_protection.data

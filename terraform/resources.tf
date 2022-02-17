@@ -225,6 +225,7 @@ resource "github_team" "this" {
   lifecycle {
     # @resources.team.ignore_changes
     ignore_changes = [
+      id,
       create_default_maintainer,
       description,
       etag,

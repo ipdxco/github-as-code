@@ -8,6 +8,10 @@ jobs:
   prepare:
     if: github.ref_name == github.event.repository.default_branch &&
         github.event.repository.is_template == false
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     name: Prepare
     runs-on: ubuntu-latest
     outputs:
@@ -47,6 +51,9 @@ jobs:
   apply:
     needs: [prepare]
     if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''
+    permissions:
+      actions: read
+      contents: read
     strategy:
       fail-fast: false
       matrix:
