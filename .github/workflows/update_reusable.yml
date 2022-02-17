@@ -28,7 +28,7 @@ jobs:
       - name: Checkout GitHub Management template
         uses: actions/checkout@v2
         with:
-          repository: galargh/github-mgmt-template
+          repository: protocol/github-mgmt-template
           path: github-mgmt-template
       - name: Checkout GitHub Management
         uses: actions/checkout@v2
