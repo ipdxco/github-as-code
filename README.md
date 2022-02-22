@@ -145,10 +145,10 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 #### GitHub App
 
-*NOTE*: If you already have a GitHub App with required permissions you can install it in the target organisation instead.
+*NOTE*: If you already have a GitHub App with required permissions you can skip the app creation step.
 
-- [ ] [Create 3 GitHub Apps](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
-    <details><summary>terraform read-only</summary>
+- [ ] [Create 2 GitHub Apps](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
+    <details><summary>read-only</summary>
 
     - `Repository permissions`
         - `Administration`: `Read-only`
@@ -157,34 +157,26 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
     - `Organization permissions`
         - `Members`: `Read-only`
     </details>
-    <details><summary>terraform read & write</summary>
+    <details><summary>read & write</summary>
 
     - `Repository permissions`
         - `Administration`: `Read & Write`
         - `Contents`: `Read & Write`
         - `Metadata`: `Read-only`
+        - `Pull requests`: `Read & Write`
+        - `Workflows`: `Read & Write`
     - `Organization permissions`
         - `Members`: `Read & Write`
     </details>
-    <details><summary>gh read & write</summary>
-    - `Repository permissions`
-        - `Contents`: `Read & Write`
-        - `Metadata`: `Read-only`
-        - `Pull requests`: `Read & Write`
-        - `Workflows`: `Read & Write`
-    </details>
-- [ ] [Install the terraform GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
-- [ ] [Install the gh GitHub App](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for the GitHub Management repository
+- [ ] [Install the GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
 
-#### GitHub Organisation Secrets
+#### GitHub Repository Secrets
 
-*NOTE*: If the repository is private and you're not on GitHub Enterprise, you're going to have to create repository secrets instead.
-
-- [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organisation and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
-    - [ ] `TF_RO_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-    - [ ] `TF_RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_INSTALLATION_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-    - [ ] `TF_RO_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_PEM_FILE`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-    - [ ] `TF_RO_AWS_ACCESS_KEY_ID`, `TF_RW_AWS_ACCESS_KEY_ID`, `TF_RO_AWS_SECRET_ACCESS_KEY` and `TF_RW_AWS_SECRET_ACCESS_KEY`: Use the values generated during [AWS](#aws) setup
+- [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the GitHub Management repository (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
+    - [ ] `RO_GITHUB_APP_ID`, `RW_GITHUB_APP_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
+    - [ ] `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
+    - [ ] `RO_GITHUB_APP_PEM_FILE`, `RW_GITHUB_APP_PEM_FILE`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
+    - [ ] `RO_AWS_ACCESS_KEY_ID`, `RW_AWS_ACCESS_KEY_ID`, `RO_AWS_SECRET_ACCESS_KEY` and `RW_AWS_SECRET_ACCESS_KEY`: Use the values generated during [AWS](#aws) setup
 
 #### GitHub Management Repository Setup
 
