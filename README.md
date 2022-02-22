@@ -167,6 +167,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
         - `Members`: `Read & Write`
     </details>
     <details><summary>gh read & write</summary>
+    
     - `Repository permissions`
         - `Contents`: `Read & Write`
         - `Metadata`: `Read-only`
@@ -181,10 +182,23 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 *NOTE*: If the repository is private and you're not on GitHub Enterprise, you're going to have to create repository secrets instead.
 
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organisation and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
-    - [ ] `TF_RO_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-    - [ ] `TF_RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_INSTALLATION_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-    - [ ] `TF_RO_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `TF_RW_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`, `GH_RW_GITHUB_APP_PEM_FILE`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-    - [ ] `TF_RO_AWS_ACCESS_KEY_ID`, `TF_RW_AWS_ACCESS_KEY_ID`, `TF_RO_AWS_SECRET_ACCESS_KEY` and `TF_RW_AWS_SECRET_ACCESS_KEY`: Use the values generated during [AWS](#aws) setup
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
+       - [ ] `TF_RO_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `TF_RW_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `GH_RW_GITHUB_APP_ID`
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
+       - [ ] `TF_RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `TF_RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `GH_RW_GITHUB_APP_INSTALLATION_ID`:
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
+       - [ ] `TF_RO_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `TF_RW_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `GH_RW_GITHUB_APP_PEM_FILE`
+    - [ ] Use the values generated during [AWS](#aws) setup
+       - [ ] `TF_RO_AWS_ACCESS_KEY_ID`
+       - [ ] `TF_RW_AWS_ACCESS_KEY_ID`
+       - [ ] `TF_RO_AWS_SECRET_ACCESS_KEY`
+       - [ ] `TF_RW_AWS_SECRET_ACCESS_KEY`
 
 #### GitHub Management Repository Setup
 
@@ -207,7 +221,9 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 *NOTE*: Branch protection rules are not available for private repositories on Free plan.
 
-- [ ] Manually set  `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators` **AND** `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission` because it is impossible to control this value via terraform yet
+- [ ] Manually set values that are impossible to control this value via terraform currently 
+   - [ ] `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators`
+   - [ ] `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission`
 - [ ] Pull remote changes to the default branch
 - [ ] Enable merge commits, disable rebase and squash merges on the repository by making sure [github/$ORGANIZATION_NAME/repository.json](github/$ORGANIZATION_NAME/repository.json) contains the following entry:
     ```
