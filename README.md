@@ -201,14 +201,6 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 - [ ] Manually set  `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators` **AND** `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission` because it is impossible to control this value via terraform yet
 - [ ] Pull remote changes to the default branch
-- [ ] Enable merge commits, disable rebase and squash merges on the repository by making sure [github/$ORGANIZATION_NAME/repository.json](github/$ORGANIZATION_NAME/repository.json) contains the following entry:
-    ```
-    "$GITHUB_MGMT_REPOSITORY_NAME": {
-      "allow_merge_commit": true,
-      "allow_rebase_merge": false,
-      "allow_squash_merge": false
-    }
-    ```
 - [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME/branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) contains the following entry:
     ```
     "$GITHUB_MGMT_REPOSITORY_NAME": {
