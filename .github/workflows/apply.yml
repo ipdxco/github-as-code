@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: protocol/github-api-action-library/find-content-by-query@v1
         with:
-          query: ${{ github.sha }}
+          query: repository:${{ github.repository }} ${{ github.sha }}
       - name: Find sha for plan
         id: sha
         env:
