@@ -10,25 +10,40 @@ on:
 
 jobs:
   update:
-    permissions:
-      pull-requests: write
+    if: (github.event_name == 'workflow_dispatch' &&
+        github.ref_name == github.event.repository.default_branch) ||
+        (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success')
     name: Update
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     steps:
+      - name: Generate app token
+        id: token
+        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        with:
+          app_id: ${{ secrets.RW_GITHUB_APP_ID }}
+          installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] }}
+          private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       - name: Update PRs
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          while read number; do
-            if [[ ! -z "$number" ]]; then
-              if gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch" >/dev/null 2>&1; then
-                echo "${{github.repository}}#$number ✅"
-              else
-                echo "${{github.repository}}#$number ❌"
+          while read pr; do
+            if [[ ! -z "$pr" ]]; then
+              number="$(jq -r '.number' <<< "$pr")"
+              base_label="$(jq -r '.base.label' <<< "$pr")"
+              head_label="$(jq -r '.head.label' <<< "$pr")"
+              behind_by="$(gh api "/repos/${{ github.repository }}/compare/$base_label...$head_label" --jq '.behind_by')"
+              if [[ "$behind_by" == '0' ]]; then
+                echo '{"message":"Not updating pull request branch.","url":"https://api.github.com/repos/${{ github.repository }}/pulls/'"$number"'"}'
+              elif ! gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch"; then
+                echo ''
                 echo "::warning title=update-branch failure::${{github.repository}}#$number"
+              else
+                echo ''
               fi
             fi
-          done <<< "$(gh api '/repos/${{ github.repository }}/pulls' --jq '.[] | .number')"
+          done <<< "$(gh api '/repos/${{ github.repository }}/pulls' --jq '.[]')"

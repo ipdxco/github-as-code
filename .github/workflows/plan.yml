@@ -11,8 +11,7 @@ on:
 jobs:
   prepare:
     if: (github.event_name == 'workflow_dispatch' &&
-        github.ref_name == github.event.repository.default_branch &&
-        github.event.repository.is_template == false) ||
+        github.ref_name == github.event.repository.default_branch) ||
         (github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success')
     permissions:
