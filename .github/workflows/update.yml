@@ -1,12 +1,31 @@
 name: Update
 
 on:
+  workflow_run:
+    workflows:
+      - "Apply"
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
   update:
-    uses: protocol/github-mgmt-template/.github/workflows/update_reusable.yml@master
-    secrets:
-      GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+    permissions:
+      pull-requests: write
+    name: Update
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Update PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          while read number; do
+            if gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch" 2> /dev/null; then
+              echo "${{github.repository}}#$number ✅"
+            else
+              echo "${{github.repository}}#$number ❌"
+            fi
+          done <<< "$(gh api '/repos/${{ github.repository }}/pulls' --jq '.[] | .number')"

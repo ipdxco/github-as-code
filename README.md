@@ -7,7 +7,7 @@ This repository is meant to serve as a template for creating new repositories re
 - 2-way sync between GitHub Management and the actual GitHub configuration (including bootstrapping)
 - PR-based configuration change review process which guarantees the reviewed plan is the one being applied
 - control over what resources and what properties are managed by GitHub Management
-- auto-updates from the template repository
+- auto-upgrades from the template repository
 
 ## How does it work?
 
@@ -280,7 +280,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 - [ ] Run `Sync` GitHub Action workflow from your desired `branch` - *this will import all the resources from the actual GitHub configuration state into GitHub Management*
 - [ ] Merge the pull request that the workflow created once the `Plan` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
 
-### ...update GitHub Management?
+### ...upgrade GitHub Management?
 
-- [ ] Run `Update` GitHub Action workflow
+- [ ] Run `Upgrade` GitHub Action workflow
 - [ ] Merge the pull request that the workflow created once the `Plan` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
