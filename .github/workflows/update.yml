@@ -28,6 +28,7 @@ jobs:
                 echo "${{github.repository}}#$number ✅"
               else
                 echo "${{github.repository}}#$number ❌"
+                echo "::warning title=update-branch failure::${{github.repository}}#$number"
               fi
             fi
           done <<< "$(gh api '/repos/${{ github.repository }}/pulls' --jq '.[] | .number')"
