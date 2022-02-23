@@ -23,9 +23,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           while read number; do
-            if gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch" 2> /dev/null; then
-              echo "${{github.repository}}#$number ✅"
-            else
-              echo "${{github.repository}}#$number ❌"
+            if [[ ! -z "$number" ]]; then
+              if gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch" >/dev/null 2>&1; then
+                echo "${{github.repository}}#$number ✅"
+              else
+                echo "${{github.repository}}#$number ❌"
+              fi
             fi
           done <<< "$(gh api '/repos/${{ github.repository }}/pulls' --jq '.[] | .number')"
