@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: protocol/github-api-action-library/find-content-by-query@v1
         with:
-          query: ${{ github.sha }}
+          query: repository:${{ github.repository }} ${{ github.sha }}
       - name: Find sha for plan
         id: sha
         env:
@@ -64,11 +64,11 @@ jobs:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_WORKSPACE: ${{ matrix.workspace }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RW_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RW_AWS_SECRET_ACCESS_KEY }}
-      GITHUB_APP_ID: ${{ secrets[format('TF_RW_GITHUB_APP_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_RW_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       TF_VAR_write_delay_ms: 300
     defaults:
       run:

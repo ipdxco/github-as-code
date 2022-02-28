@@ -7,7 +7,7 @@ This repository is meant to serve as a template for creating new repositories re
 - 2-way sync between GitHub Management and the actual GitHub configuration (including bootstrapping)
 - PR-based configuration change review process which guarantees the reviewed plan is the one being applied
 - control over what resources and what properties are managed by GitHub Management
-- auto-updates from the template repository
+- auto-upgrades from the template repository
 
 ## How does it work?
 
@@ -145,10 +145,10 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 #### GitHub App
 
-*NOTE*: If you already have a GitHub App with required permissions you can install it in the target organisation instead.
+*NOTE*: If you already have a GitHub App with required permissions you can skip the app creation step.
 
-- [ ] [Create 3 GitHub Apps](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
-    <details><summary>terraform read-only</summary>
+- [ ] [Create 2 GitHub Apps](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app) in the GitHub organisation with the following permissions - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
+    <details><summary>read-only</summary>
 
     - `Repository permissions`
         - `Administration`: `Read-only`
@@ -157,48 +157,36 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
     - `Organization permissions`
         - `Members`: `Read-only`
     </details>
-    <details><summary>terraform read & write</summary>
+    <details><summary>read & write</summary>
 
     - `Repository permissions`
         - `Administration`: `Read & Write`
         - `Contents`: `Read & Write`
         - `Metadata`: `Read-only`
+        - `Pull requests`: `Read & Write`
+        - `Workflows`: `Read & Write`
     - `Organization permissions`
         - `Members`: `Read & Write`
     </details>
-    <details><summary>gh read & write</summary>
-    
-    - `Repository permissions`
-        - `Contents`: `Read & Write`
-        - `Metadata`: `Read-only`
-        - `Pull requests`: `Read & Write`
-        - `Workflows`: `Read & Write`
-    </details>
-- [ ] [Install the terraform GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
-- [ ] [Install the gh GitHub App](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for the GitHub Management repository
+- [ ] [Install the GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organisation for `All repositories`
 
-#### GitHub Organisation Secrets
-
-*NOTE*: If the repository is private and you're not on GitHub Enterprise, you're going to have to create repository secrets instead.
+#### GitHub Repository Secrets
 
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organisation and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-       - [ ] `TF_RO_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `TF_RW_GITHUB_APP_ID_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `GH_RW_GITHUB_APP_ID`
+       - [ ] `RO_GITHUB_APP_ID`
+       - [ ] `RW_GITHUB_APP_ID`
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-       - [ ] `TF_RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `TF_RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `GH_RW_GITHUB_APP_INSTALLATION_ID`:
+       - [ ] `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-       - [ ] `TF_RO_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `TF_RW_GITHUB_APP_PEM_FILE_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `GH_RW_GITHUB_APP_PEM_FILE`
+       - [ ] `RO_GITHUB_APP_PEM_FILE`
+       - [ ] `RW_GITHUB_APP_PEM_FILE`
     - [ ] Use the values generated during [AWS](#aws) setup
-       - [ ] `TF_RO_AWS_ACCESS_KEY_ID`
-       - [ ] `TF_RW_AWS_ACCESS_KEY_ID`
-       - [ ] `TF_RO_AWS_SECRET_ACCESS_KEY`
-       - [ ] `TF_RW_AWS_SECRET_ACCESS_KEY`
+       - [ ] `RO_AWS_ACCESS_KEY_ID`
+       - [ ] `RW_AWS_ACCESS_KEY_ID`
+       - [ ] `RO_AWS_SECRET_ACCESS_KEY`
+       - [ ] `RW_AWS_SECRET_ACCESS_KEY`
 
 #### GitHub Management Repository Setup
 
@@ -225,14 +213,6 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
    - [ ] `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators`
    - [ ] `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission`
 - [ ] Pull remote changes to the default branch
-- [ ] Enable merge commits, disable rebase and squash merges on the repository by making sure [github/$ORGANIZATION_NAME/repository.json](github/$ORGANIZATION_NAME/repository.json) contains the following entry:
-    ```
-    "$GITHUB_MGMT_REPOSITORY_NAME": {
-      "allow_merge_commit": true,
-      "allow_rebase_merge": false,
-      "allow_squash_merge": false
-    }
-    ```
 - [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME/branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) contains the following entry:
     ```
     "$GITHUB_MGMT_REPOSITORY_NAME": {
@@ -312,7 +292,7 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 - [ ] Run `Sync` GitHub Action workflow from your desired `branch` - *this will import all the resources from the actual GitHub configuration state into GitHub Management*
 - [ ] Merge the pull request that the workflow created once the `Plan` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
 
-### ...update GitHub Management?
+### ...upgrade GitHub Management?
 
-- [ ] Run `Update` GitHub Action workflow
+- [ ] Run `Upgrade` GitHub Action workflow
 - [ ] Merge the pull request that the workflow created once the `Plan` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*

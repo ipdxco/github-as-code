@@ -52,11 +52,11 @@ jobs:
       TF_INPUT: 0
       TF_LOCK: ${{ github.event.inputs.lock }}
       TF_DEBUG: ${{ github.event.inputs.debug }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.TF_RW_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_RW_AWS_SECRET_ACCESS_KEY }}
-      GITHUB_APP_ID: ${{ secrets[format('TF_RW_GITHUB_APP_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('TF_RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
-      GITHUB_APP_PEM_FILE: ${{ secrets[format('TF_RW_GITHUB_APP_PEM_FILE_{0}', matrix.workspace)] }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       TF_VAR_write_delay_ms: 300
     defaults:
       run:
@@ -101,9 +101,9 @@ jobs:
         id: token
         uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
         with:
-          app_id: ${{ secrets.GH_RW_GITHUB_APP_ID }}
-          installation_id: ${{ secrets.GH_RW_GITHUB_APP_INSTALLATION_ID }}
-          private_key: ${{ secrets.GH_RW_GITHUB_APP_PEM_FILE }}
+          app_id: ${{ secrets.RW_GITHUB_APP_ID }}
+          installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] }}
+          private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       - name: Checkout
         uses: actions/checkout@v2
         with:

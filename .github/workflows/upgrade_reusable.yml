@@ -1,4 +1,4 @@
-name: Update (reusable)
+name: Upgrade (reusable)
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ on:
         required: true
 
 jobs:
-  update:
-    name: Update
+  upgrade:
+    name: Upgrade
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -45,11 +45,11 @@ jobs:
       - uses: ./github-mgmt-template/.github/actions/git-config-user
       - run: |
           git add --all
-          git diff-index --quiet HEAD || git commit --message='update (#${{ github.run_number }})'
+          git diff-index --quiet HEAD || git commit --message='upgrade (#${{ github.run_number }})'
         working-directory: github-mgmt
       - uses: ./github-mgmt-template/.github/actions/git-push
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         with:
-          suffix: update
+          suffix: upgrade
           working-directory: github-mgmt
