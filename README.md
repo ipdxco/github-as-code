@@ -172,11 +172,21 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 #### GitHub Repository Secrets
 
-- [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) for the GitHub Management repository (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
-    - [ ] `RO_GITHUB_APP_ID`, `RW_GITHUB_APP_ID`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-    - [ ] `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`, `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-    - [ ] `RO_GITHUB_APP_PEM_FILE`, `RW_GITHUB_APP_PEM_FILE`: Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-    - [ ] `RO_AWS_ACCESS_KEY_ID`, `RW_AWS_ACCESS_KEY_ID`, `RO_AWS_SECRET_ACCESS_KEY` and `RW_AWS_SECRET_ACCESS_KEY`: Use the values generated during [AWS](#aws) setup
+- [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organisation and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organisation name) - *these secrets are read by the GitHub Action workflows*
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
+       - [ ] `RO_GITHUB_APP_ID`
+       - [ ] `RW_GITHUB_APP_ID`
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
+       - [ ] `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
+       - [ ] `RO_GITHUB_APP_PEM_FILE`
+       - [ ] `RW_GITHUB_APP_PEM_FILE`
+    - [ ] Use the values generated during [AWS](#aws) setup
+       - [ ] `RO_AWS_ACCESS_KEY_ID`
+       - [ ] `RW_AWS_ACCESS_KEY_ID`
+       - [ ] `RO_AWS_SECRET_ACCESS_KEY`
+       - [ ] `RW_AWS_SECRET_ACCESS_KEY`
 
 #### GitHub Management Repository Setup
 
@@ -199,7 +209,9 @@ Branch protection rules managed via GitHub Management cannot contain wildcards. 
 
 *NOTE*: Branch protection rules are not available for private repositories on Free plan.
 
-- [ ] Manually set  `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators` **AND** `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission` because it is impossible to control this value via terraform yet
+- [ ] Manually set values that are impossible to control this value via terraform currently 
+   - [ ] `Settings` > `Actions` > `General` > `Fork pull request workflows from outside collaborators` > `Require approval for all outside collaborators`
+   - [ ] `Settings` > `Actions` > `General` > `Workflow permissions` > `Read repository contents permission`
 - [ ] Pull remote changes to the default branch
 - [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME/branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) contains the following entry:
     ```
