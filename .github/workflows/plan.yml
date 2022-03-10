@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
-      repository: ${{ steps.github.outputs.repository }}
       sha: ${{ steps.github.outputs.sha }}
+      ref: ${{ steps.github.outputs.ref }}
       number: ${{ steps.github.outputs.number }}
     defaults:
       run:
@@ -35,15 +35,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
-            repository='${{ github.repository }}'
             sha='${{ github.sha }}'
+            ref='${{ github.sha }}'
           elif [[ '${{ github.event_name }}' == 'workflow_run' ]]; then
-            repository='${{ github.event.workflow_run.head_repository.full_name }}'
             sha='${{ github.event.workflow_run.head_commit.id }}'
-            number="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}' --jq '.pull_requests[0].number')"
+            ref="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs' --jq '.jobs[] | .steps[] | .name | select(startswith("Run ref="))')"
+            ref="${ref#Run ref=}"
+            number="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs' --jq '.jobs[] | .steps[] | .name | select(startswith("Run number="))')"
+            number="${number#Run number=}"
           fi
-          echo "::set-output name=repository::$repository"
           echo "::set-output name=sha::$sha"
+          echo "::set-output name=ref::$ref"
           echo "::set-output name=number::$number"
       - run: sha=${{ steps.github.outputs.sha }}
       - env:
@@ -52,8 +54,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: ${{ steps.github.outputs.repository }}
-          ref: ${{ steps.github.outputs.sha }}
+          repository: ${{ github.repository }}
+          ref: ${{ steps.github.outputs.ref }}
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.]' | jq -sc add)"
@@ -83,11 +85,10 @@ jobs:
         shell: bash
         working-directory: terraform
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
-          repository: ${{ needs.prepare.outputs.repository }}
-          ref: ${{ needs.prepare.outputs.sha }}
+          repository: ${{ github.repository }}
+          ref: ${{ needs.prepare.outputs.ref }}
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
@@ -131,11 +132,10 @@ jobs:
         shell: bash
         working-directory: terraform
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
-          repository: ${{ needs.prepare.outputs.repository }}
-          ref: ${{ needs.prepare.outputs.sha }}
+          repository: ${{ github.repository }}
+          ref: ${{ needs.prepare.outputs.ref }}
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
