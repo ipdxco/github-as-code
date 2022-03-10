@@ -10,4 +10,8 @@ jobs:
     name: "Trigger"
     runs-on: ubuntu-latest
     steps:
-      - run: "true"
+      - uses: actions/checkout@v2
+      - id: ref
+        run: echo "::set-output name=this::$(git rev-parse HEAD)"
+      - run: ref=${{ steps.ref.outputs.this }}
+      - run: number=${{ github.event.pull_request.number }}
