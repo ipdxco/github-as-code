@@ -34,12 +34,17 @@ jobs:
           while read pr; do
             if [[ ! -z "$pr" ]]; then
               number="$(jq -r '.number' <<< "$pr")"
-              base_label="$(jq -r '.base.label' <<< "$pr")"
-              head_label="$(jq -r '.head.label' <<< "$pr")"
-              behind_by="$(gh api "/repos/${{ github.repository }}/compare/$base_label...$head_label" --jq '.behind_by')"
-              if [[ "$behind_by" == '0' ]]; then
-                echo '{"message":"Not updating pull request branch.","url":"https://api.github.com/repos/${{ github.repository }}/pulls/'"$number"'"}'
-              elif ! gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch"; then
+              private="$(jq -r '.head.repo.private' <<< "$pr")"
+              if [[ "$private" == 'false' ]]; then
+                base_label="$(jq -r '.base.label' <<< "$pr")"
+                head_label="$(jq -r '.head.label' <<< "$pr")"
+                behind_by="$(gh api "/repos/${{ github.repository }}/compare/$base_label...$head_label" --jq '.behind_by')"
+                if [[ "$behind_by" == '0' ]]; then
+                  echo '{"message":"Not updating pull request branch. Head repository is up to date.","url":"https://api.github.com/repos/${{ github.repository }}/pulls/'"$number"'"}'
+                  continue
+                fi
+              fi
+              if ! gh api -X PUT "/repos/${{ github.repository }}/pulls/$number/update-branch"; then
                 echo ''
                 echo "::warning title=update-branch failure::${{github.repository}}#$number"
               else
