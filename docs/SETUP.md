@@ -6,10 +6,12 @@
 
 ## GitHub Organization
 
-- [ ] [Set base permissions for the organization](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/setting-base-permissions-for-an-organization) to `Read` or `None` not to make all organization members de-facto admins through GitHub Management
-- [ ] If you plan to keep the GitHub Management repository private, [allow forking of private repositories](https://docs.github.com/en/organizations/managing-organization-settings/managing-the-forking-policy-for-your-organization) and [enable workflows for private repository forks](https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#enabling-workflows-for-private-repository-forks)
+- [ ] [Set base permissions for the organization](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/setting-base-permissions-for-an-organization) to `Read` or `None` not to make all organization members de-facto admins through GitHub Management - `gh -X PATCH /orgs/$GITHUB_ORGANIZATION -f default_repository_permission=read`
+- [ ] If you plan to keep the GitHub Management repository private, [allow forking of private repositories](https://docs.github.com/en/organizations/managing-organization-settings/managing-the-forking-policy-for-your-organization) and [enable workflows for private repository forks](https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#enabling-workflows-for-private-repository-forks) - `gh -X PATCH /orgs/$GITHUB_ORGANIZATION -f members_can_fork_private_repositories=true` (enabling workflows for private repository forks is not possible through API)
 
 ## AWS
+
+*NOTE*: Setting up AWS can be automated with [terraform](../terraform/bootstrap/aws.tf). If you choose to create AWS with terraform, remember that you'll still need to retrieve `AWS_ACCESS_KEY_ID`s and `AWS_SECRET_ACCESS_KEY`s manually.
 
 - [ ] [Create a S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html) - *this is where Terraform states for the organizations will be stored*
 - [ ] [Create a DynamoDB table](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html) using `LockID` of type `String` as the partition key - *this is where Terraform state locks will be stored*
