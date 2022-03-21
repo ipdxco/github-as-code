@@ -9,6 +9,7 @@ on:
 
 jobs:
   notify:
+    if: github.event.repository.is_template == false
     permissions:
       actions: read
       statuses: write
