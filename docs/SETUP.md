@@ -119,8 +119,8 @@
        - [ ] `RO_GITHUB_APP_ID`
        - [ ] `RW_GITHUB_APP_ID`
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-       - [ ] `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
-       - [ ] `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME`
+       - [ ] `RO_GITHUB_APP_INSTALLATION_ID` (or `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
+       - [ ] `RW_GITHUB_APP_INSTALLATION_ID` (or `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
        - [ ] `RO_GITHUB_APP_PEM_FILE`
        - [ ] `RW_GITHUB_APP_PEM_FILE`
