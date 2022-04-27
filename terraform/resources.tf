@@ -219,7 +219,7 @@ resource "github_team" "this" {
   create_default_maintainer = try(each.value.create_default_maintainer, null)
   description               = try(each.value.description, null)
   ldap_dn                   = try(each.value.ldap_dn, null)
-  parent_team_id            = try(each.value.parent_team_id, null)
+  parent_team_id            = try(try(element(data.github_organization_teams.this, index(data.github_organization_teams.this.*.id, each.value.parent_team_id)), each.value.parent_team_id), null)
   privacy                   = try(each.value.privacy, null)
 
   lifecycle {

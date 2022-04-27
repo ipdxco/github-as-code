@@ -111,6 +111,9 @@ while read resource; do
   resource_config="$(at_address "github_$resource.this" "$state" | jq 'map({"key": .index, "value": .values}) | from_entries')"
 
   case "$resource" in
+    "team")
+      resource_config="$(jq '. as $resource_config | map_values(.parent_team_id = (.parent_team_id as $parent_team_id | $resource_config | map(select(.id == $parent_team_id))[0].name // $parent_team_id))' <<< "$resource_config")"
+      ;;
     "repository_file")
       pushd "$root/files"
       path_by_content="$(find . -type f -exec jq -Rs '{ "\(@base64)": $file }' --arg file '{}' '{}' \; | jq -s 'add')"

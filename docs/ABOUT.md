@@ -54,6 +54,8 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 
 ## Divergence from Terraform GitHub provider documentation
 
+`github_team.parent_team_id` accepts either an ID of a team or a name of a team.
+
 `github_repository_file.content` accepts either a content string or a path relative to `files` directory.
 
 `github_repository_file.branch` defaults to the default branch of the repository instead of `main`.
