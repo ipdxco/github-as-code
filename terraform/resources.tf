@@ -30,16 +30,17 @@ resource "github_repository" "this" {
   archived           = try(each.value.archived, null)
   auto_init          = try(each.value.auto_init, null)
   # default_branch         = try(each.value.default_branch, null)
-  delete_branch_on_merge = try(each.value.delete_branch_on_merge, null)
-  description            = try(each.value.description, null)
-  gitignore_template     = try(each.value.gitignore_template, null)
-  has_downloads          = try(each.value.has_downloads, null)
-  has_issues             = try(each.value.has_issues, null)
-  has_projects           = try(each.value.has_projects, null)
-  has_wiki               = try(each.value.has_wiki, null)
-  homepage_url           = try(each.value.homepage_url, null)
-  is_template            = try(each.value.is_template, null)
-  license_template       = try(each.value.license_template, null)
+  delete_branch_on_merge                  = try(each.value.delete_branch_on_merge, null)
+  description                             = try(each.value.description, null)
+  gitignore_template                      = try(each.value.gitignore_template, null)
+  has_downloads                           = try(each.value.has_downloads, null)
+  has_issues                              = try(each.value.has_issues, null)
+  has_projects                            = try(each.value.has_projects, null)
+  has_wiki                                = try(each.value.has_wiki, null)
+  homepage_url                            = try(each.value.homepage_url, null)
+  ignore_vulnerability_alerts_during_read = try(each.value.ignore_vulnerability_alerts_during_read, null)
+  is_template                             = try(each.value.is_template, null)
+  license_template                        = try(each.value.license_template, null)
   # private                = try(each.value.private, null)
   topics               = try(each.value.topics, null)
   visibility           = try(each.value.visibility, null)
@@ -92,6 +93,7 @@ resource "github_repository" "this" {
       html_url,
       http_clone_url,
       id,
+      ignore_vulnerability_alerts_during_read,
       is_template,
       license_template,
       node_id,
