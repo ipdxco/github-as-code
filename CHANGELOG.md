@@ -13,3 +13,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Upgrade (reusable) workflow: included docs and CHANGELOG in the upgrades
 - README: extracted sections to separate docs
+- GitHub Provider: upgraded to v4.23.0
