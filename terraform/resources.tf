@@ -300,3 +300,44 @@ resource "github_team_membership" "this" {
     ]
   }
 }
+
+resource "github_repository_file" "this" {
+  for_each = merge([
+    for repository, files in lookup(local.github, "repository_file", {}) :
+    {
+      for file, config in files :
+      "${repository}${local.separator}${file}" => merge({
+        repository = repository
+        file       = file
+      }, config)
+    }
+  ]...)
+
+  # @resources.repository_file.required
+  repository = each.value.repository
+  # @resources.repository_file.required
+  file = each.value.file
+
+  # Content is required but it is not used as a key
+  content = try(file("${path.module}/../files/${each.value.content}"), each.value.content)
+
+  branch              = try(each.value.branch, github_repository.this[each.value.repository].default_branch)
+  commit_author       = try(each.value.commit_author, null)
+  commit_email        = try(each.value.commit_email, null)
+  commit_message      = try(each.value.commit_message, null)
+  overwrite_on_create = try(each.value.overwrite_on_create, null)
+
+  lifecycle {
+    # @resources.repository_file.ignore_changes
+    ignore_changes = [
+      id,
+      branch,
+      commit_author,
+      commit_email,
+      commit_message,
+      commit_sha,
+      overwrite_on_create,
+      sha
+    ]
+  }
+}

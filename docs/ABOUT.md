@@ -50,6 +50,13 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 | [github_team](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team) | `team.json` | `team.name` | n/a | add/remove teams from your organization |
 | [github_team_repository](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository) | `team_repository.json` | `team.name`: `repository.name` | `github_team` | manage relationships between teams and repositories in your GitHub organization |
 | [github_team_membership](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership) | `team_membership.json` | `team.name`: `username` | `github_team` | add/remove users from teams in your organization |
+| [github_repository_file](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | `repository_file.json` | `repository.name`: `filename` | `github_repository` | add/remove files from repositories in your organization |
+
+## Divergence from Terraform GitHub provider documentation
+
+`github_repository_file.content` accepts either a content string or a path relative to `files` directory.
+
+`github_repository_file.branch` defaults to the default branch of the repository instead of `main`.
 
 # Limitations
 

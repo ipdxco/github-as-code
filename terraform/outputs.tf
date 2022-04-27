@@ -82,3 +82,21 @@ output "branch_protection" {
     ]
   ])
 }
+
+output "repository_file" {
+  value = flatten([
+    for repository, files in lookup(local.github, "repository_file", {}) :
+    [
+      for file, config in {
+        for file, config in files :
+        file => merge({
+          branch = lookup(config, "branch", data.github_repository.this[repository].default_branch)
+        }, config) if contains(keys(data.github_repository.this), repository)
+      } :
+      {
+        id    = "${repository}/${file}:${config.branch}"
+        index = "${repository}${local.separator}${file}"
+      } if contains(keys(data.github_tree.this), "${repository}:${config.branch}") ? contains(data.github_tree.this["${repository}:${config.branch}"].entries.*.path, file) : false
+    ]
+  ])
+}
