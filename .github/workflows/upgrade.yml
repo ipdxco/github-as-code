@@ -2,10 +2,17 @@ name: Upgrade
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        required: true
+        description: The github-mgmt-template ref to upgrade to
+        default: master
 
 jobs:
   upgrade:
     uses: protocol/github-mgmt-template/.github/workflows/upgrade_reusable.yml@master
+    with:
+      ref: inputs.ref
     secrets:
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
