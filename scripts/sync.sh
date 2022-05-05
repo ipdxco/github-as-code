@@ -110,18 +110,30 @@ while read resource; do
   echo "Retrieving resources from state"
   resource_config="$(at_address "github_$resource.this" "$state" | jq 'map({"key": .index, "value": .values}) | from_entries')"
 
+  case "$resource" in
+    "team")
+      resource_config="$(jq '. as $resource_config | map_values(.parent_team_id = (.parent_team_id as $parent_team_id | $resource_config | map(select(.id == $parent_team_id))[0].name // $parent_team_id))' <<< "$resource_config")"
+      ;;
+    "repository_file")
+      pushd "$root/files"
+      path_by_content="$(find . -type f -exec jq -Rs '{ "\(@base64)": $file }' --arg file '{}' '{}' \; | jq -s 'add')"
+      popd
+      resource_config="$(jq 'map_values(.content = ($path_by_content["\(.content | @base64)"] // .content))' --argjson path_by_content "$path_by_content" <<< "$resource_config")"
+      ;;
+  esac
+
   echo "Ignoring ignored and required arguments"
   resource_config="$(jq "map_values(del($ignore_string))" <<< "$resource_config")"
 
-  if (( $(jq 'length' <<< "$required") > 1 )); then
-    echo "Breaking up top level keys"
+  for (( i=1; i<$(jq 'length' <<< "$required"); i++ )); do
+    echo "Breaking up top level keys #$i"
     resource_config="$(jq 'to_entries |
       map(.key |= split($separator)) |
-      map({"key": .key[0], "value": {"key": .key[1], "value": .value}}) |
+      map({"key": (.key[:-1] | join($separator)), "value": {"key": .key[-1], "value": .value}}) |
       group_by(.key) |
       map({"key": .[0].key, "value": map(.value) | from_entries}) |
       from_entries' --arg separator "$separator" <<< "$resource_config")"
-  fi
+  done
 
   echo "Saving new resource configuration"
   jq '.' <<< "$resource_config" > "$root/github/$organization/$resource.json"

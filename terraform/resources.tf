@@ -30,16 +30,17 @@ resource "github_repository" "this" {
   archived           = try(each.value.archived, null)
   auto_init          = try(each.value.auto_init, null)
   # default_branch         = try(each.value.default_branch, null)
-  delete_branch_on_merge = try(each.value.delete_branch_on_merge, null)
-  description            = try(each.value.description, null)
-  gitignore_template     = try(each.value.gitignore_template, null)
-  has_downloads          = try(each.value.has_downloads, null)
-  has_issues             = try(each.value.has_issues, null)
-  has_projects           = try(each.value.has_projects, null)
-  has_wiki               = try(each.value.has_wiki, null)
-  homepage_url           = try(each.value.homepage_url, null)
-  is_template            = try(each.value.is_template, null)
-  license_template       = try(each.value.license_template, null)
+  delete_branch_on_merge                  = try(each.value.delete_branch_on_merge, null)
+  description                             = try(each.value.description, null)
+  gitignore_template                      = try(each.value.gitignore_template, null)
+  has_downloads                           = try(each.value.has_downloads, null)
+  has_issues                              = try(each.value.has_issues, null)
+  has_projects                            = try(each.value.has_projects, null)
+  has_wiki                                = try(each.value.has_wiki, null)
+  homepage_url                            = try(each.value.homepage_url, null)
+  ignore_vulnerability_alerts_during_read = try(each.value.ignore_vulnerability_alerts_during_read, null)
+  is_template                             = try(each.value.is_template, null)
+  license_template                        = try(each.value.license_template, null)
   # private                = try(each.value.private, null)
   topics               = try(each.value.topics, null)
   visibility           = try(each.value.visibility, null)
@@ -92,6 +93,7 @@ resource "github_repository" "this" {
       html_url,
       http_clone_url,
       id,
+      ignore_vulnerability_alerts_during_read,
       is_template,
       license_template,
       node_id,
@@ -219,7 +221,7 @@ resource "github_team" "this" {
   create_default_maintainer = try(each.value.create_default_maintainer, null)
   description               = try(each.value.description, null)
   ldap_dn                   = try(each.value.ldap_dn, null)
-  parent_team_id            = try(each.value.parent_team_id, null)
+  parent_team_id            = try(try(element(data.github_organization_teams.this, index(data.github_organization_teams.this.*.id, each.value.parent_team_id)), each.value.parent_team_id), null)
   privacy                   = try(each.value.privacy, null)
 
   lifecycle {
@@ -297,6 +299,47 @@ resource "github_team_membership" "this" {
       etag,
       id,
       role
+    ]
+  }
+}
+
+resource "github_repository_file" "this" {
+  for_each = merge([
+    for repository, files in lookup(local.github, "repository_file", {}) :
+    {
+      for file, config in files :
+      "${repository}${local.separator}${file}" => merge({
+        repository = repository
+        file       = file
+      }, config)
+    }
+  ]...)
+
+  # @resources.repository_file.required
+  repository = each.value.repository
+  # @resources.repository_file.required
+  file = each.value.file
+
+  # Content is required but it is not used as a key
+  content = try(file("${path.module}/../files/${each.value.content}"), each.value.content)
+
+  branch              = try(each.value.branch, github_repository.this[each.value.repository].default_branch)
+  commit_author       = try(each.value.commit_author, null)
+  commit_email        = try(each.value.commit_email, null)
+  commit_message      = try(each.value.commit_message, null)
+  overwrite_on_create = try(each.value.overwrite_on_create, null)
+
+  lifecycle {
+    # @resources.repository_file.ignore_changes
+    ignore_changes = [
+      id,
+      branch,
+      commit_author,
+      commit_email,
+      commit_message,
+      commit_sha,
+      overwrite_on_create,
+      sha
     ]
   }
 }

@@ -2,6 +2,12 @@ name: Upgrade (reusable)
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: The github-mgmt-template ref to upgrade to
+        default: master
     secrets:
       GITHUB_APP_ID:
         required: true
@@ -30,6 +36,7 @@ jobs:
         with:
           repository: protocol/github-mgmt-template
           path: github-mgmt-template
+          ref: ${{ github.event.inputs.ref }}
       - name: Checkout GitHub Management
         uses: actions/checkout@v2
         with:
