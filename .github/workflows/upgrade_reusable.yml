@@ -5,7 +5,7 @@ on:
     inputs:
       ref:
         type: string
-        required: true
+        required: false
         description: The github-mgmt-template ref to upgrade to
         default: master
     secrets:

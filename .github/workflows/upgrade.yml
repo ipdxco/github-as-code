@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        required: true
+        required: false
         description: The github-mgmt-template ref to upgrade to
         default: master
 
