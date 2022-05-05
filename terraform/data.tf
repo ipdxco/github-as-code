@@ -56,18 +56,20 @@ data "github_organization_teams" "this" {}
 data "github_branch" "this" {
   for_each = merge([
     for repository, files in lookup(local.github, "repository_file", {}) :
-    {
+    merge([
       for file, config in {
         for file, config in files :
         file => merge({
           branch = lookup(config, "branch", data.github_repository.this[repository].default_branch)
         }, config) if contains(keys(data.github_repository.this), repository)
       } :
-      "${repository}:${config.branch}" => {
-        repository = repository
-        branch     = config.branch
+      {
+        "${repository}:${config.branch}" = {
+          repository = repository
+          branch     = config.branch
+        }
       }
-    }
+    ]...)
   ]...)
 
   branch     = each.value.branch
