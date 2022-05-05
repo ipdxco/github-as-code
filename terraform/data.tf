@@ -30,12 +30,17 @@ data "github_organization_teams" "this" {}
 
 data "github_branch" "this" {
   for_each = merge([
-    for repository, config in data.github_repository.this :
+    for repository, files in lookup(local.github, "repository_file", {}) :
     {
-      for branch in config.branches :
-      "${repository}:${branch.name}" => {
+      for file, config in {
+        for file, config in files :
+        file => merge({
+          branch = lookup(config, "branch", data.github_repository.this[repository].default_branch)
+        }, config) if contains(keys(data.github_repository.this), repository)
+      } :
+      "${repository}:${config.branch}" => {
         repository = repository
-        branch     = branch.name
+        branch     = config.branch
       }
     }
   ]...)
@@ -46,16 +51,9 @@ data "github_branch" "this" {
 
 # @resources.repository_file.data
 data "github_tree" "this" {
-  for_each = {
-    for key, value in data.github_branch.this :
-    key => value if contains(keys(lookup(local.github, "repository_file", {})), value.repository) ?
-    contains([
-      for config in values(lookup(local.github, "repository_file", {})[value.repository]) :
-      lookup(config, "branch", data.github_repository.this[value.repository].default_branch)
-    ], value.branch) : false
-  }
+  for_each = data.github_branch.this
 
   recursive  = true
   repository = each.value.repository
-  tree_sha   = data.github_branch.this["${each.value.repository}:${each.value.branch}"].sha
+  tree_sha   = data.value.sha
 }
