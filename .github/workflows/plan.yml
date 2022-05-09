@@ -149,16 +149,23 @@ jobs:
           path: terraform
       - name: Show terraform plans
         run: |
-          echo 'COMMENT<<EOF' >> $GITHUB_ENV
           for plan in $(find . -type f -name '*.tfplan'); do
-            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> $GITHUB_ENV
-            echo '' >> $GITHUB_ENV
-            echo '```' >> $GITHUB_ENV
-            echo "$(terraform show -no-color "$plan" 2>&1)" >> $GITHUB_ENV
-            echo '```' >> $GITHUB_ENV
-            echo '' >> $GITHUB_ENV
-            echo '</details>' >> $GITHUB_ENV
+            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> TERRAFORM_PLANS.md
+            echo '' >> TERRAFORM_PLANS.md
+            echo '```' >> TERRAFORM_PLANS.md
+            echo "$(terraform show -no-color "$plan" 2>&1)" >> TERRAFORM_PLANS.md
+            echo '```' >> TERRAFORM_PLANS.md
+            echo '' >> TERRAFORM_PLANS.md
+            echo '</details>' >> TERRAFORM_PLANS.md
           done
+      - name: Prepare comment
+        run: |
+          echo 'COMMENT<<EOF' >> $GITHUB_ENV
+          if [[ $(wc -c TERRAFORM_PLANS.md | cut -d' ' -f1) -ge 65000 ]]; then
+            echo 'Terraform plans are too long to post as a comment. Please inspect `Plan > Comment > Show terraform plans` instead.' >> $GITHUB_ENV
+          else
+            cat TERRAFORM_PLANS.md >> $GITHUB_ENV
+          fi
           echo 'EOF' >> $GITHUB_ENV
       - name: Comment on pull request
         uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
