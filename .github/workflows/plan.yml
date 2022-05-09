@@ -158,11 +158,12 @@ jobs:
             echo '' >> TERRAFORM_PLANS.md
             echo '</details>' >> TERRAFORM_PLANS.md
           done
+          cat TERRAFORM_PLANS.md
       - name: Prepare comment
         run: |
           echo 'COMMENT<<EOF' >> $GITHUB_ENV
           if [[ $(wc -c TERRAFORM_PLANS.md | cut -d' ' -f1) -ge 65000 ]]; then
-            echo 'Terraform plans are too long to post as a comment. Please inspect `Plan > Comment > Show terraform plans` instead.' >> $GITHUB_ENV
+            echo 'Terraform plans are too long to post as a comment. Please inspect [Plan > Comment > Show terraform plans](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) instead.' >> $GITHUB_ENV
           else
             cat TERRAFORM_PLANS.md >> $GITHUB_ENV
           fi
