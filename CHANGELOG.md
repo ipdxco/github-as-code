@@ -20,3 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - links to supported resources in HOWTOs
+- posting PR comments when terraform plan output is very long
