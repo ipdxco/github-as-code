@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "sync": "node sync.js"
+  },
+  "dependencies": {
+    "@actions/core": "^1.8.2",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.0.3",
+    "@actions/glob": "^0.3.0",
+    "hcl2-parser": "^1.0.3"
+  }
+}

@@ -1,13 +1,11 @@
 resource "github_membership" "this" {
   for_each = lookup(local.github, "membership", {})
 
-  # @resources.membership.required
   username = each.key
 
   role = try(each.value.role, null)
 
   lifecycle {
-    # @resources.membership.ignore_changes
     ignore_changes = [
       etag,
       id,
@@ -19,7 +17,6 @@ resource "github_membership" "this" {
 resource "github_repository" "this" {
   for_each = lookup(local.github, "repository", {})
 
-  # @resources.repository.required
   name = each.key
 
   allow_auto_merge   = try(each.value.allow_auto_merge, null)
@@ -68,7 +65,6 @@ resource "github_repository" "this" {
   }
 
   lifecycle {
-    # @resources.repository.ignore_changes
     ignore_changes = [
       allow_auto_merge,
       allow_merge_commit,
@@ -126,16 +122,13 @@ resource "github_repository_collaborator" "this" {
 
   depends_on = [github_repository.this]
 
-  # @resources.repository_collaborator.required
   repository = each.value.repository
-  # @resources.repository_collaborator.required
   username = each.value.username
 
   permission                  = try(each.value.permission, null)
   permission_diff_suppression = try(each.value.permission_diff_suppression, null)
 
   lifecycle {
-    # @resources.repository_collaborator.ignore_changes
     ignore_changes = [
       id,
       invitation_id,
@@ -157,9 +150,7 @@ resource "github_branch_protection" "this" {
     }
   ]...)
 
-  # @resources.branch_protection.required
   pattern = each.value.pattern
-  # @resources.branch_protection.required
   repository_id = each.value.repository_id
 
   allows_deletions                = try(each.value.allows_deletions, null)
@@ -189,7 +180,6 @@ resource "github_branch_protection" "this" {
   }
 
   lifecycle {
-    # @resources.branch_protection.ignore_changes
     ignore_changes = [
       allows_deletions,
       allows_force_pushes,
@@ -215,7 +205,6 @@ resource "github_branch_protection" "this" {
 resource "github_team" "this" {
   for_each = lookup(local.github, "team", {})
 
-  # @resources.team.required
   name = each.key
 
   create_default_maintainer = try(each.value.create_default_maintainer, null)
@@ -225,7 +214,6 @@ resource "github_team" "this" {
   privacy                   = try(each.value.privacy, null)
 
   lifecycle {
-    # @resources.team.ignore_changes
     ignore_changes = [
       id,
       create_default_maintainer,
@@ -257,15 +245,12 @@ resource "github_team_repository" "this" {
     github_repository.this
   ]
 
-  # @resources.team_repository.required
   repository = each.value.repository
-  # @resources.team_repository.required
   team_id = each.value.team_id
 
   permission = try(each.value.permission, null)
 
   lifecycle {
-    # @resources.team_repository.ignore_changes
     ignore_changes = [
       etag,
       id,
@@ -286,15 +271,12 @@ resource "github_team_membership" "this" {
     }
   ]...)
 
-  # @resources.team_membership.required
   team_id = each.value.team_id
-  # @resources.team_membership.required
   username = each.value.username
 
   role = try(each.value.role, null)
 
   lifecycle {
-    # @resources.team_membership.ignore_changes
     ignore_changes = [
       etag,
       id,
@@ -315,9 +297,7 @@ resource "github_repository_file" "this" {
     }
   ]...)
 
-  # @resources.repository_file.required
   repository = each.value.repository
-  # @resources.repository_file.required
   file = each.value.file
 
   # Content is required but it is not used as a key
@@ -330,7 +310,6 @@ resource "github_repository_file" "this" {
   overwrite_on_create = try(each.value.overwrite_on_create, null)
 
   lifecycle {
-    # @resources.repository_file.ignore_changes
     ignore_changes = [
       id,
       branch,

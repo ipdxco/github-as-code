@@ -1,14 +1,11 @@
-# @resources.membership.data
 data "github_organization" "this" {
   name = local.organization
 }
 
-# @resources.repository.data
 data "github_repositories" "this" {
   query = "org:${local.organization}"
 }
 
-# @resources.repository_collaborator.data
 data "github_collaborators" "this" {
   for_each = toset(data.github_repositories.this.names)
 
@@ -17,15 +14,11 @@ data "github_collaborators" "this" {
   affiliation = "direct"
 }
 
-# @resources.branch_protection.data
 data "github_repository" "this" {
   for_each = toset(data.github_repositories.this.names)
   name     = each.value
 }
 
-# @resources.team.data
-# @resources.team_repository.data
-# @resources.team_membership.data
 data "github_organization_teams" "this" {}
 
 # once https://github.com/integrations/terraform-provider-github/issues/1131 is resolved
@@ -76,7 +69,6 @@ data "github_branch" "this" {
   repository = each.value.repository
 }
 
-# @resources.repository_file.data
 data "github_tree" "this" {
   for_each = data.github_branch.this
 

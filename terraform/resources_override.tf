@@ -1,6 +1,5 @@
 resource "github_branch_protection" "this" {
   lifecycle {
-    # @resources.branch_protection.ignore_changes
     ignore_changes = [
       allows_deletions,
       allows_force_pushes,
