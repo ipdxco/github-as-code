@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../scripts/schema.json
+
+members:
+  admin:
+    - galargh # this is me
+    # this is a different comment
+    - laurentsenta
+teams:
+  ipdx:
+    members:
+      maintainer:
+        - galargh
+        - laurentsenta
+  ipfs: {}
+repositories:
+  github-mgmt: {}
+  ipdx: {}
+  rust-sccache-action:
+    collaborators:
+      admin:
+        - galargh
+    files:
+      .github/workflows/stale.yml:
+        content: ''
+        branch: ''

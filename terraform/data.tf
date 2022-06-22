@@ -22,36 +22,14 @@ data "github_repository" "this" {
 data "github_organization_teams" "this" {}
 
 # once https://github.com/integrations/terraform-provider-github/issues/1131 is resolved
-# we can replace data.github_branch.this and data.github_tree.this with the following:
-# data "github_repository_file" "this" {
-#   for_each = merge([
-#     for repository, files in lookup(local.github, "repository_file", {}) :
-#     {
-#       for file, config in {
-#         for file, config in files :
-#         file => merge({
-#           branch = lookup(config, "branch", data.github_repository.this[repository].default_branch)
-#         }, config) if contains(keys(data.github_repository.this), repository)
-#       } :
-#       "${repository}/${file}:${config.branch}" => {
-#         repository = repository
-#         file       = file
-#         branch     = config.branch
-#       }
-#     }
-#   ]...)
-#
-#   repository = each.value.repository
-#   file       = each.value.file
-#   branch     = each.value.branch
-# }
+# we can check for file existence in a more targetted, simpler way
 
 data "github_branch" "this" {
   for_each = merge([
-    for repository, files in lookup(local.github, "repository_file", {}) :
+    for repository, repository_config in lookup(local.config, "repositories", {}) :
     merge([
       for file, config in {
-        for file, config in files :
+        for file, config in lookup(repository_config, "files", {}) :
         file => merge({
           branch = lookup(config, "branch", data.github_repository.this[repository].default_branch)
         }, config) if contains(keys(data.github_repository.this), repository)
@@ -75,4 +53,16 @@ data "github_tree" "this" {
   recursive  = true
   repository = each.value.repository
   tree_sha   = each.value.sha
+}
+
+resource "null_resource" "data" {
+  depends_on = [
+    data.github_organization.this,
+    data.github_repositories.this,
+    data.github_collaborators.this,
+    data.github_repository.this,
+    data.github_organization_teams.this,
+    data.github_branch.this,
+    data.github_tree.this
+  ]
 }

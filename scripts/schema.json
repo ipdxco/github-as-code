@@ -1,0 +1,263 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "properties": {
+    "members": {
+      "type": "object",
+      "patternProperties": {
+        "^(admin|member)$": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Member"
+          }
+        }
+      }
+    },
+    "repositories": {
+      "type": "object",
+      "patternProperties": {
+        "^.+$": {
+          "$ref": "#/definitions/Repository"
+        }
+      }
+    },
+    "teams": {
+      "type": "object",
+      "patternProperties": {
+        "^.+$": {
+          "$ref": "#/definitions/Team"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "Member": {
+      "type": "string"
+    },
+    "Team": {
+      "type": "object",
+      "properties": {
+        "create_default_maintainer": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "privacy": {
+          "type": "string",
+          "enum": [
+            "closed",
+            "secret"
+          ]
+        },
+        "members": {
+          "type": "object",
+          "patternProperties": {
+            "^(maintainer|member)$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TeamMember"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TeamMember": {
+      "type": "string"
+    },
+    "Repository": {
+      "type": "object",
+      "properties": {
+        "allow_auto_merge": {
+          "type": "boolean"
+        },
+        "allow_merge_commit": {
+          "type": "boolean"
+        },
+        "allow_rebase_merge": {
+          "type": "boolean"
+        },
+        "allow_squash_merge": {
+          "type": "boolean"
+        },
+        "archive_on_destroy": {
+          "type": "boolean"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "auto_init": {
+          "type": "boolean"
+        },
+        "delete_branch_on_merge": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "gitignore_template": {
+          "type": "string"
+        },
+        "has_downloads": {
+          "type": "boolean"
+        },
+        "has_issues": {
+          "type": "boolean"
+        },
+        "has_projects": {
+          "type": "boolean"
+        },
+        "has_wiki": {
+          "type": "boolean"
+        },
+        "homepage_url": {
+          "type": "string"
+        },
+        "ignore_vulnerability_alerts_during_read": {
+          "type": "boolean"
+        },
+        "is_template": {
+          "type": "boolean"
+        },
+        "license_template": {
+          "type": "string"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "vulnerability_alerts": {
+          "type": "boolean"
+        },
+        "collaborators": {
+          "type": "object",
+          "patternProperties": {
+            "^(admin|maintainer|push|triage|pull)$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RepositoryCollaborator"
+              }
+            }
+          }
+        },
+        "teams": {
+          "type": "object",
+          "patternProperties": {
+            "^(admin|maintainer|push|triage|pull)$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RepositoryTeam"
+              }
+            }
+          }
+        },
+        "files": {
+          "type": "object",
+          "patternProperties": {
+            "^.+$": {
+              "$ref": "#/definitions/RepositoryFile"
+            }
+          }
+        },
+        "branch_protection": {
+          "type": "object",
+          "patternProperties": {
+            "^.+$": {
+              "$ref": "#/definitions/RepositoryBranchProtection"
+            }
+          }
+        }
+      }
+    },
+    "RepositoryCollaborator": {
+      "type": "string"
+    },
+    "RepositoryTeam": {
+      "type": "string"
+    },
+    "RepositoryFile": {
+      "type": "object",
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        }
+      }
+    },
+    "RepositoryBranchProtection": {
+      "type": "object",
+      "properties": {
+        "allows_deletions": {
+          "type": "boolean"
+        },
+        "allows_force_pushes": {
+          "type": "boolean"
+        },
+        "enforce_admins": {
+          "type": "boolean"
+        },
+        "push_restrictions": {
+          "type": "boolean"
+        },
+        "require_conversation_resolution": {
+          "type": "boolean"
+        },
+        "require_signed_commits": {
+          "type": "boolean"
+        },
+        "required_linear_history": {
+          "type": "boolean"
+        },
+        "required_pull_request_reviews": {
+          "type": "object",
+          "properties": {
+            "dismiss_stale_reviews": {
+              "type": "boolean"
+            },
+            "dismissal_restrictions": {
+              "type": "boolean"
+            },
+            "require_code_owner_reviews": {
+              "type": "boolean"
+            },
+            "required_approving_review_count": {
+              "type": "number"
+            },
+            "restrict_dismissals": {
+              "type": "boolean"
+            }
+          }
+        },
+        "required_status_checks": {
+          "type": "object",
+          "properties": {
+            "contexts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "strict": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}

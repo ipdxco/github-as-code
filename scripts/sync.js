@@ -2,50 +2,47 @@ import fs from 'fs';
 import HCL from 'hcl2-parser';
 import cli from '@actions/exec';
 import glob from '@actions/glob';
+import YAML from 'yaml';
+import merge from 'deepmerge';
+import { config } from 'process';
+
 
 const __dirname = process.cwd();
 const __rootdirname = fs.realpathSync(`${__dirname}/..`);
 
-const resourceToData = {
-  "github_membership": ["github_organization"],
-  "github_repository": ["github_repositories"],
-  "github_repository_collaborator": ["github_collaborators"],
-  "github_branch_protection": ["github_repository"],
-  "github_team": ["github_organization_teams"],
-  "github_team_repository": ["github_organization_teams"],
-  "github_team_membership": ["github_organization_teams"],
-  "github_repository_file": ["github_tree"]
-}
-
-const resourceToKeys = {
-  "github_membership": ["username"],
-  "github_repository": ["name"],
-  "github_repository_collaborator": ["repository", "username"],
-  "github_branch_protection": ["pattern", "repository_id"],
-  "github_team": ["name"],
-  "github_team_repository": ["repository", "team_id"],
-  "github_team_membership": ["team_id", "username"],
-  "github_repository_file": ["repository", "file"]
-}
-
-function getResourcesByAddressPrefix(state, addressPrefix) {
+function getStateResources(state, resourceType) {
   let modules = [state?.values?.root_module]
   modules = modules.concat(state?.values?.root_module?.child_modules || []);
   const resources = modules.flatMap(module => { return module.resources; });
-  return resources.filter(resource => { return resource.address.startsWith(addressPrefix); });
+  return resources.filter(resource => { return resource.address.startsWith(`${resourceType}.this`); });
 }
 
-const terraform = {
-  getStateJSON: async () => {
+const Terraform = {
+  // This controls wether we take out a lock while accessing remote terraform resources
+  // Using a lock is slower but more secure - defaults to using the locking mechanism
+  LOCK: process.env.TF_LOCK != 'false',
+
+  getWorkspace: async () => {
+    let workspace = '';
+    await cli.exec('terraform workspace show', null, {
+      cwd: `${__rootdirname}/terraform`,
+      listeners: { stdout: data => { workspace += data.toString(); } }
+    })
+    return workspace.trim();
+  },
+  getResourcesFromStateByType: async () => {
     let content = '';
     await cli.exec('terraform show -json', null, {
       cwd: `${__rootdirname}/terraform`,
       listeners: { stdout: data => { content += data.toString(); } },
       silent: true
     });
-    return JSON.parse(content);
+    const state = JSON.parse(content);
+    return Object.fromEntries(state.values.root_module.resources.map(resource => {
+      [resource.address.split('.')[0], resource]
+    }));
   },
-  getOutputJSON: async () => {
+  getResourcesFromOutputByType: async () => {
     let content = '';
     await cli.exec('terraform output -json', null, {
       cwd: `${__rootdirname}/terraform`,
@@ -53,127 +50,282 @@ const terraform = {
       silent: true
     });
     return JSON.parse(content);
+  },
+  getFile: (name) => {
+    const content = fs.readFileSync(`${__rootdirname}/terraform/${name}.tf`);
+    const parsedContent = HCL.parseToObject(content)[0];
+    if (fs.existsSync(`${__rootdirname}/terraform/${name}_override.tf`)) {
+      const overrideContent = fs.readFileSync(`${__rootdirname}/terraform/${name}_override.tf`);
+      const parsedOverrideContent = HCL.parseToObject(overrideContent)[0];
+      return merge(parsedContent, parsedOverrideContent, { arrayMerge: overwriteMerge });
+    } else {
+      return parsedContent;
+    }
+  },
+  refresh: async () => {
+    await cli.exec(`terraform refresh -target=null_resource.resources -lock=${this.LOCK}`, null, { cwd: `${__rootdirname}/terraform` });
+    await cli.exec(`terraform apply -target=null_resource.data -auto-approve -lock=${this.LOCK}`, null, { cwd: `${__rootdirname}/terraform` });
+  },
+  import: async (resourceType, resourceId) => {
+    await cli.exec(`terraform import -lock=${this.LOCK} "github_${resourceType}.this[${resourceId}]" "${resourceId}"`, null, { cwd: `${__rootdirname}/terraform` });
+  },
+  delete: async (resourceType, resourceId) => {
+    await cli.exec(`terraform state rm -lock=${this.LOCK} "github_${resourceType}.this[${resourceId}]"`, null, { cwd: `${__rootdirname}/terraform` });
+  }
+}
+
+class YamlConfig {
+  constructor(organization) {
+    this.config = YAML.parseDocument(fs.readFileSync(`${__rootdirname}/github/${organization}.yml`, 'utf8'));
+    this.updatePaths()
+  }
+
+  updatePaths() {
+    const items = [this.config];
+    while (items.length != 0) {
+      const item = items.pop();
+      if (item.contents?.items || item.value?.items) {
+        (item.contents?.items || item.value?.items).forEach(child => {
+          child.path = [...(item.path || []), child.key?.value || child.value]
+          items.push(child);
+        });
+      }
+    }
+  }
+
+  find(path) {
+    return path.reduce((items, pathElement) => {
+      return items
+        .flatMap(item => {
+          return item.value?.items || item;
+        })
+        .filter(item => {
+          return (item.key?.value || item.value).match(new RegExp(`^${pathElement.key || pathElement}$`));
+        });
+    }, [{value: this.config.contents}]);
+  }
+
+  add(path) {
+    for (const [index, pathElement] of Object.entries(path)) {
+      if (! this.has(path.slice(0, index + 1))) {
+        const parent = this.find(path.slice(0, index))[0];
+        if (index + 1 == path.length) {
+          if (YAML.isNode(pathElement) || YAML.isPair(pathElement)) {
+            parent.value.items.push(pathElement);
+          } else {
+            parent.value.items.push(YAML.parseDocument(YAML.stringify(pathElement)).contents);
+          }
+        } else {
+          parent.value.items.push(new YAML.Pair(new YAML.Scalar(pathElement), new YAML.YAMLMap()));
+        }
+      }
+    }
+  }
+
+  delete(resource) {
+    const parent = this.find(resource.path.slice(0, -1))[0];
+    parent.value.items = parent.value.items.filter(child => {
+      return child !== resource;
+    });
+  }
+
+  move(resource, path) {
+    this.add([...path.slice(0, -1), resource]);
+    this.delete(resource);
+  }
+
+  toString() {
+    return this.config.toString({ collectionStyle: 'block' });
+  }
+
+  has(path) {
+    return this.find(path).length != 0;
+  }
+
+  update(path, keys) {
+    const resource = this.find(path)[0];
+    if (YAML.isMap(resource)) {
+      resource.value.items = resource.value.items.filter(item => {
+        return ! keys.includes(item.key.value);
+      });
+    }
+  }
+}
+
+const ResourceHelpersByType = {
+  github_membership: {
+    getYamlConfigPathToAllTheResources: () => { return ['members', '(admin|member)', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['members', resourceFromTerraformState.values.role, resourceFromTerraformState.values.username];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return resourceFromYamlConfig.value;
+    }
+  },
+  github_repository: {
+    getYamlConfigPathToAllTheResources: () => { return ['repositories', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['repositories', { key: resourceFromTerraformState.values.name, value: resourceFromTerraformState.values }];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return resourceFromYamlConfig.key.value;
+    }
+  },
+  github_repository_collaborator: {
+    getYamlConfigPathToAllTheResources: () => { return ['repositories', '.+', 'collaborators', '(admin|maintain|push|triage|pull)', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['repositories', resourceFromTerraformState.values.repository, 'collaborators', resourceFromTerraformState.values.permission, resourceFromTerraformState.values.username];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return `${resourceFromYamlConfig.path[1].key.value}:${resourceFromYamlConfig.value}`;
+    }
+  },
+  github_branch_protection: {
+    getYamlConfigPathToAllTheResources: () => { return ['repositories', '.+', 'branch_protection', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['repositories', resourceFromTerraformState.values.repository_id, 'branch_protection', { key: resourceFromTerraformState.values.pattern, value: resourceFromTerraformState.values }];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return `${resourceFromYamlConfig.path[1].key.value}:${resourceFromYamlConfig.key.value}`;
+    }
+  },
+  github_team: {
+    getYamlConfigPathToAllTheResources: () => { return ['teams', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['teams', { key: resourceFromTerraformState.values.name, value: resourceFromTerraformState.values }];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return resourceFromYamlConfig.key.value;
+    }
+  },
+  github_team_repository: {
+    getYamlConfigPathToAllTheResources: () => { return ['repositories', '.+', 'teams', '(admin|maintain|push|triage|pull)', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['repositories', resourceFromTerraformState.values.repository, 'teams', resourceFromTerraformState.values.permission, resourceFromTerraformState.values.team];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return `${resourceFromYamlConfig.value}:${resourceFromYamlConfig.path[1].key.value}`;
+    }
+  },
+  github_team_membership: {
+    getYamlConfigPathToAllTheResources: () => { return ['teams', '.+', 'members', '(maintainer|member)', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['teams', resourceFromTerraformState.values.team_id, 'members', resourceFromTerraformState.values.role, resourceFromTerraformState.values.username];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return `${resourceFromYamlConfig.path[1].key.value}:${resourceFromYamlConfig.value}`;
+    }
+  },
+  github_repository_file: {
+    getYamlConfigPathToAllTheResources: () => { return ['repositories', '.+', 'files', '.+']; },
+    getYamlConfigPathToTheResource: (resourceFromTerraformState) => {
+      return ['repositories', resourceFromTerraformState.values.repository, 'files', { key: resourceFromTerraformState.values.file, value: resourceFromTerraformState.values }];
+    },
+    getId: (resourceFromYamlConfig) => {
+      return `${resourceFromYamlConfig.path[1].key.value}/${resourceFromYamlConfig.key.value}:${resourceFromYamlConfig.value.items.find(item => { return item.key.value == 'branch'; }).value.value}`;
+    }
   }
 }
 
 async function main() {
-  const lock = process.env.TF_LOCK != 'false';
+  const organization = Terraform.getWorkspace();
+  // Loading organization config
+  const yamlConfig = new YamlConfig(organization);
 
-  let organization = ''
-  cli.exec('terraform workspace show', null, {
-    cwd: `${__rootdirname}/terraform`,
-    listeners: { stdout: data => { content += data.toString(); } }
-  })
-  organization = organization.trim();
+  await Terraform.refresh();
+  let resourcesTerraformKnowsAboutByType = await Terraform.getResourcesFromStateByType();
+  let resourcesGitHubKnowsAboutByTYpe = await Terraform.getResourcesFromOutputByType();
 
-  const localsContent = fs.readFileSync(`${__rootdirname}/terraform/locals.tf`);
-  const resourcesContent = fs.readFileSync(`${__rootdirname}/terraform/resources.tf`);
-  const resourcesOverrideContent = fs.readFileSync(`${__rootdirname}/terraform/resources_override.tf`);
-
-  const localsTF = HCL.parseToObject(localsContent).locals;
-  const resourcesTF = HCL.parseToObject(resourcesContent)[0].resource;
-  const resourcesOverrideTF = HCL.parseToObject(resourcesOverrideContent)[0].resource;
-
-  const resources = fs.readdirSync(`${__rootdirname}/github/${organization}/`).map(path => {
-    return path.substring(0, path.length - 5);
-  });
-
-  const resourceTargetsString = resources.map(resource => {
-    return `-target=github_${resource}.this`;
-  }).join(' ');
-  const dataTargetsString = resources.flatmap(resource => {
-    return resourceToData[resource];
-  }).map(data => {
-    return `-target=data.${data}.this`
-  }).join(' ');
-
-  cli.exec(`terraform refresh ${resourceTargetsString} -lock=${lock}`, null, { cwd: `${__rootdirname}/terraform` });
-  cli.exec(`terraform apply ${dataTargetsString} -auto-approve -lock=${lock}`, null, { cwd: `${__rootdirname}/terraform` });
-
-  let state = await terraform.getStateJSON();
-  let output = await terraform.getOutputJSON();
-
-  for (const resource of resources) {
-    const stateResources = getResourcesByAddressPrefix(state, `github_${resource}.this`);
-    const gitHubResources = output[resource];
-
-    for (const gitHubResource of gitHubResources) {
-      const existsInState = stateResources.find(stateResource => {
-        return stateResource.index == gitHubResource.index;
-      });
-      if (! existsInState) {
-        await cli.exec(`terraform import -lock=${lock} "github_${resource}.this[${gitHubResource.index}]" "${gitHubResource.id}"`, null, { cwd: `${__rootdirname}/terraform` });
+  const allResourceTypes = Object.keys(ResourceHelpersByType);
+  const managedResourceTypes = Terraform.getFile('locals').locals.resource_types;
+  const ignoredPropertiesByResourceType = Object.fromEntries(
+    Object.entries(
+      Terraform.getFile('resources').resource).map(([key, value]) => {
+        return [key, value.this.lifecycle.ignore_changes];
       }
-    }
+    )
+  );
 
-    for (const stateResource of stateResources) {
-      const existsInGitHub = gitHubResources.find(gitHubResource => {
-        return gitHubResource.index == stateResource.index;
-      });
-      if (! existsInGitHub) {
-        await cli.exec(`terraform state rm -lock=${lock} "github_${resource}.this[${stateResource.index}]"`, null, { cwd: `${__rootdirname}/terraform` });
-      }
-    }
-  }
+  // Sync Terraform State with GitHub
+  for (const resourceType of allResourceTypes) {
+    const resourcesTerraformKnowsAbout = resourcesTerraformKnowsAboutByType[resourceType];
+    const resourcesGitHubKnowsAbout = resourcesGitHubKnowsAbout[resourceType];
 
-  state = await terraform.getStateJSON();
-
-  for (const resource of resources) {
-    const keys = resourceToKeys[resource];
-    const ignoreChanges = resourcesOverrideTF[resource]?.this?.lifecycle?.ignore_changes || resourcesTF[resource]?.this?.lifecycle?.ignore_changes
-
-    let stateResources = getResourcesByAddressPrefix(state, `github_${resource}.this`);
-
-    switch(resource) {
-      case "team":
-        stateResources = stateResources.map(stateResource => {
-          stateResource.values.parent_team_id = stateResources.find(otherStateResource => {
-            return otherStateResource.values.id == stateResource.values.parent_team_id;
-          })?.values.name || stateResource.values.parent_team_id;
-          return stateResource;
+    if (managedResourceTypes.includes(resourceType)) {
+      // Import all the resources that exist in GitHub but do not exist in TF state yet
+      for (const gitHubResource of resourcesGitHubKnowsAbout) {
+        const notInTerraformStateYet = ! resourcesTerraformKnowsAbout.find(terraformResource => {
+          return terraformResource.id == gitHubResource;
         });
-        break;
-      case "repository_file":
-        const contentToRelpath = {};
-        const paths = (await (await glob.create(`${__rootdirname}/files/**`, { matchDirectories: false })).glob())
-        for (const path of paths) {
-          const content = fs.readFileSync(path);
-          const relpath = `./${path.substring(`${__rootdirname}/files/`.length)}`;
-          contentToRelpath[content.toString('base64')] = relpath;
+        if (notInTerraformStateYet) {
+          await Terraform.import(resourceType, gitHubResource);
         }
-        stateResources = stateResources.map(stateResource => {
-          stateResource.values.content = contentToRelpath[stateResource.values.content] || stateResource.values.content;
-          return stateResource;
+      }
+
+      // Remove all the resources that exist in TF state but do not exist in GitHub anymore
+      for (const terraformResource of resourcesTerraformKnowsAbout) {
+        const notInGitHubAnymore = ! resourcesGitHubKnowsAbout.find(gitHubResource => {
+          return gitHubResource == terraformResource.id;
         });
-        break;
+        if (notInGitHubAnymore) {
+          await Terraform.delete(resourceType, terraformResource.id)
+        }
+      }
+    } else {
+      // Remove all the resources from state for resource types not managed through GitHub Management
+      for (const terraformResource of resourcesTerraformKnowsAbout) {
+        await Terraform.delete(resourceType, terraformResource.id)
+      }
+    }
+  }
+
+  // Retrieving resources again because we manipulated the state in the loop above
+  // We do not care about resources from GitHub anymore because terraform state is synced already
+  resourcesTerraformKnowsAboutByType = await Terraform.getResourcesFromStateByType();
+
+  // Sync YAML config with TF state
+  for (const resourceType of managedResourceTypes) {
+    const resourceHelper = ResourceHelpersByType[resourceType];
+
+    // Retrieve resources that TF knows about
+    const resourcesTerraformKnowsAbout = resourcesTerraformKnowsAboutByType[resourceType];
+    // Retrieve resources that YAML config knows about
+    const resourcesYamlConfigKnowsAbout = yamlConfig.find(resourceHelper.getYamlConfigPathToAllTheResources());
+
+    const ignoredProperties = ignoredPropertiesByResourceType[resourceType];
+
+    // Remove all the resources that exist in YAML config but do not exist in TF state anymore
+    // Move all the resources within the YAML config for which the path has changed
+    for (const yamlConfigResource of resourcesYamlConfigKnowsAbout) {
+      const terraformResource = resourcesTerraformKnowsAbout.find(terraformResource => {
+        return terraformResource.id == resourceHelper.getId(yamlConfigResource);
+      });
+      if (! terraformResource) {
+        yamlConfig.delete(yamlConfigResource)
+      } else {
+        const yamlConfigPath = resourceHelper.getYamlConfigPathToTheResource(terraformResource);
+        if (! yamlConfig.has(yamlConfigPath)) {
+          yamlConfig.move(yamlConfigResource, yamlConfigPath);
+        }
+      }
     }
 
-    stateResources = stateResources.map(stateResource => {
-      for (const key of keys) {
-        delete stateResource.values[key];
-      }
-      for (const ignore of ignoreChanges) {
-        delete stateResource.values[ignore];
-      }
-      return stateResource;
-    });
+    // Add all the resources that exist in TF state but do not exist in YAML config yet
+    // Update properties of all the resources
+    for (const terraformResource of resourcesTerraformKnowsAbout) {
+      const yamlConfigPath = resourceHelper.getYamlConfigPathToTheResource(terraformResource);
 
-    arr.reduce(function(map, obj) {
-      map[obj.key] = obj.val;
-      return map;
-    }, {});
-
-    stateResources = stateResources.map(stateResource => {
-      const indexParts = stateResource.index.split(localsTF.separator);
-      stateResource = stateResource.values;
-      for (const indexPart of indexParts.reverse()) {
-        stateResource = { [indexPart]: stateResource };
+      if (yamlConfig.has(yamlConfigPath)) {
+        yamlConfig.update(yamlConfigPath);
+      } else {
+        yamlConfig.add(yamlConfigPath);
       }
-      return stateResource;
-    });
-
-    fs.writeFileSync(`${__rootdirname}/github/${organization}/${resource}.json`, JSON.stringify(stateResources, null, 2));
+      yamlConfig.ignore(yamlConfigPath, ignoredProperties);
+    }
   }
+
+
+   // fs.writeFileSync(`${__rootdirname}/github/${organization}/${resource}.json`, JSON.stringify(resourceFromTerraformStates, null, 2));
 }
 
 main();
