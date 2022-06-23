@@ -1,0 +1,2012 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.1.4",
+  "values": {
+    "outputs": {
+      "github_branch_protection": {
+        "sensitive": false,
+        "value": [
+          "github-mgmt:master"
+        ]
+      },
+      "github_membership": {
+        "sensitive": false,
+        "value": [
+          {
+            "id": "pl-strflt:galargh",
+            "index": "galargh"
+          },
+          {
+            "id": "pl-strflt:laurentsenta",
+            "index": "laurentsenta"
+          }
+        ]
+      },
+      "github_repository": {
+        "sensitive": false,
+        "value": [
+          "github-mgmt",
+          "tf-aws-gh-runner",
+          "projects-status-history",
+          "github-action-releaser",
+          "rust-sccache-action",
+          "ipdx",
+          "projects-migration"
+        ]
+      },
+      "github_repository_collaborator": {
+        "sensitive": false,
+        "value": [
+          "projects-migration:galargh",
+          "projects-status-history:galargh",
+          "rust-sccache-action:galargh"
+        ]
+      },
+      "github_repository_file": {
+        "sensitive": false,
+        "value": [
+          {
+            "id": "github-mgmt/README.md:master",
+            "index": "github-mgmt/README.md"
+          }
+        ]
+      },
+      "github_team": {
+        "sensitive": false,
+        "value": [
+          {
+            "id": 5869006,
+            "index": "ipdx"
+          }
+        ]
+      },
+      "github_team_membership": {
+        "sensitive": false,
+        "value": [
+          {
+            "id": "5869006:laurentsenta",
+            "index": "ipdx:laurentsenta"
+          },
+          {
+            "id": "5869006:galargh",
+            "index": "ipdx:galargh"
+          }
+        ]
+      },
+      "github_team_repository": {
+        "sensitive": false,
+        "value": [
+          {
+            "id": "5869006:github-mgmt",
+            "index": "ipdx:github-mgmt"
+          },
+          {
+            "id": "5869006:tf-aws-gh-runner",
+            "index": "ipdx:tf-aws-gh-runner"
+          }
+        ]
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "data.github_branch.this[\"github-mgmt:master\"]",
+          "mode": "data",
+          "type": "github_branch",
+          "name": "this",
+          "index": "github-mgmt:master",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "branch": "master",
+            "etag": "W/\"0811d51b867edf25009accde8c7558ed2d80c25fa3a765deffd24b78f95c1659\"",
+            "id": "github-mgmt:master",
+            "ref": "refs/heads/master",
+            "repository": "github-mgmt",
+            "sha": "ed43f7170d887fc0bfd5bef0727a1cd82bb1a6d6"
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "data.github_collaborators.this[\"github-action-releaser\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "github-action-releaser",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [],
+            "id": "pl-strflt/github-action-releaser/direct",
+            "owner": "pl-strflt",
+            "repository": "github-action-releaser"
+          },
+          "sensitive_values": {
+            "collaborator": []
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"github-mgmt\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "github-mgmt",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [],
+            "id": "pl-strflt/github-mgmt/direct",
+            "owner": "pl-strflt",
+            "repository": "github-mgmt"
+          },
+          "sensitive_values": {
+            "collaborator": []
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"ipdx\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "ipdx",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [],
+            "id": "pl-strflt/ipdx/direct",
+            "owner": "pl-strflt",
+            "repository": "ipdx"
+          },
+          "sensitive_values": {
+            "collaborator": []
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"projects-migration\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "projects-migration",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [
+              {
+                "events_url": "https://api.github.com/users/galargh/events{/privacy}",
+                "followers_url": "https://api.github.com/users/galargh/followers",
+                "following_url": "https://api.github.com/users/galargh/following{/other_user}",
+                "gists_url": "https://api.github.com/users/galargh/gists{/gist_id}",
+                "html_url": "https://github.com/galargh",
+                "id": 6688074,
+                "login": "galargh",
+                "organizations_url": "https://api.github.com/users/galargh/orgs",
+                "permission": "admin",
+                "received_events_url": "https://api.github.com/users/galargh/received_events",
+                "repos_url": "https://api.github.com/users/galargh/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/galargh/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/galargh/subscriptions",
+                "type": "User",
+                "url": "https://api.github.com/users/galargh"
+              }
+            ],
+            "id": "pl-strflt/projects-migration/direct",
+            "owner": "pl-strflt",
+            "repository": "projects-migration"
+          },
+          "sensitive_values": {
+            "collaborator": [
+              {}
+            ]
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"projects-status-history\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "projects-status-history",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [
+              {
+                "events_url": "https://api.github.com/users/galargh/events{/privacy}",
+                "followers_url": "https://api.github.com/users/galargh/followers",
+                "following_url": "https://api.github.com/users/galargh/following{/other_user}",
+                "gists_url": "https://api.github.com/users/galargh/gists{/gist_id}",
+                "html_url": "https://github.com/galargh",
+                "id": 6688074,
+                "login": "galargh",
+                "organizations_url": "https://api.github.com/users/galargh/orgs",
+                "permission": "admin",
+                "received_events_url": "https://api.github.com/users/galargh/received_events",
+                "repos_url": "https://api.github.com/users/galargh/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/galargh/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/galargh/subscriptions",
+                "type": "User",
+                "url": "https://api.github.com/users/galargh"
+              }
+            ],
+            "id": "pl-strflt/projects-status-history/direct",
+            "owner": "pl-strflt",
+            "repository": "projects-status-history"
+          },
+          "sensitive_values": {
+            "collaborator": [
+              {}
+            ]
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"rust-sccache-action\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "rust-sccache-action",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [
+              {
+                "events_url": "https://api.github.com/users/galargh/events{/privacy}",
+                "followers_url": "https://api.github.com/users/galargh/followers",
+                "following_url": "https://api.github.com/users/galargh/following{/other_user}",
+                "gists_url": "https://api.github.com/users/galargh/gists{/gist_id}",
+                "html_url": "https://github.com/galargh",
+                "id": 6688074,
+                "login": "galargh",
+                "organizations_url": "https://api.github.com/users/galargh/orgs",
+                "permission": "admin",
+                "received_events_url": "https://api.github.com/users/galargh/received_events",
+                "repos_url": "https://api.github.com/users/galargh/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/galargh/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/galargh/subscriptions",
+                "type": "User",
+                "url": "https://api.github.com/users/galargh"
+              }
+            ],
+            "id": "pl-strflt/rust-sccache-action/direct",
+            "owner": "pl-strflt",
+            "repository": "rust-sccache-action"
+          },
+          "sensitive_values": {
+            "collaborator": [
+              {}
+            ]
+          }
+        },
+        {
+          "address": "data.github_collaborators.this[\"tf-aws-gh-runner\"]",
+          "mode": "data",
+          "type": "github_collaborators",
+          "name": "this",
+          "index": "tf-aws-gh-runner",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "affiliation": "direct",
+            "collaborator": [],
+            "id": "pl-strflt/tf-aws-gh-runner/direct",
+            "owner": "pl-strflt",
+            "repository": "tf-aws-gh-runner"
+          },
+          "sensitive_values": {
+            "collaborator": []
+          }
+        },
+        {
+          "address": "data.github_organization.this",
+          "mode": "data",
+          "type": "github_organization",
+          "name": "this",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "description": "",
+            "id": "102680777",
+            "login": "pl-strflt",
+            "members": [
+              "galargh",
+              "laurentsenta"
+            ],
+            "name": "PL Starfleet",
+            "node_id": null,
+            "orgname": "pl-strflt",
+            "plan": "free",
+            "repositories": [
+              "pl-strflt/projects-migration",
+              "pl-strflt/projects-status-history",
+              "pl-strflt/github-mgmt",
+              "pl-strflt/ipdx",
+              "pl-strflt/rust-sccache-action",
+              "pl-strflt/github-action-releaser",
+              "pl-strflt/tf-aws-gh-runner"
+            ]
+          },
+          "sensitive_values": {
+            "members": [
+              false,
+              false
+            ],
+            "repositories": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "address": "data.github_organization_teams.this",
+          "mode": "data",
+          "type": "github_organization_teams",
+          "name": "this",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "id": "O_kgDOBh7IyQ",
+            "root_teams_only": false,
+            "teams": [
+              {
+                "description": "",
+                "id": 5869006,
+                "members": [
+                  "laurentsenta",
+                  "galargh"
+                ],
+                "name": "ipdx",
+                "node_id": "T_kwDOBh7Iyc4AWY3O",
+                "privacy": "VISIBLE",
+                "repositories": [
+                  "github-mgmt",
+                  "tf-aws-gh-runner"
+                ],
+                "slug": "ipdx"
+              }
+            ]
+          },
+          "sensitive_values": {
+            "teams": [
+              {
+                "members": [
+                  false,
+                  false
+                ],
+                "repositories": [
+                  false,
+                  false
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "address": "data.github_repositories.this",
+          "mode": "data",
+          "type": "github_repositories",
+          "name": "this",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "full_names": [
+              "pl-strflt/github-mgmt",
+              "pl-strflt/tf-aws-gh-runner",
+              "pl-strflt/projects-status-history",
+              "pl-strflt/github-action-releaser",
+              "pl-strflt/rust-sccache-action",
+              "pl-strflt/ipdx",
+              "pl-strflt/projects-migration"
+            ],
+            "id": "org:pl-strflt",
+            "names": [
+              "github-mgmt",
+              "tf-aws-gh-runner",
+              "projects-status-history",
+              "github-action-releaser",
+              "rust-sccache-action",
+              "ipdx",
+              "projects-migration"
+            ],
+            "query": "org:pl-strflt",
+            "sort": "updated"
+          },
+          "sensitive_values": {
+            "full_names": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "names": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"github-action-releaser\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "github-action-releaser",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [],
+            "default_branch": "main",
+            "description": "Release steps for github actions.",
+            "full_name": "pl-strflt/github-action-releaser",
+            "git_clone_url": "git://github.com/pl-strflt/github-action-releaser.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/github-action-releaser",
+            "http_clone_url": "https://github.com/pl-strflt/github-action-releaser.git",
+            "id": "github-action-releaser",
+            "name": "github-action-releaser",
+            "node_id": "R_kgDOHSWBKg",
+            "pages": [],
+            "private": false,
+            "repo_id": 488997162,
+            "ssh_clone_url": "git@github.com:pl-strflt/github-action-releaser.git",
+            "svn_url": "https://github.com/pl-strflt/github-action-releaser",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"github-mgmt\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "github-mgmt",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [
+              {
+                "name": "master",
+                "protected": true
+              },
+              {
+                "name": "master-upgrade",
+                "protected": false
+              }
+            ],
+            "default_branch": "master",
+            "description": "",
+            "full_name": "pl-strflt/github-mgmt",
+            "git_clone_url": "git://github.com/pl-strflt/github-mgmt.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": false,
+            "has_wiki": false,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/github-mgmt",
+            "http_clone_url": "https://github.com/pl-strflt/github-mgmt.git",
+            "id": "github-mgmt",
+            "name": "github-mgmt",
+            "node_id": "R_kgDOHGSVzQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 476353997,
+            "ssh_clone_url": "git@github.com:pl-strflt/github-mgmt.git",
+            "svn_url": "https://github.com/pl-strflt/github-mgmt",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"ipdx\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "ipdx",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [],
+            "default_branch": "main",
+            "description": "",
+            "full_name": "pl-strflt/ipdx",
+            "git_clone_url": "git://github.com/pl-strflt/ipdx.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/ipdx",
+            "http_clone_url": "https://github.com/pl-strflt/ipdx.git",
+            "id": "ipdx",
+            "name": "ipdx",
+            "node_id": "R_kgDOHIrYtQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 478861493,
+            "ssh_clone_url": "git@github.com:pl-strflt/ipdx.git",
+            "svn_url": "https://github.com/pl-strflt/ipdx",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"projects-migration\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "projects-migration",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "description": "",
+            "full_name": "pl-strflt/projects-migration",
+            "git_clone_url": "git://github.com/pl-strflt/projects-migration.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/projects-migration",
+            "http_clone_url": "https://github.com/pl-strflt/projects-migration.git",
+            "id": "projects-migration",
+            "name": "projects-migration",
+            "node_id": "R_kgDOG92-cg",
+            "pages": [
+              {
+                "cname": "",
+                "custom_404": false,
+                "html_url": "https://pl-strflt.github.io/projects-migration/",
+                "source": [
+                  {
+                    "branch": "main",
+                    "path": "/docs"
+                  }
+                ],
+                "status": "building",
+                "url": "https://api.github.com/repos/pl-strflt/projects-migration/pages"
+              }
+            ],
+            "private": false,
+            "repo_id": 467517042,
+            "ssh_clone_url": "git@github.com:pl-strflt/projects-migration.git",
+            "svn_url": "https://github.com/pl-strflt/projects-migration",
+            "topics": [
+              "github",
+              "graphql"
+            ],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [
+              {}
+            ],
+            "pages": [
+              {
+                "source": [
+                  {}
+                ]
+              }
+            ],
+            "topics": [
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"projects-status-history\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "projects-status-history",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "description": "",
+            "full_name": "pl-strflt/projects-status-history",
+            "git_clone_url": "git://github.com/pl-strflt/projects-status-history.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/projects-status-history",
+            "http_clone_url": "https://github.com/pl-strflt/projects-status-history.git",
+            "id": "projects-status-history",
+            "name": "projects-status-history",
+            "node_id": "R_kgDOHDpReA",
+            "pages": [],
+            "private": false,
+            "repo_id": 473583992,
+            "ssh_clone_url": "git@github.com:pl-strflt/projects-status-history.git",
+            "svn_url": "https://github.com/pl-strflt/projects-status-history",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [
+              {}
+            ],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"rust-sccache-action\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "rust-sccache-action",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [
+              {
+                "name": "arm64",
+                "protected": false
+              },
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "description": "",
+            "full_name": "pl-strflt/rust-sccache-action",
+            "git_clone_url": "git://github.com/pl-strflt/rust-sccache-action.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/rust-sccache-action",
+            "http_clone_url": "https://github.com/pl-strflt/rust-sccache-action.git",
+            "id": "rust-sccache-action",
+            "name": "rust-sccache-action",
+            "node_id": "R_kgDOHKJAdw",
+            "pages": [],
+            "private": false,
+            "repo_id": 480395383,
+            "ssh_clone_url": "git@github.com:pl-strflt/rust-sccache-action.git",
+            "svn_url": "https://github.com/pl-strflt/rust-sccache-action",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_repository.this[\"tf-aws-gh-runner\"]",
+          "mode": "data",
+          "type": "github_repository",
+          "name": "this",
+          "index": "tf-aws-gh-runner",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archived": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              },
+              {
+                "name": "ref-fvm",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "description": "",
+            "full_name": "pl-strflt/tf-aws-gh-runner",
+            "git_clone_url": "git://github.com/pl-strflt/tf-aws-gh-runner.git",
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/tf-aws-gh-runner",
+            "http_clone_url": "https://github.com/pl-strflt/tf-aws-gh-runner.git",
+            "id": "tf-aws-gh-runner",
+            "name": "tf-aws-gh-runner",
+            "node_id": "R_kgDOHYbSbQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 495374957,
+            "ssh_clone_url": "git@github.com:pl-strflt/tf-aws-gh-runner.git",
+            "svn_url": "https://github.com/pl-strflt/tf-aws-gh-runner",
+            "topics": [],
+            "visibility": "public"
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "data.github_tree.this[\"github-mgmt:master\"]",
+          "mode": "data",
+          "type": "github_tree",
+          "name": "this",
+          "index": "github-mgmt:master",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "entries": [
+              {
+                "mode": "040000",
+                "path": ".github",
+                "sha": "514982474531118a94f9d135aaa35a6b54baccf3",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/PULL_REQUEST_TEMPLATE.md",
+                "sha": "c9ffcb68f12de9ca123b72950e8ee48643fdee07",
+                "size": 52,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": ".github/actions",
+                "sha": "49faa22ad5eb69ea19fdd907b69c98fe75e2411b",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "040000",
+                "path": ".github/actions/git-config-user",
+                "sha": "0cd3d9a8fd1ebd9ef8687fe92a0482ec0879d6be",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/actions/git-config-user/action.yml",
+                "sha": "9bb285106ec81da3743b83d7386e30b7f475fe34",
+                "size": 270,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": ".github/actions/git-push",
+                "sha": "2e10e8bc6cbbd351d82cb62efd05f625108e3172",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/actions/git-push/action.yml",
+                "sha": "54ae873cd9888b7acc259b7adcc2e37f4c9eeb3f",
+                "size": 1279,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": ".github/workflows",
+                "sha": "d40c14516228c5eada2f0a84eb74395f94e9ec08",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/apply.yml",
+                "sha": "7b1b978f6a28754695b342952d2259633e80a277",
+                "size": 3461,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/plan.yml",
+                "sha": "f0ad1208f70b5420c3d840de65e9ac5c3d3d1a5d",
+                "size": 7209,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/plan_post.yml",
+                "sha": "8bfcd242c194ffa8c2b64a4aa5f16f920a6420c6",
+                "size": 817,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/plan_pre.yml",
+                "sha": "41114643376e41d729aeea0070cd014ebf5eba75",
+                "size": 480,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/sync.yml",
+                "sha": "52d340b02571c914cc5addca26a4a5a8312ee3f1",
+                "size": 4396,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/update.yml",
+                "sha": "cb5ae496de61df51f106d10eb1e44f9538fbe9f3",
+                "size": 2102,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/upgrade.yml",
+                "sha": "746f2c103fd55ebff7787b6f87d1d4f93a01a20b",
+                "size": 602,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".github/workflows/upgrade_reusable.yml",
+                "sha": "f5b6b72c005b63b6ca6a73889abb32c813bae859",
+                "size": 1839,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": ".gitignore",
+                "sha": "34adc7e0def49ca607bb6b41990ddc1f9366ff04",
+                "size": 733,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "CHANGELOG.md",
+                "sha": "4ad89db240275387c7ad574540999758c9ac9f6b",
+                "size": 813,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "README.md",
+                "sha": "06fff7c5952d13ffe71c528cc97602e575588cb6",
+                "size": 857,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": "docs",
+                "sha": "9e6acc2bbe758ffb5b789951e52b639dce5ac5db",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": "docs/ABOUT.md",
+                "sha": "fd467ee963798d29696a420a1dd1165dd77dc032",
+                "size": 8187,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "docs/HOWTOS.md",
+                "sha": "37d58cf7ba3d0855ea8f326ad8da769b7153ba70",
+                "size": 5859,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "docs/SETUP.md",
+                "sha": "84cc4b476f8d0911e9fa751e726178c1f18920af",
+                "size": 10870,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": "github",
+                "sha": "9e60e77963718ff7919d1a9a9ecd4a4b54390139",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "040000",
+                "path": "github/pl-strflt",
+                "sha": "29e06233dd23712ef70ade451cd9af8dabfae38c",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/membership.json",
+                "sha": "d88bf12d8936393470439bef021ce54009dcccbd",
+                "size": 88,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/repository.json",
+                "sha": "88f2506a5d1d34178045c6ba4d2236878b5c5f7b",
+                "size": 186,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/repository_collaborator.json",
+                "sha": "76e3b0d7fd62dcf31720550079c6c31a3c45aa57",
+                "size": 255,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/team.json",
+                "sha": "26c0ef08cb29af8aff0fc25c27220d1b337c03bb",
+                "size": 68,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/team_membership.json",
+                "sha": "5cfe3b1f0a9ef92c541eace1c36fc34c2bba3020",
+                "size": 126,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "github/pl-strflt/team_repository.json",
+                "sha": "0967ef424bce6791893e9a57bb952f80fd536e93",
+                "size": 3,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": "scripts",
+                "sha": "fe01b10b5898336418b959773a5fe9d5065890c5",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100755",
+                "path": "scripts/sync.sh",
+                "sha": "96714cf00a5893f63391077cec40e938273ae081",
+                "size": 5928,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": "terraform",
+                "sha": "1b529b5112e5a5c73ea4e2d910e05535bf792b3a",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/.terraform.lock.hcl",
+                "sha": "29d77ddf7cfa0115c16861d744d71e1d295f21e4",
+                "size": 1262,
+                "type": "blob"
+              },
+              {
+                "mode": "040000",
+                "path": "terraform/bootstrap",
+                "sha": "29ff526601421eee9e585f817f3b3d85f67dd646",
+                "size": 0,
+                "type": "tree"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/bootstrap/aws.tf",
+                "sha": "2002e1095e50d627f89697930c4e7848d6faaf1b",
+                "size": 2562,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/data.tf",
+                "sha": "ade1249d775079c4f23801f8ec749705b172dcf9",
+                "size": 2461,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/locals.tf",
+                "sha": "e2a195d6c6403e29de3b137b83972ac975408621",
+                "size": 284,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/outputs.tf",
+                "sha": "34e1fb299520ae8edd7762b8f26e95e1115e853a",
+                "size": 2705,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/providers.tf",
+                "sha": "2a306bb3727c6f23122876c33dbcef461f2d2fea",
+                "size": 112,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/resources.tf",
+                "sha": "98f26404f5f7bac6939ce126f8cf466991703fe1",
+                "size": 10760,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/resources_override.tf",
+                "sha": "290207ea45fa59d7f71a1fdf01f42f7289fd549f",
+                "size": 1061,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/terraform.tf",
+                "sha": "fd2714012254b0b5cfd244a184bcb957853d3eaf",
+                "size": 158,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/terraform_override.tf",
+                "sha": "0a4794f1354f4fe0a3491a4d4d8d4aef8771e50f",
+                "size": 270,
+                "type": "blob"
+              },
+              {
+                "mode": "100644",
+                "path": "terraform/variables.tf",
+                "sha": "ee53007f8ca1cf4896c941f64884ed666da834e2",
+                "size": 165,
+                "type": "blob"
+              }
+            ],
+            "id": "ed43f7170d887fc0bfd5bef0727a1cd82bb1a6d6",
+            "recursive": true,
+            "repository": "github-mgmt",
+            "tree_sha": "ed43f7170d887fc0bfd5bef0727a1cd82bb1a6d6"
+          },
+          "sensitive_values": {
+            "entries": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          }
+        },
+        {
+          "address": "github_branch_protection.this[\"github-mgmt:master\"]",
+          "mode": "managed",
+          "type": "github_branch_protection",
+          "name": "this",
+          "index": "github-mgmt:master",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 1,
+          "values": {
+            "allows_deletions": false,
+            "allows_force_pushes": false,
+            "enforce_admins": false,
+            "id": "BPR_kwDOHGSVzc4BfS9s",
+            "pattern": "master",
+            "push_restrictions": [],
+            "repository_id": "R_kgDOHGSVzQ",
+            "require_conversation_resolution": false,
+            "require_signed_commits": false,
+            "required_linear_history": false,
+            "required_pull_request_reviews": [
+              {
+                "dismiss_stale_reviews": false,
+                "dismissal_restrictions": [],
+                "pull_request_bypassers": [],
+                "require_code_owner_reviews": false,
+                "required_approving_review_count": 1,
+                "restrict_dismissals": false
+              }
+            ],
+            "required_status_checks": [
+              {
+                "contexts": [
+                  "Plan"
+                ],
+                "strict": true
+              }
+            ]
+          },
+          "sensitive_values": {
+            "push_restrictions": [],
+            "required_pull_request_reviews": [
+              {
+                "dismissal_restrictions": [],
+                "pull_request_bypassers": []
+              }
+            ],
+            "required_status_checks": [
+              {
+                "contexts": [
+                  false
+                ]
+              }
+            ]
+          },
+          "depends_on": [
+            "github_repository.this"
+          ]
+        },
+        {
+          "address": "github_membership.this[\"galargh\"]",
+          "mode": "managed",
+          "type": "github_membership",
+          "name": "this",
+          "index": "galargh",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"b484932af42ea6def2c32617351fbcfffdd4742e1ae1e421d0a8eb0a1e044f7f\"",
+            "id": "pl-strflt:galargh",
+            "role": "admin",
+            "username": "galargh"
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "github_membership.this[\"laurentsenta\"]",
+          "mode": "managed",
+          "type": "github_membership",
+          "name": "this",
+          "index": "laurentsenta",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"719564f4df833db1551049895dc06b5b3c75331842804419f6b7993d766b34f4\"",
+            "id": "pl-strflt:laurentsenta",
+            "role": "admin",
+            "username": "laurentsenta"
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "github_repository.this[\"github-action-releaser\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "github-action-releaser",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "Release steps for github actions.",
+            "etag": "W/\"cc70919312e9ea30001fdb88fbbfe798123d8dd2ebdfcf3ec567a07d590d50e2\"",
+            "full_name": "pl-strflt/github-action-releaser",
+            "git_clone_url": "git://github.com/pl-strflt/github-action-releaser.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/github-action-releaser",
+            "http_clone_url": "https://github.com/pl-strflt/github-action-releaser.git",
+            "id": "github-action-releaser",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "github-action-releaser",
+            "node_id": "R_kgDOHSWBKg",
+            "pages": [],
+            "private": false,
+            "repo_id": 488997162,
+            "ssh_clone_url": "git@github.com:pl-strflt/github-action-releaser.git",
+            "svn_url": "https://github.com/pl-strflt/github-action-releaser",
+            "template": [],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [],
+            "pages": [],
+            "template": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository.this[\"github-mgmt\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "github-mgmt",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [
+              {
+                "name": "master",
+                "protected": true
+              },
+              {
+                "name": "master-upgrade",
+                "protected": false
+              }
+            ],
+            "default_branch": "master",
+            "delete_branch_on_merge": true,
+            "description": "",
+            "etag": "W/\"92c45bebf6bec5560ab7aae34fa19c10bab5a43201fcf8bc4e04b1025f022e2a\"",
+            "full_name": "pl-strflt/github-mgmt",
+            "git_clone_url": "git://github.com/pl-strflt/github-mgmt.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": false,
+            "has_wiki": false,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/github-mgmt",
+            "http_clone_url": "https://github.com/pl-strflt/github-mgmt.git",
+            "id": "github-mgmt",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "github-mgmt",
+            "node_id": "R_kgDOHGSVzQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 476353997,
+            "ssh_clone_url": "git@github.com:pl-strflt/github-mgmt.git",
+            "svn_url": "https://github.com/pl-strflt/github-mgmt",
+            "template": [
+              {
+                "owner": "protocol",
+                "repository": "github-mgmt-template"
+              }
+            ],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "template": [
+              {}
+            ],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository.this[\"ipdx\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "ipdx",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "",
+            "etag": "W/\"6c03852dfd95e549753c9e71ff729a12c7cceb2d49c445f45569ff04f0b54eeb\"",
+            "full_name": "pl-strflt/ipdx",
+            "git_clone_url": "git://github.com/pl-strflt/ipdx.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/ipdx",
+            "http_clone_url": "https://github.com/pl-strflt/ipdx.git",
+            "id": "ipdx",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "ipdx",
+            "node_id": "R_kgDOHIrYtQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 478861493,
+            "ssh_clone_url": "git@github.com:pl-strflt/ipdx.git",
+            "svn_url": "https://github.com/pl-strflt/ipdx",
+            "template": [],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [],
+            "pages": [],
+            "template": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository.this[\"projects-migration\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "projects-migration",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "",
+            "etag": "W/\"0cde120a56690ff5590e03406b627fa9d27975c4682e5ab1cd0d54589cbda207\"",
+            "full_name": "pl-strflt/projects-migration",
+            "git_clone_url": "git://github.com/pl-strflt/projects-migration.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/projects-migration",
+            "http_clone_url": "https://github.com/pl-strflt/projects-migration.git",
+            "id": "projects-migration",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "projects-migration",
+            "node_id": "R_kgDOG92-cg",
+            "pages": [
+              {
+                "cname": "",
+                "custom_404": false,
+                "html_url": "https://pl-strflt.github.io/projects-migration/",
+                "source": [
+                  {
+                    "branch": "main",
+                    "path": "/docs"
+                  }
+                ],
+                "status": "building",
+                "url": "https://api.github.com/repos/pl-strflt/projects-migration/pages"
+              }
+            ],
+            "private": false,
+            "repo_id": 467517042,
+            "ssh_clone_url": "git@github.com:pl-strflt/projects-migration.git",
+            "svn_url": "https://github.com/pl-strflt/projects-migration",
+            "template": [],
+            "topics": [
+              "github",
+              "graphql"
+            ],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [
+              {}
+            ],
+            "pages": [
+              {
+                "source": [
+                  {}
+                ]
+              }
+            ],
+            "template": [],
+            "topics": [
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "address": "github_repository.this[\"projects-status-history\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "projects-status-history",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "",
+            "etag": "W/\"577137edcd890315884bc4b12aeb86c1e5052940e459c40701b9e531d524f239\"",
+            "full_name": "pl-strflt/projects-status-history",
+            "git_clone_url": "git://github.com/pl-strflt/projects-status-history.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/projects-status-history",
+            "http_clone_url": "https://github.com/pl-strflt/projects-status-history.git",
+            "id": "projects-status-history",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "projects-status-history",
+            "node_id": "R_kgDOHDpReA",
+            "pages": [],
+            "private": false,
+            "repo_id": 473583992,
+            "ssh_clone_url": "git@github.com:pl-strflt/projects-status-history.git",
+            "svn_url": "https://github.com/pl-strflt/projects-status-history",
+            "template": [],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [
+              {}
+            ],
+            "pages": [],
+            "template": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository.this[\"rust-sccache-action\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "rust-sccache-action",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [
+              {
+                "name": "arm64",
+                "protected": false
+              },
+              {
+                "name": "main",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "",
+            "etag": "W/\"cb4f4913032f7abb3dc6b027584bd412379e384c6ffa6eb7d74aa859d62646c5\"",
+            "full_name": "pl-strflt/rust-sccache-action",
+            "git_clone_url": "git://github.com/pl-strflt/rust-sccache-action.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/rust-sccache-action",
+            "http_clone_url": "https://github.com/pl-strflt/rust-sccache-action.git",
+            "id": "rust-sccache-action",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "rust-sccache-action",
+            "node_id": "R_kgDOHKJAdw",
+            "pages": [],
+            "private": false,
+            "repo_id": 480395383,
+            "ssh_clone_url": "git@github.com:pl-strflt/rust-sccache-action.git",
+            "svn_url": "https://github.com/pl-strflt/rust-sccache-action",
+            "template": [],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": true
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "template": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository.this[\"tf-aws-gh-runner\"]",
+          "mode": "managed",
+          "type": "github_repository",
+          "name": "this",
+          "index": "tf-aws-gh-runner",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "allow_auto_merge": false,
+            "allow_merge_commit": true,
+            "allow_rebase_merge": true,
+            "allow_squash_merge": true,
+            "archive_on_destroy": null,
+            "archived": false,
+            "auto_init": false,
+            "branches": [
+              {
+                "name": "main",
+                "protected": false
+              },
+              {
+                "name": "ref-fvm",
+                "protected": false
+              }
+            ],
+            "default_branch": "main",
+            "delete_branch_on_merge": false,
+            "description": "",
+            "etag": "W/\"3ff698cea2bed3dea6f54b00c20ea3a69f88d9d047d81ad389d591e219d485a1\"",
+            "full_name": "pl-strflt/tf-aws-gh-runner",
+            "git_clone_url": "git://github.com/pl-strflt/tf-aws-gh-runner.git",
+            "gitignore_template": null,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_projects": true,
+            "has_wiki": true,
+            "homepage_url": "",
+            "html_url": "https://github.com/pl-strflt/tf-aws-gh-runner",
+            "http_clone_url": "https://github.com/pl-strflt/tf-aws-gh-runner.git",
+            "id": "tf-aws-gh-runner",
+            "ignore_vulnerability_alerts_during_read": null,
+            "is_template": false,
+            "license_template": null,
+            "name": "tf-aws-gh-runner",
+            "node_id": "R_kgDOHYbSbQ",
+            "pages": [],
+            "private": false,
+            "repo_id": 495374957,
+            "ssh_clone_url": "git@github.com:pl-strflt/tf-aws-gh-runner.git",
+            "svn_url": "https://github.com/pl-strflt/tf-aws-gh-runner",
+            "template": [],
+            "topics": [],
+            "visibility": "public",
+            "vulnerability_alerts": false
+          },
+          "sensitive_values": {
+            "branches": [
+              {},
+              {}
+            ],
+            "pages": [],
+            "template": [],
+            "topics": []
+          }
+        },
+        {
+          "address": "github_repository_collaborator.this[\"projects-migration:galargh\"]",
+          "mode": "managed",
+          "type": "github_repository_collaborator",
+          "name": "this",
+          "index": "projects-migration:galargh",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "id": "projects-migration:galargh",
+            "invitation_id": null,
+            "permission": "admin",
+            "permission_diff_suppression": null,
+            "repository": "projects-migration",
+            "username": "galargh"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "github_repository.this"
+          ]
+        },
+        {
+          "address": "github_repository_collaborator.this[\"projects-status-history:galargh\"]",
+          "mode": "managed",
+          "type": "github_repository_collaborator",
+          "name": "this",
+          "index": "projects-status-history:galargh",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "id": "projects-status-history:galargh",
+            "invitation_id": null,
+            "permission": "admin",
+            "permission_diff_suppression": null,
+            "repository": "projects-status-history",
+            "username": "galargh"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "github_repository.this"
+          ]
+        },
+        {
+          "address": "github_repository_collaborator.this[\"rust-sccache-action:galargh\"]",
+          "mode": "managed",
+          "type": "github_repository_collaborator",
+          "name": "this",
+          "index": "rust-sccache-action:galargh",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "id": "rust-sccache-action:galargh",
+            "invitation_id": null,
+            "permission": "admin",
+            "permission_diff_suppression": null,
+            "repository": "rust-sccache-action",
+            "username": "galargh"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "github_repository.this"
+          ]
+        },
+        {
+          "address": "github_repository_file.this[\"github-mgmt/README.md\"]",
+          "mode": "managed",
+          "type": "github_repository_file",
+          "name": "this",
+          "index": "github-mgmt/README.md",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "branch": "master",
+            "commit_author": "galargh",
+            "commit_email": "piotr.galar@gmail.com",
+            "commit_message": "Update README",
+            "commit_sha": "ff32de62d3dd9bc01a2dabd8439d413e8a250dfe",
+            "content": "# GitHub Management via Terraform: pl-strflt\n\nThis repository is responsible for managing GitHub configuration of `pl-strflt` organisation as code with Terraform. It was created from [github-mgmt-template](https://github.com/protocol/github-mgmt-template) and it will receive updates from that repository.\n\n**IMPORTANT**: Having write access to GitHub Management repository can be as powerful as having admin access to the organizations managed by that repository.\n\n*NOTE*: Because we don't have merge queue functionality enabled for the repository yet, after a merge, wait for the `Apply` and `Update` workflows to complete before merging any other PRs.\n\nTo learn more, check out:\n- [What is GitHub Management and how does it work?](docs/ABOUT.md)\n- [How to set up GitHub Management?](docs/SETUP.md)\n- [How to work with GitHub Management?](docs/HOWTOS.md)\n",
+            "file": "README.md",
+            "id": "github-mgmt/README.md",
+            "overwrite_on_create": false,
+            "repository": "github-mgmt",
+            "sha": "06fff7c5952d13ffe71c528cc97602e575588cb6"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "github_repository.this"
+          ]
+        },
+        {
+          "address": "github_team.this[\"ipdx\"]",
+          "mode": "managed",
+          "type": "github_team",
+          "name": "this",
+          "index": "ipdx",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "create_default_maintainer": null,
+            "description": "",
+            "etag": "W/\"f90cadeb6749b9534012dbb7d5ad1103623234ceb8d9dc0df069b97dc0a91501\"",
+            "id": "5869006",
+            "ldap_dn": "",
+            "members_count": 2,
+            "name": "ipdx",
+            "node_id": "T_kwDOBh7Iyc4AWY3O",
+            "parent_team_id": null,
+            "privacy": "closed",
+            "slug": "ipdx"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this"
+          ]
+        },
+        {
+          "address": "github_team_membership.this[\"ipdx:galargh\"]",
+          "mode": "managed",
+          "type": "github_team_membership",
+          "name": "this",
+          "index": "ipdx:galargh",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"6639f9bc580c38fa7168d0be91b9ccc6b520f108b80473536c9133fe82fa3f11\"",
+            "id": "5869006:galargh",
+            "role": "maintainer",
+            "team_id": "5869006",
+            "username": "galargh"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this",
+            "github_team.this"
+          ]
+        },
+        {
+          "address": "github_team_membership.this[\"ipdx:laurentsenta\"]",
+          "mode": "managed",
+          "type": "github_team_membership",
+          "name": "this",
+          "index": "ipdx:laurentsenta",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"179b224765e73338f7d65ef340b65cc861bc6608be1a8baa6f8d4600ce32585a\"",
+            "id": "5869006:laurentsenta",
+            "role": "maintainer",
+            "team_id": "5869006",
+            "username": "laurentsenta"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this",
+            "github_team.this"
+          ]
+        },
+        {
+          "address": "github_team_repository.this[\"ipdx:github-mgmt\"]",
+          "mode": "managed",
+          "type": "github_team_repository",
+          "name": "this",
+          "index": "ipdx:github-mgmt",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"2dfe1b6da6ea11797f3e6beae16af6c944dd5952d1219c45c10161cca53afcda\"",
+            "id": "5869006:github-mgmt",
+            "permission": "triage",
+            "repository": "github-mgmt",
+            "team_id": "5869006"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this",
+            "github_repository.this",
+            "github_team.this"
+          ]
+        },
+        {
+          "address": "github_team_repository.this[\"ipdx:tf-aws-gh-runner\"]",
+          "mode": "managed",
+          "type": "github_team_repository",
+          "name": "this",
+          "index": "ipdx:tf-aws-gh-runner",
+          "provider_name": "registry.terraform.io/integrations/github",
+          "schema_version": 0,
+          "values": {
+            "etag": "W/\"55abdcdcc760ba2aba7d635ecd082b1e564a619f404065793dd1436cae5de718\"",
+            "id": "5869006:tf-aws-gh-runner",
+            "permission": "maintain",
+            "repository": "tf-aws-gh-runner",
+            "team_id": "5869006"
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this",
+            "github_repository.this",
+            "github_team.this"
+          ]
+        },
+        {
+          "address": "null_resource.data",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "data",
+          "provider_name": "registry.terraform.io/hashicorp/null",
+          "schema_version": 0,
+          "values": {
+            "id": "8896981123394969925",
+            "triggers": null
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_branch.this",
+            "data.github_collaborators.this",
+            "data.github_organization.this",
+            "data.github_organization_teams.this",
+            "data.github_repositories.this",
+            "data.github_repository.this",
+            "data.github_tree.this"
+          ]
+        },
+        {
+          "address": "null_resource.resources",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "resources",
+          "provider_name": "registry.terraform.io/hashicorp/null",
+          "schema_version": 0,
+          "values": {
+            "id": "8153466109885816269",
+            "triggers": null
+          },
+          "sensitive_values": {},
+          "depends_on": [
+            "data.github_organization_teams.this",
+            "github_branch_protection.this",
+            "github_membership.this",
+            "github_repository.this",
+            "github_repository_collaborator.this",
+            "github_repository_file.this",
+            "github_team.this",
+            "github_team_membership.this"
+          ]
+        }
+      ]
+    }
+  }
+}

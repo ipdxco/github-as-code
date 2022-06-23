@@ -10,10 +10,6 @@ on:
         description: Whether to acquire terraform state lock during sync
         required: false
         default: "true"
-      debug:
-        description: Print out all the commands being executed
-        required: false
-        default: "false"
 
 jobs:
   prepare:
@@ -31,7 +27,7 @@ jobs:
         id: workspaces
         run: |
           if [[ -z '${{ github.event.inputs.workspaces }}' ]]; then
-            workspaces="$(ls github | jq --raw-input '[.]' | jq -sc add)"
+            workspaces="$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
           else
             workspaces="$(echo '${{ github.event.inputs.workspaces }}' | jq --raw-input 'split(" ")')"
           fi
@@ -51,7 +47,6 @@ jobs:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_LOCK: ${{ github.event.inputs.lock }}
-      TF_DEBUG: ${{ github.event.inputs.debug }}
       AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
@@ -78,7 +73,10 @@ jobs:
           echo 'TF_WORKSPACE=${{ matrix.workspace }}' >> $GITHUB_ENV
         working-directory: terraform
       - name: Sync
-        run: ./scripts/sync.sh
+        run: |
+          npm install
+          npm run sync
+        working-directory: scripts
       - uses: ./.github/actions/git-config-user
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

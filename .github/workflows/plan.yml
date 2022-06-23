@@ -58,7 +58,7 @@ jobs:
           ref: ${{ steps.github.outputs.ref }}
       - name: Discover workspaces
         id: workspaces
-        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.]' | jq -sc add)"
+        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
   plan:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''

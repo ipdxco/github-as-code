@@ -1,8 +1,5 @@
 locals {
-  separator    = " → "
-  organization = terraform.workspace
-  github = {
-    for file in fileset("${path.module}/../github/${local.organization}", "*.json") :
-    trimsuffix(file, ".json") => jsondecode(file("${path.module}/../github/${local.organization}/${file}"))
-  }
+  organization   = terraform.workspace
+  config         = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
+  resource_types = []
 }
