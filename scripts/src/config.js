@@ -1,9 +1,8 @@
-import fs from 'fs';
 import YAML from 'yaml';
 
 export class Config {
-  constructor(organization) {
-    this.config = YAML.parseDocument(fs.readFileSync(`${process.cwd()}/../github/${organization}.yml`, 'utf8'));
+  constructor(yaml) {
+    this.config = YAML.parseDocument(yaml);
     this.updatePaths()
   }
 

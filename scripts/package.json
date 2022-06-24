@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "sync": "node src/sync.js"
+    "sync": "node src/main.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
   },
   "dependencies": {
     "@actions/exec": "^1.1.1",
@@ -9,5 +10,11 @@
     "deepmerge": "^4.2.2",
     "hcl2-parser": "^1.0.3",
     "yaml": "^2.1.1"
+  },
+  "devDependencies": {
+    "jest": "^28.1.1"
+  },
+  "jest": {
+    "transform": {}
   }
 }

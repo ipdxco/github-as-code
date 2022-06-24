@@ -2,16 +2,22 @@ import fs from 'fs';
 import glob from '@actions/glob';
 import crypto from 'crypto';
 
-function hash(value) {
-  return crypto.createHash('md5').update(value).digest("hex");
+export const Paths = {
+  init: async() => {
+    const root = fs.realpathSync(`${process.cwd()}/..`);
+    const globber = await glob.create(`${root}/files/**/*`, { matchDirectories: false });
+    const paths = await globber.glob();
+    Paths.map = Object.fromEntries(paths.map(path => {
+      return [Paths.hash(fs.readFileSync(path)), path.substring(`${root}/files/`.length)];
+    }));
+  },
+  get: (value) => {
+    return Paths.map[Paths.hash(value)];
+  },
+  hash: (value) => {
+    return crypto.createHash('md5').update(value).digest("hex");
+  }
 }
-
-const root = fs.realpathSync(`${process.cwd()}/..`);
-const globber = await glob.create(`${root}/files/**/*`, { matchDirectories: false });
-const paths = await globber.glob();
-const pathsByHash = Object.fromEntries(paths.map(path => {
-  return [hash(fs.readFileSync(path)), path.substring(`${root}/files/`.length)];
-}));
 
 export const Resources = {
   github_membership: {
@@ -175,7 +181,7 @@ export const Resources = {
     getPathToAllTheResources: () => { return ['repositories', '.+', 'files', '.+']; },
     getPathToTheResource: (resourceFromTerraformState) => {
       const resource = {...resourceFromTerraformState.values}
-      resource.content = pathsByHash[hash(resource.content)] || resource.content;
+      resource.content = Paths.get(resource.content) || resource.content;
       return ['repositories', resourceFromTerraformState.values.repository, 'files', { [resourceFromTerraformState.values.file]: resource }];
     },
     getIgnoredProperties: () => {
