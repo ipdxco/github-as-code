@@ -184,15 +184,12 @@ resource "github_team" "this" {
   } : {}
 
   name                      = each.value.name
-  create_default_maintainer = try(each.value.create_default_maintainer, null)
   description               = try(each.value.description, null)
-  ldap_dn                   = try(each.value.ldap_dn, null)
   parent_team_id            = try(each.value.parent_team_id, null)
   privacy                   = try(each.value.privacy, null)
 
   lifecycle {
     ignore_changes = [
-      create_default_maintainer,
       description,
       parent_team_id,
       privacy,

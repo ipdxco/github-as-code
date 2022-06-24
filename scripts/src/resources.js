@@ -117,6 +117,7 @@ export const Resources = {
     },
     getIgnoredProperties: () => {
       return [
+        'create_default_maintainer',
         'etag',
         'id',
         'ldap_dn',

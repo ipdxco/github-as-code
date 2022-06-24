@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../github/.schema.json
+
+members: # This group defines org members (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/membership)
+  admin: # This array defines org members with role=admin
+    - peter # This is a GitHub username
+  member: # This array defines org members with role=member
+    - adam
+teams: # This group defines teams (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team)
+  employees: {}
+  developers:
+    members: # This group defines team members (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership)
+      maintainer: # This array defines team members with role=maintainer
+        - peter
+      member: # This member defines team members with role=member
+        - adam
+    description: Developers Team
+    parent_team_id: employees # This field, unlike its' terraform counterpar, accepts a team name
+    privacy: closed # This field accepts either secret or closed (i.e. visible) - https://docs.github.com/en/organizations/organizing-members-into-teams/changing-team-visibility
+repositories: # This group defines repositories (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository)
+  github-mgmt:
+    files: # This group defines repository files (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file)
+      README.md:
+        branch: master # This field defaults to the default branch of the repository
+        content: README.md # This field accepts either a relative path to a file from ./files directory...
+      docs/HELLO.md:
+        content: > # ... or a content string
+          Hi!
+    branch_protection: # This group defines branch protection rules (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection)
+      master: # This key accepts only EXACT branch names, unlike the terraform resource which accepts any pattern
+        allows_deletions: false
+        allows_force_pushes: false
+        enforce_admins: false
+        require_conversation_resolution: false
+        require_signed_commits: false
+        required_linear_history: false
+        push_restrictions: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
+        required_pull_request_reviews:
+          dismiss_stale_reviews: false
+          dismissal_restrictions: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
+          pull_request_bypassers: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
+          require_code_owner_reviews: false
+          required_approving_review_count: 1
+          restrict_dismissals: false
+        required_status_checks:
+          contexts:
+            - Plan
+          strict: true
+    collaborators: # This group defines repository collaborators (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_collaborator)
+      admin: # This array defines repository collaborators with permission=admin
+        - peter
+      maintain: # This array defines repository collaborators with permission=maintain
+        - adam
+      push: [] # This array defines repository collaborators with permission=push
+      triage: [] # This array defines repository collaborators with permission=triage
+      pull: [] # This array defines repository collaborators with permission=pull
+    teams: # This group defines teams with access to the repository (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository)
+      admin: [] # This array defines teams with permission=admin
+      maintain: [] # This array defines teams with permission=maintain
+      push: # This array defines teams with permission=push
+        - developers
+      triage: # This array defines teams with permission=triage
+        - employees
+      pull: [] # This array defines teams with permission=pull
+    allow_merge_commit: true
+    allow_rebase_merge: true
+    allow_squash_merge: true
+    has_downloads: true
+    has_issues: true
+    has_projects: true
+    has_wiki: true
+    visibility: public # This field accepts either public or private
+    allow_auto_merge: false
+    archived: false
+    auto_init: false
+    delete_branch_on_merge: false
+    description: GitHub Management
+    homepage_url: https://github.com/protocol/github-mgmt-template
+    is_template: false
+    vulnerability_alerts: false
+    archive_on_destroy: true
+    gitignore_template: Terraform # This field accepts a name of a template from https://github.com/github/gitignore without extension
+    ignore_vulnerability_alerts_during_read: false
+    license_template: mit # This field accepts a name of a template from https://github.com/github/choosealicense.com/tree/gh-pages/_licenses without extension
+    pages:
+      cname: ""
+      source:
+        branch: master
+        path: /docs
+    template:
+      owner: protocol
+      repository: github-mgmt-template
+    topics:
+      - github

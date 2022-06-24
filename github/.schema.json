@@ -182,7 +182,7 @@
           "type": "object",
           "additionalProperties": false,
           "patternProperties": {
-            "^(admin|maintainer|push|triage|pull)$": {
+            "^(admin|maintain|push|triage|pull)$": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/RepositoryCollaborator"
