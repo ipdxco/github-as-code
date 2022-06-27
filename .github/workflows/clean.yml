@@ -1,0 +1,90 @@
+name: Clean
+
+on:
+  workflow_dispatch:
+    inputs:
+      workspaces:
+        description: Space separated list of workspaces to sync (leave blank to sync all)
+        required: false
+      regex:
+        description: Regex string to use to find the resources to remove from the state
+        required: false
+        default: .*
+      dry-run:
+        description: Whether to only print out what would've been removed
+        required: false
+        default: "true"
+      lock:
+        description: Whether to acquire terraform state lock during sync
+        required: false
+        default: "true"
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      workspaces: ${{ steps.workspaces.outputs.this }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Discover workspaces
+        id: workspaces
+        run: |
+          if [[ -z '${{ github.event.inputs.workspaces }}' ]]; then
+            workspaces="$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+          else
+            workspaces="$(echo '${{ github.event.inputs.workspaces }}' | jq --raw-input 'split(" ")')"
+          fi
+          echo "::set-output name=this::$workspaces"
+  clean:
+    needs: [prepare]
+    if: needs.prepare.outputs.workspaces != ''
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
+    name: Prepare
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      TF_LOCK: ${{ github.event.inputs.lock }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+      TF_VAR_write_delay_ms: 300
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.4
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: terraform
+      - name: Select terraform workspace
+        run: |
+          terraform workspace select '${{ matrix.workspace }}' || terraform workspace new '${{ matrix.workspace }}'
+          echo 'TF_WORKSPACE=${{ matrix.workspace }}' >> $GITHUB_ENV
+        working-directory: terraform
+      - name: Clean
+        run: |
+          dryRunFlag=''
+          if [[ '${{ github.event.inputs.dry-run }}' == 'true' ]]; then
+            dryRunFlag='-dry-run'
+          fi
+          terraform state rm $dryRunFlag $(terraform state list | grep -E '^${{ github.event.inputs.regex }}$')
+        working-directory: terraform

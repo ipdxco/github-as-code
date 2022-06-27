@@ -102,3 +102,8 @@ I push my changes to a new branch and create a PR. An admin reviews the PR, sync
 
 - Run `Upgrade` GitHub Action workflow
 - Merge the pull request that the workflow created once the `Plan` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
+
+### ...remove resources from GitHub Management state?
+
+- Run `Clean` GitHub Action workflow with a chosen regex
+- Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github)
