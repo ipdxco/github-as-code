@@ -86,5 +86,5 @@ jobs:
           if [[ '${{ github.event.inputs.dry-run }}' == 'true' ]]; then
             dryRunFlag='-dry-run'
           fi
-          terraform state rm $dryRunFlag $(terraform state list | grep -E '^${{ github.event.inputs.regex }}$')
+          terraform state list | grep -E '^${{ github.event.inputs.regex }}$' | sed 's/"/\\"/g' | xargs -I {} terraform state rm -lock=${{ env.TF_LOCK }} $dryRunFlag {}
         working-directory: terraform
