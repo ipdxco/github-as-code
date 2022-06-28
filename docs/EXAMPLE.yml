@@ -14,7 +14,7 @@ teams: # This group defines teams (https://registry.terraform.io/providers/integ
       member: # This member defines team members with role=member
         - adam
     description: Developers Team
-    parent_team_id: employees # This field, unlike its' terraform counterpar, accepts a team name
+    parent_team_id: employees # This field, unlike its terraform counterpart, accepts a team name
     privacy: closed # This field accepts either secret or closed (i.e. visible) - https://docs.github.com/en/organizations/organizing-members-into-teams/changing-team-visibility
 repositories: # This group defines repositories (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository)
   github-mgmt:
