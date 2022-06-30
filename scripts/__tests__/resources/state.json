@@ -90,10 +90,10 @@
     "root_module": {
       "resources": [
         {
-          "address": "data.github_branch.this[\"github-mgmt:master\"]",
+          "address": "data.github_branch.data_github_branch[\"github-mgmt:master\"]",
           "mode": "data",
           "type": "github_branch",
-          "name": "this",
+          "name": "data_github_branch",
           "index": "github-mgmt:master",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -108,10 +108,10 @@
           "sensitive_values": {}
         },
         {
-          "address": "data.github_collaborators.this[\"github-action-releaser\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"github-action-releaser\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "github-action-releaser",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -127,10 +127,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"github-mgmt\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"github-mgmt\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "github-mgmt",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -146,10 +146,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"ipdx\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"ipdx\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "ipdx",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -165,10 +165,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"projects-migration\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"projects-migration\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "projects-migration",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -205,10 +205,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"projects-status-history\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"projects-status-history\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "projects-status-history",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -245,10 +245,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"rust-sccache-action\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"rust-sccache-action\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "rust-sccache-action",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -285,10 +285,10 @@
           }
         },
         {
-          "address": "data.github_collaborators.this[\"tf-aws-gh-runner\"]",
+          "address": "data.github_collaborators.data_github_collaborators[\"tf-aws-gh-runner\"]",
           "mode": "data",
           "type": "github_collaborators",
-          "name": "this",
+          "name": "data_github_collaborators",
           "index": "tf-aws-gh-runner",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -304,10 +304,10 @@
           }
         },
         {
-          "address": "data.github_organization.this",
+          "address": "data.github_organization.data_github_organization",
           "mode": "data",
           "type": "github_organization",
-          "name": "this",
+          "name": "data_github_organization",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
           "values": {
@@ -349,10 +349,10 @@
           }
         },
         {
-          "address": "data.github_organization_teams.this",
+          "address": "data.github_organization_teams.data_github_organization_teams",
           "mode": "data",
           "type": "github_organization_teams",
-          "name": "this",
+          "name": "data_github_organization_teams",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
           "values": {
@@ -393,10 +393,10 @@
           }
         },
         {
-          "address": "data.github_repositories.this",
+          "address": "data.github_repositories.data_github_repositories",
           "mode": "data",
           "type": "github_repositories",
-          "name": "this",
+          "name": "data_github_repositories",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
           "values": {
@@ -444,10 +444,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"github-action-releaser\"]",
+          "address": "data.github_repository.data_github_repository[\"github-action-releaser\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "github-action-releaser",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -487,10 +487,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"github-mgmt\"]",
+          "address": "data.github_repository.data_github_repository[\"github-mgmt\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "github-mgmt",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -542,10 +542,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"ipdx\"]",
+          "address": "data.github_repository.data_github_repository[\"ipdx\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "ipdx",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -585,10 +585,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"projects-migration\"]",
+          "address": "data.github_repository.data_github_repository[\"projects-migration\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "projects-migration",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -661,10 +661,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"projects-status-history\"]",
+          "address": "data.github_repository.data_github_repository[\"projects-status-history\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "projects-status-history",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -711,10 +711,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"rust-sccache-action\"]",
+          "address": "data.github_repository.data_github_repository[\"rust-sccache-action\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "rust-sccache-action",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -766,10 +766,10 @@
           }
         },
         {
-          "address": "data.github_repository.this[\"tf-aws-gh-runner\"]",
+          "address": "data.github_repository.data_github_repository[\"tf-aws-gh-runner\"]",
           "mode": "data",
           "type": "github_repository",
-          "name": "this",
+          "name": "data_github_repository",
           "index": "tf-aws-gh-runner",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -821,10 +821,10 @@
           }
         },
         {
-          "address": "data.github_tree.this[\"github-mgmt:master\"]",
+          "address": "data.github_tree.data_github_tree[\"github-mgmt:master\"]",
           "mode": "data",
           "type": "github_tree",
-          "name": "this",
+          "name": "data_github_tree",
           "index": "github-mgmt:master",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1210,10 +1210,10 @@
           }
         },
         {
-          "address": "github_branch_protection.this[\"github-mgmt:master\"]",
+          "address": "github_branch_protection.github_branch_protection[\"github-mgmt:master\"]",
           "mode": "managed",
           "type": "github_branch_protection",
-          "name": "this",
+          "name": "github_branch_protection",
           "index": "github-mgmt:master",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 1,
@@ -1264,14 +1264,14 @@
             ]
           },
           "depends_on": [
-            "github_repository.this"
+            "github_repository.github_repository"
           ]
         },
         {
-          "address": "github_membership.this[\"galargh\"]",
+          "address": "github_membership.github_membership[\"galargh\"]",
           "mode": "managed",
           "type": "github_membership",
-          "name": "this",
+          "name": "github_membership",
           "index": "galargh",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1284,10 +1284,10 @@
           "sensitive_values": {}
         },
         {
-          "address": "github_membership.this[\"laurentsenta\"]",
+          "address": "github_membership.github_membership[\"laurentsenta\"]",
           "mode": "managed",
           "type": "github_membership",
-          "name": "this",
+          "name": "github_membership",
           "index": "laurentsenta",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1300,10 +1300,10 @@
           "sensitive_values": {}
         },
         {
-          "address": "github_repository.this[\"github-action-releaser\"]",
+          "address": "github_repository.github_repository[\"github-action-releaser\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "github-action-releaser",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1354,10 +1354,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"github-mgmt\"]",
+          "address": "github_repository.github_repository[\"github-mgmt\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "github-mgmt",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1427,10 +1427,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"ipdx\"]",
+          "address": "github_repository.github_repository[\"ipdx\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "ipdx",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1481,10 +1481,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"projects-migration\"]",
+          "address": "github_repository.github_repository[\"projects-migration\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "projects-migration",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1568,10 +1568,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"projects-status-history\"]",
+          "address": "github_repository.github_repository[\"projects-status-history\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "projects-status-history",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1629,10 +1629,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"rust-sccache-action\"]",
+          "address": "github_repository.github_repository[\"rust-sccache-action\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "rust-sccache-action",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1695,10 +1695,10 @@
           }
         },
         {
-          "address": "github_repository.this[\"tf-aws-gh-runner\"]",
+          "address": "github_repository.github_repository[\"tf-aws-gh-runner\"]",
           "mode": "managed",
           "type": "github_repository",
-          "name": "this",
+          "name": "github_repository",
           "index": "tf-aws-gh-runner",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1761,10 +1761,10 @@
           }
         },
         {
-          "address": "github_repository_collaborator.this[\"projects-migration:galargh\"]",
+          "address": "github_repository_collaborator.github_repository_collaborator[\"projects-migration:galargh\"]",
           "mode": "managed",
           "type": "github_repository_collaborator",
-          "name": "this",
+          "name": "github_repository_collaborator",
           "index": "projects-migration:galargh",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1778,14 +1778,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "github_repository.this"
+            "github_repository.github_repository"
           ]
         },
         {
-          "address": "github_repository_collaborator.this[\"projects-status-history:galargh\"]",
+          "address": "github_repository_collaborator.github_repository_collaborator[\"projects-status-history:galargh\"]",
           "mode": "managed",
           "type": "github_repository_collaborator",
-          "name": "this",
+          "name": "github_repository_collaborator",
           "index": "projects-status-history:galargh",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1799,14 +1799,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "github_repository.this"
+            "github_repository.github_repository"
           ]
         },
         {
-          "address": "github_repository_collaborator.this[\"rust-sccache-action:galargh\"]",
+          "address": "github_repository_collaborator.github_repository_collaborator[\"rust-sccache-action:galargh\"]",
           "mode": "managed",
           "type": "github_repository_collaborator",
-          "name": "this",
+          "name": "github_repository_collaborator",
           "index": "rust-sccache-action:galargh",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1820,14 +1820,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "github_repository.this"
+            "github_repository.github_repository"
           ]
         },
         {
-          "address": "github_repository_file.this[\"github-mgmt/README.md\"]",
+          "address": "github_repository_file.github_repository_file[\"github-mgmt/README.md\"]",
           "mode": "managed",
           "type": "github_repository_file",
-          "name": "this",
+          "name": "github_repository_file",
           "index": "github-mgmt/README.md",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1846,14 +1846,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "github_repository.this"
+            "github_repository.github_repository"
           ]
         },
         {
-          "address": "github_team.this[\"ipdx\"]",
+          "address": "github_team.github_team[\"ipdx\"]",
           "mode": "managed",
           "type": "github_team",
-          "name": "this",
+          "name": "github_team",
           "index": "ipdx",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1872,14 +1872,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this"
+            "data.github_organization_teams.data_github_organization_teams"
           ]
         },
         {
-          "address": "github_team_membership.this[\"ipdx:galargh\"]",
+          "address": "github_team_membership.github_team_membership[\"ipdx:galargh\"]",
           "mode": "managed",
           "type": "github_team_membership",
-          "name": "this",
+          "name": "github_team_membership",
           "index": "ipdx:galargh",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1892,15 +1892,15 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this",
-            "github_team.this"
+            "data.github_organization_teams.data_github_organization_teams",
+            "github_team.github_team"
           ]
         },
         {
-          "address": "github_team_membership.this[\"ipdx:laurentsenta\"]",
+          "address": "github_team_membership.github_team_membership[\"ipdx:laurentsenta\"]",
           "mode": "managed",
           "type": "github_team_membership",
-          "name": "this",
+          "name": "github_team_membership",
           "index": "ipdx:laurentsenta",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1913,15 +1913,15 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this",
-            "github_team.this"
+            "data.github_organization_teams.data_github_organization_teams",
+            "github_team.github_team"
           ]
         },
         {
-          "address": "github_team_repository.this[\"ipdx:github-mgmt\"]",
+          "address": "github_team_repository.github_team_repository[\"ipdx:github-mgmt\"]",
           "mode": "managed",
           "type": "github_team_repository",
-          "name": "this",
+          "name": "github_team_repository",
           "index": "ipdx:github-mgmt",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1934,16 +1934,16 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this",
-            "github_repository.this",
-            "github_team.this"
+            "data.github_organization_teams.data_github_organization_teams",
+            "github_repository.github_repository",
+            "github_team.github_team"
           ]
         },
         {
-          "address": "github_team_repository.this[\"ipdx:tf-aws-gh-runner\"]",
+          "address": "github_team_repository.github_team_repository[\"ipdx:tf-aws-gh-runner\"]",
           "mode": "managed",
           "type": "github_team_repository",
-          "name": "this",
+          "name": "github_team_repository",
           "index": "ipdx:tf-aws-gh-runner",
           "provider_name": "registry.terraform.io/integrations/github",
           "schema_version": 0,
@@ -1956,9 +1956,9 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this",
-            "github_repository.this",
-            "github_team.this"
+            "data.github_organization_teams.data_github_organization_teams",
+            "github_repository.github_repository",
+            "github_team.github_team"
           ]
         },
         {
@@ -1974,13 +1974,13 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_branch.this",
-            "data.github_collaborators.this",
-            "data.github_organization.this",
-            "data.github_organization_teams.this",
-            "data.github_repositories.this",
-            "data.github_repository.this",
-            "data.github_tree.this"
+            "data.github_branch.data_github_branch",
+            "data.github_collaborators.data_github_collaborators",
+            "data.github_organization.data_github_organization",
+            "data.github_organization_teams.data_github_organization_teams",
+            "data.github_repositories.data_github_repositories",
+            "data.github_repository.data_github_repository",
+            "data.github_tree.data_github_tree"
           ]
         },
         {
@@ -1996,14 +1996,14 @@
           },
           "sensitive_values": {},
           "depends_on": [
-            "data.github_organization_teams.this",
-            "github_branch_protection.this",
-            "github_membership.this",
-            "github_repository.this",
-            "github_repository_collaborator.this",
-            "github_repository_file.this",
-            "github_team.this",
-            "github_team_membership.this"
+            "data.github_organization_teams.data_github_organization_teams",
+            "github_branch_protection.github_branch_protection",
+            "github_membership.thgithub_membershipis",
+            "github_repository.github_repository",
+            "github_repository_collaborator.github_repository_collaborator",
+            "github_repository_file.github_repository_file",
+            "github_team.github_team",
+            "github_team_membership.github_team_membership"
           ]
         }
       ]
