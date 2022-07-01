@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import * as fs from 'fs'
 import * as terraform from '../src/terraform'
+import * as YAML from 'yaml'
 
 test('parses terraform state', async () => {
   const json = fs.readFileSync('__tests__/resources/state.json').toString()
@@ -29,4 +30,19 @@ test('finds no resources to remove', async () => {
   const resourcesToRemove = state.getResourcesToRemove()
 
   expect(resourcesToRemove.length).toEqual(0)
+})
+
+test('finds no id fields on YAML resources', async () => {
+  const json = fs.readFileSync('__tests__/resources/state.json').toString()
+  const state = terraform.parse(json)
+
+  const yamlResources = state.getYAMLResources()
+
+  yamlResources.forEach(resource => {
+    if (YAML.isPair(resource.value)) {
+      const value = resource.value.value as YAML.YAMLMap
+      const keys = value.items.map(item => item.key as YAML.Scalar).map(key => key.value)
+      expect(keys).not.toContain('id')
+    }
+  })
 })

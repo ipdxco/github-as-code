@@ -1,4 +1,6 @@
 import {Type, plainToClass} from 'class-transformer'
+import * as Config from './yaml'
+import * as YAML from 'yaml'
 
 interface Identifiable {
   id: string
@@ -9,16 +11,14 @@ class Resource {
   values!: Identifiable
 
   equals(other: Resource): boolean {
-    if (this instanceof GitHubBranchProtection || other instanceof GitHubBranchProtection) {
-      // GitHubBranchProtection is a special case, because it uses 2 different IDs for import and in state
-      return this.address === other.address
-    } else {
-      return this.address === other.address && this.values.id.toString() === other.values.id.toString()
-    }
+    return this.address === other.address
   }
 }
 
-abstract class ManagedResource extends Resource {}
+abstract class ManagedResource extends Resource {
+  index!: string
+  abstract getYAMLResource(): Config.Resource
+}
 abstract class DataResource extends Resource {
   getDesiredResources(): DesiredResource[] {
     return []
@@ -26,20 +26,106 @@ abstract class DataResource extends Resource {
 }
 class DesiredResource extends Resource {}
 
-class GitHubMembership extends ManagedResource {}
-class GitHubRepository extends ManagedResource {}
-class GitHubRepositoryCollaborator extends ManagedResource {}
+class GitHubMembership extends ManagedResource {
+  override values!: Identifiable & {
+    role: 'admin' | 'member'
+    username: string
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['members', this.values.role]
+    resource.value = YAML.parseDocument(this.values.username).contents as YAML.Scalar
+    return resource
+  }
+}
+class GitHubRepository extends ManagedResource {
+  override values!: Identifiable & {
+    name: string
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['repositories']
+    const value = plainToClass(Config.Repository, this.values, { excludeExtraneousValues: true})
+    resource.value = (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+    return resource
+  }
+}
+class GitHubRepositoryCollaborator extends ManagedResource {
+  override values!: Identifiable & {
+    username: string
+    repository: string
+    permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['repositories',  this.values.repository, 'collaborators', this.values.permission]
+    resource.value = YAML.parseDocument(this.values.username).contents as YAML.Scalar
+    return resource
+  }
+}
 class GitHubRepositoryFile extends ManagedResource {
   override values!: Identifiable & {
     branch: string
     file: string
     repository: string
   }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['repositories', this.values.repository, 'files']
+    const value = plainToClass(Config.File, this.values, { excludeExtraneousValues: true})
+    resource.value = (YAML.parseDocument(YAML.stringify({[this.values.file]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+    return resource
+  }
 }
-class GitHubBranchProtection extends ManagedResource {}
-class GitHubTeam extends ManagedResource {}
-class GitHubTeamMembership extends ManagedResource {}
-class GitHubTeamRepository extends ManagedResource {}
+class GitHubBranchProtection extends ManagedResource {
+  override values!: Identifiable & {
+    repository: string
+    pattern: string
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['repositories', this.index.split(':')[0], 'branch_protection']
+    const value = plainToClass(Config.BranchProtection, this.values, { excludeExtraneousValues: true})
+    resource.value = (YAML.parseDocument(YAML.stringify({[this.values.pattern]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+    return resource
+  }
+}
+class GitHubTeam extends ManagedResource {
+  override values!: Identifiable & {
+    name: string
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['teams']
+    const value = plainToClass(Config.Team, this.values, { excludeExtraneousValues: true})
+    resource.value = (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+    return resource
+  }
+}
+class GitHubTeamMembership extends ManagedResource {
+  override values!: Identifiable & {
+    username: string
+    role: 'maintainer' | 'member'
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['teams', this.index.split(':')[0], 'members', this.values.role]
+    resource.value = YAML.parseDocument(this.values.username).contents as YAML.Scalar
+    return resource
+  }
+}
+class GitHubTeamRepository extends ManagedResource {
+  override values!: Identifiable & {
+    repository: string
+    permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
+  }
+  override getYAMLResource(): Config.Resource {
+    const resource = new Config.Resource()
+    resource.path = ['repositories', this.index.split(':')[1], 'teams', this.values.permission]
+    resource.value = YAML.parseDocument(this.values.repository).contents as YAML.Scalar
+    return resource
+  }
+}
 class GitHubOrganizationData extends DataResource {
   override values!: Identifiable & {
     login: string,
@@ -200,6 +286,10 @@ class Values {
 class State {
   @Type(() => Values)
   values!: Values
+
+  getYAMLResources(): Config.Resource[] {
+    return this.getManagedResources().map(resource => resource.getYAMLResource())
+  }
 
   getDataResources(): DataResource[] {
     return this.values.root_module.resources.filter(
