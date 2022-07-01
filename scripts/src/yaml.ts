@@ -1,5 +1,6 @@
 import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
+import assert from 'assert'
 
 class Resource {
   path!: string[]
@@ -224,6 +225,26 @@ class Config {
       }
     }
     this.document.addIn(parsedPath, resource.value)
+  }
+
+  update(resource: Resource): void {
+    if (YAML.isPair(resource.value)) {
+      const existing = this.find(resource)
+      if (existing !== undefined && YAML.isMap(resource.value.value) && YAML.isPair(existing.value) && YAML.isMap(existing.value.value)) {
+        resource.value.value.items.forEach(item => {
+          const existingItem = (existing.value.value as YAML.YAMLMap).items.find(i => this.equals(i, item))
+          if (existingItem !== undefined) {
+            if (JSON.stringify(existingItem.value) !== JSON.stringify(item.value)) {
+              existingItem.value = item.value
+            }
+          } else {
+            (existing.value.value as YAML.YAMLMap).items.push(item)
+          }
+        })
+      } else {
+        // TODO: throw, this is unexpected
+      }
+    }
   }
 }
 

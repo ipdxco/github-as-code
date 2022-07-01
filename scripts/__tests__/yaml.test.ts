@@ -92,3 +92,108 @@ test('adds 1 new file', async () => {
   expect(cfg.matchIn(['repositories', 'github-mgmt', 'files']).length).toEqual(2)
   expect(cfg.getResources().length).toEqual(20)
 })
+
+test('updates all team descriptions', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const teams = cfg.matchIn(['teams'])
+
+  const teamUpdates = teams.map(team => {
+    const resource = new config.Resource()
+    resource.path = team.path
+    resource.value = team.value.clone() as YAML.Pair
+    ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
+    return resource
+  })
+
+  teams.forEach(team => {
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
+    expect(description).not.toEqual('TEST')
+  })
+
+  teamUpdates.forEach(team => {
+    cfg.update(team)
+  })
+
+  teams.forEach(team => {
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
+    expect(description).toEqual('TEST')
+  })
+})
+
+test('updates all team descriptions', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const teams = cfg.matchIn(['teams'])
+
+  const teamUpdates = teams.map(team => {
+    const resource = new config.Resource()
+    resource.path = team.path
+    resource.value = team.value.clone() as YAML.Pair
+    ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
+    return resource
+  })
+
+  teams.forEach(team => {
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
+    expect(description).not.toEqual('TEST')
+  })
+
+  teamUpdates.forEach(team => {
+    cfg.update(team)
+  })
+
+  teams.forEach(team => {
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
+    expect(description).toEqual('TEST')
+  })
+})
+
+test('removes a comment on property update', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const teams = cfg.matchIn(['teams'])
+
+  const resource = new config.Resource()
+  resource.path = ['repositories']
+  resource.value = (YAML.parseDocument('github-mgmt: { allow_auto_merge: true }').contents as YAML.YAMLMap).items[0];
+
+  const existingResource = cfg.find(resource)
+  const allowAutoMergePrior = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
+
+  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
+
+  cfg.update(resource)
+
+  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeTruthy()
+  expect((allowAutoMergePrior!.value as YAML.Scalar).comment?.trim()).toBeUndefined()
+})
+
+
+test('does not upate properties when the values match', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const teams = cfg.matchIn(['teams'])
+
+  const resource = new config.Resource()
+  resource.path = ['repositories']
+  resource.value = (YAML.parseDocument('github-mgmt: { allow_auto_merge: false }').contents as YAML.YAMLMap).items[0];
+
+  const existingResource = cfg.find(resource)
+  const allowAutoMergePrior = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
+
+  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
+
+  cfg.update(resource)
+
+  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
+  expect((allowAutoMergePrior!.value as YAML.Scalar).comment?.trim()).toEqual('I will survive')
+})
