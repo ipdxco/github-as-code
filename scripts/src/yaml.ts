@@ -3,8 +3,13 @@ import * as YAML from 'yaml'
 import assert from 'assert'
 
 class Resource {
-  path!: string[]
-  value!: YAML.Scalar | YAML.Pair
+  path: string[]
+  value: YAML.Scalar | YAML.Pair
+
+  constructor(path: string[], value: YAML.Scalar | YAML.Pair) {
+    this.path = path
+    this.value = value
+  }
 }
 
 class RepositoryPagesSource {
@@ -158,10 +163,7 @@ class Config {
             if (YAML.isCollection(item.value)) {
               return item.value.items.map(i => {
                 if (YAML.isScalar(i) || YAML.isPair(i)) {
-                  const resource = new Resource()
-                  resource.path = path
-                  resource.value = i
-                  return resource
+                  return new Resource(path, i)
                 } else {
                   throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(i)}`)
                 }
