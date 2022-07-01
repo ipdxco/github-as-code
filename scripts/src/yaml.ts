@@ -129,4 +129,80 @@ export default class Schema {
   teams?: Record<string, TeamContainer>
 }
 
+class Config {
+  document: YAML.Document
+
+  constructor(yaml: string) {
+    this.document = YAML.parseDocument(yaml)
+  }
+
+  getJSON(): Schema {
+    return this.document.toJSON()
+  }
+
+  matchIn(path: string[]): Resource[] {
+    function _matchIn(path: string[], node: YAML.YAMLMap, history: string[]): Resource[] {
+      const [key, ...rest] = path
+      return node.items
+        .filter(item => {
+          return YAML.isScalar(item.key) && new String(item.key.value).match(`^${key}$`)
+        })
+        .flatMap(item => {
+          if (rest.length === 0) {
+            if (YAML.isCollection(item.value)) {
+              return item.value.items.filter(i => YAML.isScalar(i) || YAML.isPair(i)).map(i => {
+                const resource = new Resource()
+                resource.path = [...history, new String((item.key as YAML.Scalar).value).toString()]
+                resource.value = i as YAML.Scalar | YAML.Pair
+                return resource
+              })
+            } else {
+              return []
+            }
+          } else {
+            if (YAML.isMap(item.value)) {
+              return _matchIn(rest, item.value, [...history, new String((item.key as YAML.Scalar).value).toString()])
+            } else {
+              return []
+            }
+          }
+        })
+    }
+    return _matchIn(path, this.document.contents as YAML.YAMLMap, [])
+  }
+
+  find(resource: Resource): Resource | undefined {
+    return this.matchIn(resource.path).find(matchingResource => {
+      if (YAML.isScalar(resource.value)) {
+        return YAML.isScalar(matchingResource.value) && resource.value.value === matchingResource.value.value
+      } else if (YAML.isPair(resource.value)) {
+        return YAML.isPair(matchingResource.value) && YAML.isScalar(resource.value.key) && YAML.isScalar(matchingResource.value.key) && resource.value.key.value === matchingResource.value.key.value
+      } else {
+        return false
+      }
+    })
+  }
+
+  contains(resource: Resource): boolean {
+    return this.find(resource) !== undefined
+  }
+
+  getResources(): Resource[] {
+    return [
+      ...this.matchIn(["members", ".+"]),
+      ...this.matchIn(["repositories"]),
+      ...this.matchIn(["repositories", ".+", "collaborators", ".+"]),
+      ...this.matchIn(["repositories", ".+", "teams", ".+"]),
+      ...this.matchIn(["repositories", ".+", "files"]),
+      ...this.matchIn(["repositories", ".+", "branch_protection"]),
+      ...this.matchIn(["teams"]),
+      ...this.matchIn(["teams", ".+", "members", ".+"])
+    ]
+  }
+}
+
 export { Resource, File, BranchProtection, Repository, Team }
+
+export function parse(yaml: string): Config {
+  return new Config(yaml)
+}
