@@ -11,7 +11,8 @@
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "jest --passWithNoTests",
-    "all": "npm run build && npm run format && npm run lint && npm test"
+    "all": "npm run build && npm run format && npm run lint && npm test",
+    "schema": "npx ts-json-schema-generator --path src/yaml.ts --type Schema --out ../github/.schema.json"
   },
   "dependencies": {
     "@actions/exec": "^1.1.1",
@@ -34,6 +35,7 @@
     "js-yaml": "^4.1.0",
     "prettier": "2.5.1",
     "ts-jest": "^27.1.2",
+    "ts-json-schema-generator": "^1.0.0",
     "typescript": "^4.4.4"
   }
 }

@@ -102,8 +102,8 @@ class RepositoryContainer extends Repository {
     triage?: string[]
     pull?: string[]
   }
-  files?: Map<string, File>
-  branch_protection?: Map<string, BranchProtection>
+  files?: Record<string, File>
+  branch_protection?: Record<string, BranchProtection>
 }
 
 class Team {
@@ -120,13 +120,13 @@ class TeamContainer extends Team {
   }
 }
 
-class Schema {
+export default class Schema {
   members?: {
     admin?: string[]
     member?: string[]
   }
-  repositories?: Map<string, RepositoryContainer>
-  teams?: Map<string, TeamContainer>
+  repositories?: Record<string, RepositoryContainer>
+  teams?: Record<string, TeamContainer>
 }
 
-export { Resource, File, BranchProtection, Repository, Team, Schema }
+export { Resource, File, BranchProtection, Repository, Team }
