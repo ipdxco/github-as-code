@@ -212,6 +212,19 @@ class Config {
       })
     }
   }
+
+  add(resource: Resource): void {
+    const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
+    const item = this.document.getIn(resource.path)
+    if (item === undefined) {
+      if (YAML.isScalar(resource.value)) {
+        this.document.addIn(parsedPath, YAML.parseDocument('[]').contents)
+      } else if (YAML.isPair(resource.value)) {
+        this.document.addIn(parsedPath, YAML.parseDocument('{}').contents)
+      }
+    }
+    this.document.addIn(parsedPath, resource.value)
+  }
 }
 
 export { Resource, File, BranchProtection, Repository, Team }

@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import * as fs from 'fs'
 import * as config from '../src/yaml'
-import { YAMLError } from 'yaml'
+import * as YAML from 'yaml'
 
 test('parses yaml config', async () => {
   const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
@@ -56,4 +56,39 @@ test('removes 3 out of 7 repository', async () => {
 
   expect(resourcesPost.length).toEqual(13)
   expect(repositoriesPost.length).toEqual(4)
+})
+
+test('adds 2 new members', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const peter = new config.Resource()
+  peter.path = ['members', 'member']
+  peter.value = YAML.parseDocument('peter').contents as YAML.Scalar;
+
+  const adam = new config.Resource()
+  adam.path = ['members', 'member']
+  adam.value = YAML.parseDocument('adam').contents as YAML.Scalar;
+
+  cfg.add(peter)
+  cfg.add(adam)
+
+  expect(cfg.matchIn(['members', 'member']).length).toEqual(2)
+  expect(cfg.getResources().length).toEqual(21)
+})
+
+test('adds 1 new file', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const file = new config.Resource()
+  file.path = ['repositories', 'github-mgmt', 'files']
+  file.value = YAML.parseDocument('file: {}').contents as YAML.Scalar;
+
+  cfg.add(file)
+
+  expect(cfg.matchIn(['repositories', 'github-mgmt', 'files']).length).toEqual(2)
+  expect(cfg.getResources().length).toEqual(20)
 })
