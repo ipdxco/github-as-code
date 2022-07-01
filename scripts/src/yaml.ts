@@ -173,13 +173,7 @@ class Config {
 
   find(resource: Resource): Resource | undefined {
     return this.matchIn(resource.path).find(matchingResource => {
-      if (YAML.isScalar(resource.value)) {
-        return YAML.isScalar(matchingResource.value) && resource.value.value === matchingResource.value.value
-      } else if (YAML.isPair(resource.value)) {
-        return YAML.isPair(matchingResource.value) && YAML.isScalar(resource.value.key) && YAML.isScalar(matchingResource.value.key) && resource.value.key.value === matchingResource.value.key.value
-      } else {
-        return false
-      }
+      return this.equals(resource.value, matchingResource.value)
     })
   }
 
@@ -198,6 +192,25 @@ class Config {
       ...this.matchIn(["teams"]),
       ...this.matchIn(["teams", ".+", "members", ".+"])
     ]
+  }
+
+  equals(a: unknown, b: unknown): boolean {
+    if (YAML.isScalar(a)) {
+      return YAML.isScalar(b) && a.value === b.value
+    } else if (YAML.isPair(a)) {
+      return YAML.isPair(b) && YAML.isScalar(a.key) && YAML.isScalar(b.key) && a.key.value === b.key.value
+    } else {
+      return false
+    }
+  }
+
+  remove(resource: Resource): void {
+    const item = this.document.getIn(resource.path)
+    if (YAML.isCollection(item)) {
+      item.items = item.items.filter(i => {
+        return !this.equals(i, resource.value)
+      })
+    }
   }
 }
 
