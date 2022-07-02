@@ -1,12 +1,13 @@
 import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
-import assert from 'assert'
 
 class Resource {
+  type: string
   path: string[]
   value: YAML.Scalar | YAML.Pair
 
-  constructor(path: string[], value: YAML.Scalar | YAML.Pair) {
+  constructor(type: string, path: string[], value: YAML.Scalar | YAML.Pair) {
+    this.type = type
     this.path = path
     this.value = value
   }
@@ -146,7 +147,7 @@ class Config {
     return this.document.toJSON()
   }
 
-  matchIn(path: string[]): Resource[] {
+  matchIn(type: string, path: string[]): Resource[] {
     function _matchIn(path: string[], node: YAML.YAMLMap, history: string[]): Resource[] {
       const [key, ...rest] = path
       return node.items
@@ -163,7 +164,7 @@ class Config {
             if (YAML.isCollection(item.value)) {
               return item.value.items.map(i => {
                 if (YAML.isScalar(i) || YAML.isPair(i)) {
-                  return new Resource(path, i)
+                  return new Resource(type, path, i)
                 } else {
                   throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(i)}`)
                 }
@@ -184,7 +185,7 @@ class Config {
   }
 
   find(resource: Resource): Resource | undefined {
-    return this.matchIn(resource.path).find(matchingResource => {
+    return this.matchIn(resource.type, resource.path).find(matchingResource => {
       return this.equals(resource.value, matchingResource.value)
     })
   }
@@ -195,14 +196,14 @@ class Config {
 
   getResources(): Resource[] {
     return [
-      ...this.matchIn(["members", ".+"]),
-      ...this.matchIn(["repositories"]),
-      ...this.matchIn(["repositories", ".+", "collaborators", ".+"]),
-      ...this.matchIn(["repositories", ".+", "teams", ".+"]),
-      ...this.matchIn(["repositories", ".+", "files"]),
-      ...this.matchIn(["repositories", ".+", "branch_protection"]),
-      ...this.matchIn(["teams"]),
-      ...this.matchIn(["teams", ".+", "members", ".+"])
+      ...this.matchIn('github_membership', ["members", ".+"]),
+      ...this.matchIn('github_repository', ["repositories"]),
+      ...this.matchIn('github_repository_collaborator', ["repositories", ".+", "collaborators", ".+"]),
+      ...this.matchIn('github_team_repository', ["repositories", ".+", "teams", ".+"]),
+      ...this.matchIn('github_repository_file', ["repositories", ".+", "files"]),
+      ...this.matchIn('github_branch_protection', ["repositories", ".+", "branch_protection"]),
+      ...this.matchIn('github_team', ["teams"]),
+      ...this.matchIn('github_team_membership', ["teams", ".+", "members", ".+"])
     ]
   }
 

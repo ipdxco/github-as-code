@@ -8,6 +8,7 @@ interface Identifiable {
 
 class Resource {
   address!: string
+  type!: string
   values!: Identifiable
 
   equals(other: Resource): boolean {
@@ -24,7 +25,14 @@ abstract class DataResource extends Resource {
     return []
   }
 }
-class DesiredResource extends Resource {}
+class DesiredResource extends Resource {
+  constructor(address: string, values: Identifiable) {
+    super()
+    this.address = address
+    this.type = address.split('.')[0]
+    this.values = values
+  }
+}
 
 class GitHubMembership extends ManagedResource {
   override values!: Identifiable & {
@@ -33,6 +41,7 @@ class GitHubMembership extends ManagedResource {
   }
   override getYAMLResource(): Config.Resource {
     return new Config.Resource(
+      this.type,
       ['members', this.values.role],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
@@ -45,6 +54,7 @@ class GitHubRepository extends ManagedResource {
   override getYAMLResource(): Config.Resource {
     const value = plainToClass(Config.Repository, this.values, { excludeExtraneousValues: true})
     return new Config.Resource(
+      this.type,
       ['repositories'],
       (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
     )
@@ -58,6 +68,7 @@ class GitHubRepositoryCollaborator extends ManagedResource {
   }
   override getYAMLResource(): Config.Resource {
     return new Config.Resource(
+      this.type,
       ['repositories',  this.values.repository, 'collaborators', this.values.permission],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
@@ -72,6 +83,7 @@ class GitHubRepositoryFile extends ManagedResource {
   override getYAMLResource(): Config.Resource {
     const value = plainToClass(Config.File, this.values, { excludeExtraneousValues: true})
     return new Config.Resource(
+      this.type,
       ['repositories', this.values.repository, 'files'],
       (YAML.parseDocument(YAML.stringify({[this.values.file]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
     )
@@ -85,6 +97,7 @@ class GitHubBranchProtection extends ManagedResource {
   override getYAMLResource(): Config.Resource {
     const value = plainToClass(Config.BranchProtection, this.values, { excludeExtraneousValues: true})
     return new Config.Resource(
+      this.type,
       ['repositories', this.index.split(':')[0], 'branch_protection'],
       (YAML.parseDocument(YAML.stringify({[this.values.pattern]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
     )
@@ -97,6 +110,7 @@ class GitHubTeam extends ManagedResource {
   override getYAMLResource(): Config.Resource {
     const value = plainToClass(Config.Team, this.values, { excludeExtraneousValues: true})
     return new Config.Resource(
+      this.type,
       ['teams'],
       (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
     )
@@ -109,6 +123,7 @@ class GitHubTeamMembership extends ManagedResource {
   }
   override getYAMLResource(): Config.Resource {
     return new Config.Resource(
+      this.type,
       ['teams', this.index.split(':')[0], 'members', this.values.role],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
@@ -121,6 +136,7 @@ class GitHubTeamRepository extends ManagedResource {
   }
   override getYAMLResource(): Config.Resource {
     return new Config.Resource(
+      this.type,
       ['repositories', this.index.split(':')[1], 'teams', this.values.permission],
       YAML.parseDocument(this.values.repository).contents as YAML.Scalar
     )
@@ -133,9 +149,10 @@ class GitHubOrganizationData extends DataResource {
   }
   override getDesiredResources(): DesiredResource[] {
     return this.values.members.map(member => {
-      const resource = new DesiredResource()
-      resource.address = `github_membership.github_membership["${member}"]`
-      resource.values = { id: `${this.values.login}:${member}` }
+      const resource = new DesiredResource(
+        `github_membership.github_membership["${member}"]`,
+        { id: `${this.values.login}:${member}` }
+      )
       return resource;
     })
   }
@@ -147,9 +164,10 @@ class GitHubRepositoriesData extends DataResource {
 
   override getDesiredResources(): DesiredResource[] {
     return this.values.names.map(name => {
-      const resource = new DesiredResource()
-      resource.address = `github_repository.github_repository["${name}"]`
-      resource.values = {id: name}
+      const resource = new DesiredResource(
+        `github_repository.github_repository["${name}"]`,
+        {id: name}
+      )
       return resource
     })
   }
@@ -163,9 +181,10 @@ class GitHubCollaboratorsData extends DataResource {
   }
   override getDesiredResources(): DesiredResource[] {
     return this.values.collaborator.map(collaborator => {
-      const resource = new DesiredResource()
-      resource.address = `github_repository_collaborator.github_repository_collaborator["${this.values.repository}:${collaborator.login}"]`
-      resource.values = {id: `${this.values.repository}:${collaborator.login}`}
+      const resource = new DesiredResource(
+        `github_repository_collaborator.github_repository_collaborator["${this.values.repository}:${collaborator.login}"]`,
+        {id: `${this.values.repository}:${collaborator.login}`}
+      )
       return resource
     })
   }
@@ -183,9 +202,10 @@ class GitHubRepositoryData extends DataResource {
     return this.values.branches
       .filter(branch => branch.protected)
       .map(branch => {
-        const resource = new DesiredResource()
-        resource.address = `github_branch_protection.github_branch_protection["${this.values.name}:${branch.name}"]`
-        resource.values = { id: `${this.values.name}:${branch.name}` }
+        const resource = new DesiredResource(
+          `github_branch_protection.github_branch_protection["${this.values.name}:${branch.name}"]`,
+          { id: `${this.values.name}:${branch.name}` }
+        )
         return resource
       })
   }
@@ -203,18 +223,20 @@ class GitHubOrganizationTeamsData extends DataResource {
     const resources = []
     resources.push(
       ...this.values.teams.map(team => {
-        const resource = new DesiredResource()
-        resource.address = `github_team.github_team["${team.name}"]`
-        resource.values = {id: team.id}
+        const resource = new DesiredResource(
+          `github_team.github_team["${team.name}"]`,
+          {id: team.id}
+        )
         return resource
       })
     )
     resources.push(
       ...this.values.teams.flatMap(team => {
         return team.repositories.map(repository => {
-          const resource = new DesiredResource()
-          resource.address = `github_team_repository.github_team_repository["${team.name}:${repository}"]`
-          resource.values = {id: `${team.id}:${repository}`}
+          const resource = new DesiredResource(
+            `github_team_repository.github_team_repository["${team.name}:${repository}"]`,
+            {id: `${team.id}:${repository}`}
+          )
           return resource
         })
       })
@@ -222,9 +244,10 @@ class GitHubOrganizationTeamsData extends DataResource {
     resources.push(
       ...this.values.teams.flatMap(team => {
         return team.members.map(member => {
-          const resource = new DesiredResource()
-          resource.address = `github_team_membership.github_team_membership["${team.name}:${member}"]`
-          resource.values = {id: `${team.id}:${member}`}
+          const resource = new DesiredResource(
+            `github_team_membership.github_team_membership["${team.name}:${member}"]`,
+            {id: `${team.id}:${member}`}
+          )
           return resource
         })
       })

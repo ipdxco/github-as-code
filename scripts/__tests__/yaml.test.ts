@@ -64,11 +64,13 @@ test('adds 2 new members', async () => {
   const cfg = config.parse(yaml)
 
   const peter = new config.Resource(
+    'github_membership',
     ['members', 'member'],
     YAML.parseDocument('peter').contents as YAML.Scalar
   )
 
   const adam = new config.Resource(
+    'github_membership',
     ['members', 'member'],
     YAML.parseDocument('adam').contents as YAML.Scalar
   )
@@ -76,7 +78,7 @@ test('adds 2 new members', async () => {
   cfg.add(peter)
   cfg.add(adam)
 
-  expect(cfg.matchIn(['members', 'member']).length).toEqual(2)
+  expect(cfg.matchIn('github_membership', ['members', 'member']).length).toEqual(2)
   expect(cfg.getResources().length).toEqual(21)
 })
 
@@ -86,13 +88,14 @@ test('adds 1 new file', async () => {
   const cfg = config.parse(yaml)
 
   const file = new config.Resource(
+    'github_repository_file',
     ['repositories', 'github-mgmt', 'files'],
     YAML.parseDocument('file: {}').contents as YAML.Scalar
   )
 
   cfg.add(file)
 
-  expect(cfg.matchIn(['repositories', 'github-mgmt', 'files']).length).toEqual(2)
+  expect(cfg.matchIn('github_repository_file', ['repositories', 'github-mgmt', 'files']).length).toEqual(2)
   expect(cfg.getResources().length).toEqual(20)
 })
 
@@ -101,10 +104,10 @@ test('updates all team descriptions', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(['teams'])
+  const teams = cfg.matchIn('github_team', ['teams'])
 
   const teamUpdates = teams.map(team => {
-    const resource = new config.Resource(team.path, team.value.clone() as YAML.Pair);
+    const resource = new config.Resource(team.type, team.path, team.value.clone() as YAML.Pair);
     ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
     return resource
   })
@@ -129,10 +132,10 @@ test('updates all team descriptions', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(['teams'])
+  const teams = cfg.matchIn('github_team', ['teams'])
 
   const teamUpdates = teams.map(team => {
-    const resource = new config.Resource(team.path, team.value.clone() as YAML.Pair);
+    const resource = new config.Resource(team.type, team.path, team.value.clone() as YAML.Pair);
     ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
     return resource
   })
@@ -157,9 +160,10 @@ test('removes a comment on property update', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(['teams'])
+  const teams = cfg.matchIn('github_team', ['teams'])
 
   const resource = new config.Resource(
+    'github_repository',
     ['repositories'],
     (YAML.parseDocument('github-mgmt: { allow_auto_merge: true }').contents as YAML.YAMLMap).items[0]
   );
@@ -181,9 +185,10 @@ test('does not upate properties when the values match', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(['teams'])
+  const teams = cfg.matchIn('github_team', ['teams'])
 
   const resource = new config.Resource(
+    'github_repository',
     ['repositories'],
     (YAML.parseDocument('github-mgmt: { allow_auto_merge: false }').contents as YAML.YAMLMap).items[0]
   );
