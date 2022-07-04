@@ -1,5 +1,7 @@
 import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
+import { ManagedResources } from './terraform'
+import { camelCaseToSnakeCase } from './utils'
 
 class Resource {
   type: string
@@ -195,16 +197,9 @@ class Config {
   }
 
   getResources(): Resource[] {
-    return [
-      ...this.matchIn('github_membership', ["members", ".+"]),
-      ...this.matchIn('github_repository', ["repositories"]),
-      ...this.matchIn('github_repository_collaborator', ["repositories", ".+", "collaborators", ".+"]),
-      ...this.matchIn('github_team_repository', ["repositories", ".+", "teams", ".+"]),
-      ...this.matchIn('github_repository_file', ["repositories", ".+", "files"]),
-      ...this.matchIn('github_branch_protection', ["repositories", ".+", "branch_protection"]),
-      ...this.matchIn('github_team', ["teams"]),
-      ...this.matchIn('github_team_membership', ["teams", ".+", "members", ".+"])
-    ]
+    return ManagedResources.flatMap(cls => {
+      return this.matchIn(camelCaseToSnakeCase(cls.name), cls.yamlPath)
+    })
   }
 
   equals(a: unknown, b: unknown): boolean {

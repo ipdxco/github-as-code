@@ -35,10 +35,10 @@ class DesiredResource extends Resource {
   }
 }
 
-
 class NullResource extends Resource {}
 
 class GithubMembership extends ManagedResource {
+  static yamlPath = ["members", ".+"]
   override values!: Identifiable & {
     role: 'admin' | 'member'
     username: string
@@ -52,6 +52,7 @@ class GithubMembership extends ManagedResource {
   }
 }
 class GithubRepository extends ManagedResource {
+  static yamlPath = ["repositories"]
   override values!: Identifiable & {
     name: string
   }
@@ -65,6 +66,7 @@ class GithubRepository extends ManagedResource {
   }
 }
 class GithubRepositoryCollaborator extends ManagedResource {
+  static yamlPath = ["repositories", ".+", "collaborators", ".+"]
   override values!: Identifiable & {
     username: string
     repository: string
@@ -79,6 +81,7 @@ class GithubRepositoryCollaborator extends ManagedResource {
   }
 }
 class GithubRepositoryFile extends ManagedResource {
+  static yamlPath = ["repositories", ".+", "files"]
   override values!: Identifiable & {
     branch: string
     file: string
@@ -94,6 +97,7 @@ class GithubRepositoryFile extends ManagedResource {
   }
 }
 class GithubBranchProtection extends ManagedResource {
+  static yamlPath = ["repositories", ".+", "branch_protection"]
   override values!: Identifiable & {
     repository: string
     pattern: string
@@ -108,6 +112,7 @@ class GithubBranchProtection extends ManagedResource {
   }
 }
 class GithubTeam extends ManagedResource {
+  static yamlPath = ["teams"]
   override values!: Identifiable & {
     name: string
   }
@@ -121,6 +126,7 @@ class GithubTeam extends ManagedResource {
   }
 }
 class GithubTeamMembership extends ManagedResource {
+  static yamlPath = ["teams", ".+", "members", ".+"]
   override values!: Identifiable & {
     username: string
     role: 'maintainer' | 'member'
@@ -134,6 +140,7 @@ class GithubTeamMembership extends ManagedResource {
   }
 }
 class GithubTeamRepository extends ManagedResource {
+  static yamlPath = ["repositories", ".+", "teams", ".+"]
   override values!: Identifiable & {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
