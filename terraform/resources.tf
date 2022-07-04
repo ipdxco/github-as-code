@@ -1,4 +1,4 @@
-resource "github_membership" "github_membership" {
+resource "github_membership" "this" {
   for_each = contains(local.resource_types, "github_membership") ? merge([
     for role, members in lookup(local.config, "members", {}) : {
       for member in members : "${member}" => {
@@ -16,7 +16,7 @@ resource "github_membership" "github_membership" {
   }
 }
 
-resource "github_repository" "github_repository" {
+resource "github_repository" "this" {
   for_each = {
     for repository, config in lookup(local.config, "repositories", {}) : repository => merge(config, {
       name = repository
@@ -96,7 +96,7 @@ resource "github_repository" "github_repository" {
   }
 }
 
-resource "github_repository_collaborator" "github_repository_collaborator" {
+resource "github_repository_collaborator" "this" {
   for_each = contains(local.resource_types, "github_repository_collaborator") ? merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
@@ -110,7 +110,7 @@ resource "github_repository_collaborator" "github_repository_collaborator" {
     ]
   ])...) : {}
 
-  depends_on = [github_repository.github_repository]
+  depends_on = [github_repository.this]
 
   repository = each.value.repository
   username   = each.value.username
@@ -121,13 +121,13 @@ resource "github_repository_collaborator" "github_repository_collaborator" {
   }
 }
 
-resource "github_branch_protection" "github_branch_protection" {
+resource "github_branch_protection" "this" {
   for_each = contains(local.resource_types, "github_branch_protection") ? merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
       for pattern, config in lookup(repository_config, "branch_protection", {}) : "${repository}:${pattern}" => merge(config, {
         pattern       = pattern
-        repository_id = github_repository.github_repository[repository].node_id
+        repository_id = github_repository.this[repository].node_id
       })
     }
   ]...) : {}
@@ -175,11 +175,11 @@ resource "github_branch_protection" "github_branch_protection" {
   }
 }
 
-resource "github_team" "github_team" {
+resource "github_team" "this" {
   for_each = contains(local.resource_types, "github_team") ? {
     for team, config in lookup(local.config, "teams", {}) : team => merge(config, {
       name           = team
-      parent_team_id = try(try(element(data.github_organization_teams.data_github_organization_teams, index(data.github_organization_teams.data_github_organization_teams.*.id, config.parent_team_id)), config.parent_team_id), null)
+      parent_team_id = try(try(element(data.github_organization_teams.this, index(data.github_organization_teams.this.*.id, config.parent_team_id)), config.parent_team_id), null)
     })
   } : {}
 
@@ -197,14 +197,14 @@ resource "github_team" "github_team" {
   }
 }
 
-resource "github_team_repository" "github_team_repository" {
+resource "github_team_repository" "this" {
   for_each = contains(local.resource_types, "github_team_repository") ? merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
       for permission, teams in lookup(repository_config, "teams", {}) : {
         for team in teams : "${team}:${repository}" => {
           repository = repository
-          team_id    = github_team.github_team[team].id
+          team_id    = github_team.this[team].id
           permission = permission
         }
       }
@@ -212,7 +212,7 @@ resource "github_team_repository" "github_team_repository" {
   ])...) : {}
 
   depends_on = [
-    github_repository.github_repository
+    github_repository.this
   ]
 
   repository = each.value.repository
@@ -225,13 +225,13 @@ resource "github_team_repository" "github_team_repository" {
   }
 }
 
-resource "github_team_membership" "github_team_membership" {
+resource "github_team_membership" "this" {
   for_each = contains(local.resource_types, "github_team_membership") ? merge(flatten([
     for team, team_config in lookup(local.config, "teams", {}) :
     [
       for role, members in lookup(team_config, "members", {}) : {
         for member in members : "${team}:${member}" => {
-          team_id  = github_team.github_team[team].id
+          team_id  = github_team.this[team].id
           username = member
           role     = role
         }
@@ -248,7 +248,7 @@ resource "github_team_membership" "github_team_membership" {
   }
 }
 
-resource "github_repository_file" "github_repository_file" {
+resource "github_repository_file" "this" {
   for_each = contains(local.resource_types, "github_repository_file") ? merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
@@ -256,7 +256,7 @@ resource "github_repository_file" "github_repository_file" {
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
           repository = repository
           file       = file
-          branch     = try(config.branch, github_repository.github_repository[repository].default_branch)
+          branch     = try(config.branch, github_repository.this[repository].default_branch)
           content    = try(file("${path.module}/../files/${config.content}"), config.content)
         }) if contains(keys(config), "content")
       ] : "${config.repository}/${config.file}" => config
@@ -284,13 +284,13 @@ resource "github_repository_file" "github_repository_file" {
 
 resource "null_resource" "resources" {
   depends_on = [
-    github_membership.github_membership,
-    github_repository.github_repository,
-    github_repository_collaborator.github_repository_collaborator,
-    github_branch_protection.github_branch_protection,
-    github_team.github_team,
-    github_team_membership.github_team_membership,
-    github_team_membership.github_team_membership,
-    github_repository_file.github_repository_file
+    github_membership.this,
+    github_repository.this,
+    github_repository_collaborator.this,
+    github_branch_protection.this,
+    github_team.this,
+    github_team_membership.this,
+    github_team_membership.this,
+    github_repository_file.this
   ]
 }

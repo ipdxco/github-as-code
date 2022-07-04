@@ -1,4 +1,4 @@
-resource "github_branch_protection" "github_branch_protection" {
+resource "github_branch_protection" "this" {
   lifecycle {
     ignore_changes = [
       allows_deletions,

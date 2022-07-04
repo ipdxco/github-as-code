@@ -8,7 +8,9 @@ test('parses terraform state', async () => {
   const json = fs.readFileSync('__tests__/resources/state.json').toString()
   const state = terraform.parse(json)
 
-  state.values.root_module.resources.forEach(resource => {
+  state.values.root_module.resources.filter(resource => {
+    return resource.type != 'null_resource'
+  }).forEach(resource => {
     expect(resource.constructor.name).not.toEqual('Resource')
   })
 })

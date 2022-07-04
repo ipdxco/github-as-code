@@ -1,6 +1,7 @@
-import {Type, plainToClass} from 'class-transformer'
+import {Type, Transform, plainToClass, ClassConstructor} from 'class-transformer'
 import * as Config from './yaml'
 import * as YAML from 'yaml'
+import {camelCaseToSnakeCase} from './utils'
 
 interface Identifiable {
   id: string
@@ -34,7 +35,10 @@ class DesiredResource extends Resource {
   }
 }
 
-class GitHubMembership extends ManagedResource {
+
+class NullResource extends Resource {}
+
+class GithubMembership extends ManagedResource {
   override values!: Identifiable & {
     role: 'admin' | 'member'
     username: string
@@ -47,7 +51,7 @@ class GitHubMembership extends ManagedResource {
     )
   }
 }
-class GitHubRepository extends ManagedResource {
+class GithubRepository extends ManagedResource {
   override values!: Identifiable & {
     name: string
   }
@@ -60,7 +64,7 @@ class GitHubRepository extends ManagedResource {
     )
   }
 }
-class GitHubRepositoryCollaborator extends ManagedResource {
+class GithubRepositoryCollaborator extends ManagedResource {
   override values!: Identifiable & {
     username: string
     repository: string
@@ -74,7 +78,7 @@ class GitHubRepositoryCollaborator extends ManagedResource {
     )
   }
 }
-class GitHubRepositoryFile extends ManagedResource {
+class GithubRepositoryFile extends ManagedResource {
   override values!: Identifiable & {
     branch: string
     file: string
@@ -89,7 +93,7 @@ class GitHubRepositoryFile extends ManagedResource {
     )
   }
 }
-class GitHubBranchProtection extends ManagedResource {
+class GithubBranchProtection extends ManagedResource {
   override values!: Identifiable & {
     repository: string
     pattern: string
@@ -103,7 +107,7 @@ class GitHubBranchProtection extends ManagedResource {
     )
   }
 }
-class GitHubTeam extends ManagedResource {
+class GithubTeam extends ManagedResource {
   override values!: Identifiable & {
     name: string
   }
@@ -116,7 +120,7 @@ class GitHubTeam extends ManagedResource {
     )
   }
 }
-class GitHubTeamMembership extends ManagedResource {
+class GithubTeamMembership extends ManagedResource {
   override values!: Identifiable & {
     username: string
     role: 'maintainer' | 'member'
@@ -129,7 +133,7 @@ class GitHubTeamMembership extends ManagedResource {
     )
   }
 }
-class GitHubTeamRepository extends ManagedResource {
+class GithubTeamRepository extends ManagedResource {
   override values!: Identifiable & {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
@@ -142,7 +146,7 @@ class GitHubTeamRepository extends ManagedResource {
     )
   }
 }
-class GitHubOrganizationData extends DataResource {
+class GithubOrganizationData extends DataResource {
   override values!: Identifiable & {
     login: string,
     members: string[],
@@ -150,14 +154,14 @@ class GitHubOrganizationData extends DataResource {
   override getDesiredResources(): DesiredResource[] {
     return this.values.members.map(member => {
       const resource = new DesiredResource(
-        `github_membership.github_membership["${member}"]`,
+        `github_membership.this["${member}"]`,
         { id: `${this.values.login}:${member}` }
       )
       return resource;
     })
   }
 }
-class GitHubRepositoriesData extends DataResource {
+class GithubRepositoriesData extends DataResource {
   override values!: Identifiable & {
     names: string[]
   }
@@ -165,14 +169,14 @@ class GitHubRepositoriesData extends DataResource {
   override getDesiredResources(): DesiredResource[] {
     return this.values.names.map(name => {
       const resource = new DesiredResource(
-        `github_repository.github_repository["${name}"]`,
+        `github_repository.this["${name}"]`,
         {id: name}
       )
       return resource
     })
   }
 }
-class GitHubCollaboratorsData extends DataResource {
+class GithubCollaboratorsData extends DataResource {
   override values!: Identifiable & {
     collaborator: {
       login: string
@@ -182,14 +186,14 @@ class GitHubCollaboratorsData extends DataResource {
   override getDesiredResources(): DesiredResource[] {
     return this.values.collaborator.map(collaborator => {
       const resource = new DesiredResource(
-        `github_repository_collaborator.github_repository_collaborator["${this.values.repository}:${collaborator.login}"]`,
+        `github_repository_collaborator.this["${this.values.repository}:${collaborator.login}"]`,
         {id: `${this.values.repository}:${collaborator.login}`}
       )
       return resource
     })
   }
 }
-class GitHubRepositoryData extends DataResource {
+class GithubRepositoryData extends DataResource {
   override values!: Identifiable & {
     name: string
     branches: {
@@ -203,14 +207,14 @@ class GitHubRepositoryData extends DataResource {
       .filter(branch => branch.protected)
       .map(branch => {
         const resource = new DesiredResource(
-          `github_branch_protection.github_branch_protection["${this.values.name}:${branch.name}"]`,
+          `github_branch_protection.this["${this.values.name}:${branch.name}"]`,
           { id: `${this.values.name}:${branch.name}` }
         )
         return resource
       })
   }
 }
-class GitHubOrganizationTeamsData extends DataResource {
+class GithubOrganizationTeamsData extends DataResource {
   override values!: Identifiable & {
     teams: {
       id: string
@@ -224,7 +228,7 @@ class GitHubOrganizationTeamsData extends DataResource {
     resources.push(
       ...this.values.teams.map(team => {
         const resource = new DesiredResource(
-          `github_team.github_team["${team.name}"]`,
+          `github_team.this["${team.name}"]`,
           {id: team.id}
         )
         return resource
@@ -234,7 +238,7 @@ class GitHubOrganizationTeamsData extends DataResource {
       ...this.values.teams.flatMap(team => {
         return team.repositories.map(repository => {
           const resource = new DesiredResource(
-            `github_team_repository.github_team_repository["${team.name}:${repository}"]`,
+            `github_team_repository.this["${team.name}:${repository}"]`,
             {id: `${team.id}:${repository}`}
           )
           return resource
@@ -245,7 +249,7 @@ class GitHubOrganizationTeamsData extends DataResource {
       ...this.values.teams.flatMap(team => {
         return team.members.map(member => {
           const resource = new DesiredResource(
-            `github_team_membership.github_team_membership["${team.name}:${member}"]`,
+            `github_team_membership.this["${team.name}:${member}"]`,
             {id: `${team.id}:${member}`}
           )
           return resource
@@ -255,8 +259,8 @@ class GitHubOrganizationTeamsData extends DataResource {
     return resources
   }
 }
-class GitHubBranchData extends DataResource {}
-class GitHubTreeData extends DataResource {
+class GithubBranchData extends DataResource {}
+class GithubTreeData extends DataResource {
   index!: string
   override values!: Identifiable & {
     entries: {
@@ -264,39 +268,51 @@ class GitHubTreeData extends DataResource {
     }[]
   }
 }
-class NullResource extends Resource {}
+
+export const ManagedResources = [
+  GithubMembership,
+  GithubRepository,
+  GithubRepositoryCollaborator,
+  GithubRepositoryFile,
+  GithubBranchProtection,
+  GithubTeam,
+  GithubTeamMembership,
+  GithubTeamRepository,
+]
+
+export const DataResources = [
+  GithubOrganizationData,
+  GithubRepositoriesData,
+  GithubCollaboratorsData,
+  GithubRepositoryData,
+  GithubOrganizationTeamsData,
+  GithubBranchData,
+  GithubTreeData,
+]
 
 class Module {
-  @Type(() => Resource, {
-    discriminator: {
-      property: 'name',
-      subTypes: [
-        {value: GitHubMembership, name: 'github_membership'},
-        {value: GitHubRepository, name: 'github_repository'},
-        {
-          value: GitHubRepositoryCollaborator,
-          name: 'github_repository_collaborator'
-        },
-        {value: GitHubRepositoryFile, name: 'github_repository_file'},
-        {value: GitHubBranchProtection, name: 'github_branch_protection'},
-        {value: GitHubTeam, name: 'github_team'},
-        {value: GitHubTeamMembership, name: 'github_team_membership'},
-        {value: GitHubTeamRepository, name: 'github_team_repository'},
-        {value: GitHubOrganizationData, name: 'data_github_organization'},
-        {value: GitHubRepositoriesData, name: 'data_github_repositories'},
-        {value: GitHubCollaboratorsData, name: 'data_github_collaborators'},
-        {value: GitHubRepositoryData, name: 'data_github_repository'},
-        {
-          value: GitHubOrganizationTeamsData,
-          name: 'data_github_organization_teams'
-        },
-        {value: GitHubBranchData, name: 'data_github_branch'},
-        {value: GitHubTreeData, name: 'data_github_tree'},
-        {value: NullResource, name: 'resources'},
-        {value: NullResource, name: 'data'}
-      ]
-    },
-    keepDiscriminatorProperty: true
+  @Transform(({ value, options }) => {
+    return (value as any[]).map(v => {
+      if (v.type == 'null_resource') {
+        return plainToClass(NullResource, v, options);
+      } else if (v.mode === 'managed') {
+        const cls = ManagedResources.find(cls => camelCaseToSnakeCase(cls.name) === v.type)
+        if (cls !== undefined) {
+          return plainToClass(cls as ClassConstructor<ManagedResource>, v, options)
+        } else {
+          throw new Error(`Expected to find a matching class for: ${JSON.stringify(v)}`)
+        }
+      } else if (v.mode === 'data') {
+        const cls = DataResources.find(cls => camelCaseToSnakeCase(cls.name) === `${v.address.split('.')[1]}_data`)
+        if (cls !== undefined) {
+          return plainToClass(cls as ClassConstructor<DataResource>, v, options)
+        } else {
+          throw new Error(`Expected to find a matching class for: ${JSON.stringify(v)}`)
+        }
+      } else {
+        throw new Error(`Expected either a null_resource, ManagedResource or a DataResource, got this instead: ${JSON.stringify(v)}`)
+      }
+    })
   })
   resources!: Resource[]
 }
@@ -350,11 +366,11 @@ class State {
     const desiredResources = this.getDesiredResources()
 
     const resourcesToRemove = managedResources.filter(managedResource => {
-      if (managedResource instanceof GitHubRepositoryFile) {
+      if (managedResource instanceof GithubRepositoryFile) {
         return !(
           this.values.root_module.resources.filter(
-            resource => resource instanceof GitHubTreeData
-          ) as GitHubTreeData[]
+            resource => resource instanceof GithubTreeData
+          ) as GithubTreeData[]
         ).find(
           resource =>
             resource.index ===
