@@ -2,6 +2,8 @@ import {Type, Transform, plainToClass, ClassConstructor} from 'class-transformer
 import * as Config from './yaml'
 import * as YAML from 'yaml'
 import * as cli from '@actions/exec'
+import * as HCL from 'hcl2-parser'
+import * as fs from 'fs'
 import {camelCaseToSnakeCase, findFileByContent} from './utils'
 
 const TF_LOCK = process.env.TF_LOCK || true
@@ -384,12 +386,12 @@ class State {
     )
   }
 
-  getResourcesToImport(): Resource[] {
+  getResourcesToImport(managedResourceTypes: string[]): Resource[] {
     const managedResources = this.getManagedResources()
     const desiredResources = this.getDesiredResources()
 
     const resourcesToImport = desiredResources.filter(desiredResource => {
-      return !managedResources.find(managedResource =>
+      return managedResourceTypes.includes(desiredResource.type) && !managedResources.find(managedResource =>
         managedResource.equals(desiredResource)
       )
     })
@@ -397,12 +399,14 @@ class State {
     return resourcesToImport
   }
 
-  getResourcesToRemove(): Resource[] {
+  getResourcesToRemove(managedResourceTypes: string[]): Resource[] {
     const managedResources = this.getManagedResources()
     const desiredResources = this.getDesiredResources()
 
     const resourcesToRemove = managedResources.filter(managedResource => {
-      if (managedResource instanceof GithubRepositoryFile) {
+      if (! managedResourceTypes.includes(managedResource.type)) {
+        return true
+      } else if (managedResource instanceof GithubRepositoryFile) {
         return !(
           this.values.root_module.resources.filter(
             resource => resource instanceof GithubTreeData
@@ -451,4 +455,48 @@ export async function getState(): Promise<State> {
     silent: true
   });
   return parse(json);
+}
+
+type LocalsTF = {
+  locals?: {
+    resource_types?: string[]
+  }
+}
+
+export function getManagedResourceTypes(): string[] {
+  if (fs.existsSync(`${TF_WORKING_DIR}/locals_override.tf`)) {
+    const overrides: LocalsTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals_override.tf`))[0];
+    if (overrides.locals !== undefined && overrides.locals.resource_types !== undefined) {
+      return overrides.locals.resource_types;
+    }
+  }
+  return HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals.tf`))[0]!.locals!.resource_types;
+}
+
+type ResourcesTF = {
+  resource?: Record<string, {
+    lifecycle?: {
+      ignore_changes?: string[]
+    }
+  }>
+}
+
+export function getIgnoredChanges(): Record<string, string[]> {
+  const ignoredChanges: Record<string, string[]> = {};
+  function _updateIgnoredChanges(resources: ResourcesTF) {
+    if (resources.resource) {
+      Object.entries(resources.resource).forEach(([name, resource]) => {
+        if (resource.lifecycle && resource.lifecycle.ignore_changes) {
+          ignoredChanges[name] = resource.lifecycle.ignore_changes;
+        }
+      })
+    }
+  }
+  const resources: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals.tf`))[0]
+  _updateIgnoredChanges(resources)
+  if (fs.existsSync(`${TF_WORKING_DIR}/resources_override.tf`)) {
+    const overrides: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/resources_override.tf`))[0];
+    _updateIgnoredChanges(overrides)
+  }
+  return ignoredChanges
 }

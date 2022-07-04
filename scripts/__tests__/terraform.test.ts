@@ -3,6 +3,7 @@ import 'reflect-metadata'
 import * as fs from 'fs'
 import * as terraform from '../src/terraform'
 import * as YAML from 'yaml'
+import { camelCaseToSnakeCase } from '../src/utils'
 
 test('parses terraform state', async () => {
   const json = fs.readFileSync('__tests__/resources/state.json').toString()
@@ -19,7 +20,7 @@ test('finds no resources to import', async () => {
   const json = fs.readFileSync('__tests__/resources/state.json').toString()
   const state = terraform.parse(json)
 
-  const resourcesToImport = state.getResourcesToImport()
+  const resourcesToImport = state.getResourcesToImport(terraform.ManagedResources.map(cls => camelCaseToSnakeCase(cls.name)))
 
   expect(resourcesToImport.length).toEqual(0)
 })
@@ -29,9 +30,18 @@ test('finds no resources to remove', async () => {
   const json = fs.readFileSync('__tests__/resources/state.json').toString()
   const state = terraform.parse(json)
 
-  const resourcesToRemove = state.getResourcesToRemove()
+  const resourcesToRemove = state.getResourcesToRemove(terraform.ManagedResources.map(cls => camelCaseToSnakeCase(cls.name)))
 
   expect(resourcesToRemove.length).toEqual(0)
+})
+
+test('finds all the unmanaged resources to remove', async () => {
+  const json = fs.readFileSync('__tests__/resources/state.json').toString()
+  const state = terraform.parse(json)
+
+  const resourcesToRemove = state.getResourcesToRemove([])
+
+  expect(resourcesToRemove.length).toEqual(19)
 })
 
 test('finds no id fields on YAML resources', async () => {

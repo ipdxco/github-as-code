@@ -2,6 +2,27 @@ import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
 import { ManagedResources } from './terraform'
 import { camelCaseToSnakeCase } from './utils'
+import * as fs from 'fs'
+
+function equals(a: unknown, b: unknown): boolean {
+  if (YAML.isScalar(a) && YAML.isScalar(b)) {
+    return a.value === b.value
+  } else if (YAML.isPair(a) && YAML.isPair(b) && YAML.isScalar(a.key) && YAML.isScalar(b.key)) {
+    return a.key.value === b.key.value
+  } else {
+    throw new Error(`Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${JSON.stringify(a)} and ${JSON.stringify(b)}`)
+  }
+}
+
+function isEmpty(a: unknown): boolean {
+  if (YAML.isScalar(a)) {
+    return a.value === undefined && a.value === null
+  } else if (YAML.isCollection(a)) {
+    return a.items.length === 0
+  } else {
+    return false
+  }
+}
 
 class Resource {
   type: string
@@ -12,6 +33,10 @@ class Resource {
     this.type = type
     this.path = path
     this.value = value
+  }
+
+  equals(other: Resource): boolean {
+    return this.type === other.type && JSON.stringify(this.path) === JSON.stringify(other.path) && equals(this.value, other.value);
   }
 }
 
@@ -149,6 +174,10 @@ class Config {
     return this.document.toJSON()
   }
 
+  toString(): string {
+    return this.document.toString({ collectionStyle: 'block' });
+  }
+
   matchIn(type: string, path: string[]): Resource[] {
     function _matchIn(path: string[], node: YAML.YAMLMap, history: string[]): Resource[] {
       const [key, ...rest] = path
@@ -188,7 +217,7 @@ class Config {
 
   find(resource: Resource): Resource | undefined {
     return this.matchIn(resource.type, resource.path).find(matchingResource => {
-      return this.equals(resource.value, matchingResource.value)
+      return equals(resource.value, matchingResource.value)
     })
   }
 
@@ -202,21 +231,11 @@ class Config {
     })
   }
 
-  equals(a: unknown, b: unknown): boolean {
-    if (YAML.isScalar(a) && YAML.isScalar(b)) {
-      return a.value === b.value
-    } else if (YAML.isPair(a) && YAML.isPair(b) && YAML.isScalar(a.key) && YAML.isScalar(b.key)) {
-      return a.key.value === b.key.value
-    } else {
-      throw new Error(`Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${JSON.stringify(a)} and ${JSON.stringify(b)}`)
-    }
-  }
-
   remove(resource: Resource): void {
     const item = this.document.getIn(resource.path)
     if (YAML.isCollection(item)) {
       item.items = item.items.filter(i => {
-        return !this.equals(i, resource.value)
+        return !equals(i, resource.value)
       })
     } else {
       throw new Error(`Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(item)}`)
@@ -246,7 +265,7 @@ class Config {
       if (existingResource !== undefined && YAML.isPair(existingResource.value) && YAML.isMap(existingResource.value.value)) {
         const existingValue = existingResource.value.value
         resource.value.value.items.forEach(item => {
-          const existingItem = existingValue.items.find(i => this.equals(i, item))
+          const existingItem = existingValue.items.find(i => equals(i, item))
           if (existingItem !== undefined) {
             if (JSON.stringify(existingItem.value) !== JSON.stringify(item.value)) {
               existingItem.value = item.value
@@ -259,7 +278,7 @@ class Config {
         })
         existingValue.items = existingValue.items.filter(item => {
           if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
-            return ! ignore.includes(item.key.value)
+            return ! ignore.includes(item.key.value) && ! isEmpty(item.value)
           } else {
             throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item.key)}`)
           }
@@ -277,4 +296,9 @@ export { Resource, File, BranchProtection, Repository, Team }
 
 export function parse(yaml: string): Config {
   return new Config(yaml)
+}
+
+export function getConfig(organization: string): Config {
+  const yaml = fs.readFileSync(`../github/${organization}.yml`).toString()
+  return parse(yaml)
 }
