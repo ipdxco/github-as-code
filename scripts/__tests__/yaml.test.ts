@@ -203,3 +203,19 @@ test('does not upate properties when the values match', async () => {
   expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
   expect((allowAutoMergePrior!.value as YAML.Scalar).comment?.trim()).toEqual('I will survive')
 })
+
+test('removes properties from the ignore array on updates', async () => {
+  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+
+  const cfg = config.parse(yaml)
+
+  const teams = cfg.matchIn('github_team', ['teams'])
+
+  teams.forEach(team => {
+    const descriptionPrior = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description')
+    expect(descriptionPrior).toBeDefined()
+    cfg.update(team, ['description'])
+    const descriptionPost = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description')
+    expect(descriptionPost).toBeUndefined()
+  })
+})

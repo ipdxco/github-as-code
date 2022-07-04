@@ -157,7 +157,7 @@ class Config {
           if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
             return item.key.value.match(`^${key}$`)
           } else {
-            throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item)}`)
+            throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item.key)}`)
           }
         })
         .flatMap(item => {
@@ -238,15 +238,15 @@ class Config {
     this.document.addIn(parsedPath, resource.value)
   }
 
-  update(resource: Resource): void {
+  update(resource: Resource, ignore: string[] = []): void {
     if (YAML.isScalar(resource.value)) {
       // do nothing, there's nothing to update in scalar values
     } else if (YAML.isPair(resource.value) && YAML.isMap(resource.value.value)) {
       const existingResource = this.find(resource)
       if (existingResource !== undefined && YAML.isPair(existingResource.value) && YAML.isMap(existingResource.value.value)) {
-        const existingItems = existingResource.value.value.items
+        const existingValue = existingResource.value.value
         resource.value.value.items.forEach(item => {
-          const existingItem = existingItems.find(i => this.equals(i, item))
+          const existingItem = existingValue.items.find(i => this.equals(i, item))
           if (existingItem !== undefined) {
             if (JSON.stringify(existingItem.value) !== JSON.stringify(item.value)) {
               existingItem.value = item.value
@@ -254,7 +254,14 @@ class Config {
               // do nothing, there's no need to update this item
             }
           } else {
-            existingItems.push(item)
+            existingValue.items.push(item)
+          }
+        })
+        existingValue.items = existingValue.items.filter(item => {
+          if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
+            return ! ignore.includes(item.key.value)
+          } else {
+            throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item.key)}`)
           }
         })
       } else {
