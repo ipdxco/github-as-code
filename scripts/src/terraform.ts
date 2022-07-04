@@ -1,7 +1,12 @@
 import {Type, Transform, plainToClass, ClassConstructor} from 'class-transformer'
 import * as Config from './yaml'
 import * as YAML from 'yaml'
+import * as cli from '@actions/exec'
 import {camelCaseToSnakeCase, findFileByContent} from './utils'
+
+const TF_LOCK = process.env.TF_LOCK || true
+const TF_WORKING_DIR = '../terraform'
+const FILES_DIR = '../files'
 
 interface Identifiable {
   id: string
@@ -14,6 +19,14 @@ class Resource {
 
   equals(other: Resource): boolean {
     return this.address === other.address
+  }
+
+  async import() {
+    await cli.exec(`terraform import -lock=${TF_LOCK} "${this.address.replaceAll('"', '\\"')}" "${this.values.id.replaceAll('"', '\\"')}"`, undefined, { cwd: TF_WORKING_DIR });
+  }
+
+  async remove() {
+    await cli.exec(`terraform state rm -lock=${TF_LOCK} "${this.address.replaceAll('"', '\\"')}"`, undefined, { cwd: TF_WORKING_DIR });
   }
 }
 
@@ -90,9 +103,9 @@ class GithubRepositoryFile extends ManagedResource {
   }
   override getYAMLResource(context: State): Config.Resource {
     const values = Object.assign({}, this.values)
-    const file = findFileByContent('../files', values.content)
+    const file = findFileByContent(FILES_DIR, values.content)
     if (file) {
-      values.content = file.substring('../files/'.length)
+      values.content = file.substring(FILES_DIR.length)
     }
     const value = plainToClass(Config.File, values, { excludeExtraneousValues: true})
     return new Config.Resource(
@@ -412,6 +425,30 @@ class State {
     return resourcesToRemove
   }
 }
+
 export function parse(json: string): State {
   return plainToClass(State, JSON.parse(json))
+}
+
+export async function getWorkspace(): Promise<string> {
+  let workspace = '';
+  await cli.exec('terraform workspace show', undefined, {
+    cwd: TF_WORKING_DIR,
+    listeners: { stdout: data => { workspace += data.toString(); } }
+  })
+  return workspace.trim();
+}
+
+export async function refreshState() {
+  await cli.exec(`terraform refresh -lock=${TF_LOCK}`, undefined, { cwd: TF_WORKING_DIR })
+}
+
+export async function getState(): Promise<State> {
+  let json = '';
+  await cli.exec('terraform show -json', undefined, {
+    cwd: TF_WORKING_DIR,
+    listeners: { stdout: data => { json += data.toString(); } },
+    silent: true
+  });
+  return parse(json);
 }
