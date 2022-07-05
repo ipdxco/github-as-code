@@ -1,334 +1,358 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "members": {
-      "type": "object",
-      "additionalProperties": false,
-      "patternProperties": {
-        "^(admin|member)$": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Member"
-          }
-        }
-      }
-    },
-    "repositories": {
-      "type": "object",
-      "additionalProperties": false,
-      "patternProperties": {
-        "^.+$": {
-          "$ref": "#/definitions/Repository"
-        }
-      }
-    },
-    "teams": {
-      "type": "object",
-      "additionalProperties": false,
-      "patternProperties": {
-        "^.+$": {
-          "$ref": "#/definitions/Team"
-        }
-      }
-    }
-  },
+  "$ref": "#/definitions/Schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "Member": {
-      "type": "string"
-    },
-    "Team": {
-      "type": "object",
+    "Schema": {
       "additionalProperties": false,
       "properties": {
-        "create_default_maintainer": {
-          "type": "boolean"
-        },
-        "description": {
-          "type": "string"
-        },
-        "parent_team_id": {
-          "type": "string"
-        },
-        "privacy": {
-          "type": "string",
-          "enum": [
-            "closed",
-            "secret"
-          ]
-        },
         "members": {
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^(maintainer|member)$": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/TeamMember"
-              }
-            }
-          }
-        }
-      }
-    },
-    "TeamMember": {
-      "type": "string"
-    },
-    "Repository": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "allow_auto_merge": {
-          "type": "boolean"
-        },
-        "allow_merge_commit": {
-          "type": "boolean"
-        },
-        "allow_rebase_merge": {
-          "type": "boolean"
-        },
-        "allow_squash_merge": {
-          "type": "boolean"
-        },
-        "archive_on_destroy": {
-          "type": "boolean"
-        },
-        "archived": {
-          "type": "boolean"
-        },
-        "auto_init": {
-          "type": "boolean"
-        },
-        "delete_branch_on_merge": {
-          "type": "boolean"
-        },
-        "description": {
-          "type": "string"
-        },
-        "gitignore_template": {
-          "type": "string"
-        },
-        "has_downloads": {
-          "type": "boolean"
-        },
-        "has_issues": {
-          "type": "boolean"
-        },
-        "has_projects": {
-          "type": "boolean"
-        },
-        "has_wiki": {
-          "type": "boolean"
-        },
-        "homepage_url": {
-          "type": "string"
-        },
-        "ignore_vulnerability_alerts_during_read": {
-          "type": "boolean"
-        },
-        "is_template": {
-          "type": "boolean"
-        },
-        "license_template": {
-          "type": "string"
-        },
-        "pages": {
-          "type": "object",
           "additionalProperties": false,
           "properties": {
-            "source": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "branch": {
+            "admin": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "member": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "repositories": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "allow_auto_merge": {
+                "type": "boolean"
+              },
+              "allow_merge_commit": {
+                "type": "boolean"
+              },
+              "allow_rebase_merge": {
+                "type": "boolean"
+              },
+              "allow_squash_merge": {
+                "type": "boolean"
+              },
+              "archive_on_destroy": {
+                "type": "boolean"
+              },
+              "archived": {
+                "type": "boolean"
+              },
+              "auto_init": {
+                "type": "boolean"
+              },
+              "branch_protection": {
+                "additionalProperties": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "allows_deletions": {
+                      "type": "boolean"
+                    },
+                    "allows_force_pushes": {
+                      "type": "boolean"
+                    },
+                    "enforce_admins": {
+                      "type": "boolean"
+                    },
+                    "push_restrictions": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "require_conversation_resolution": {
+                      "type": "boolean"
+                    },
+                    "require_signed_commits": {
+                      "type": "boolean"
+                    },
+                    "required_linear_history": {
+                      "type": "boolean"
+                    },
+                    "required_pull_request_reviews": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "dismiss_stale_reviews": {
+                          "type": "boolean"
+                        },
+                        "dismissal_restrictions": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "pull_request_bypassers": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "require_code_owner_reviews": {
+                          "type": "boolean"
+                        },
+                        "required_approving_review_count": {
+                          "type": "number"
+                        },
+                        "restrict_dismissals": {
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "required_status_checks": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "contexts": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "strict": {
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              "collaborators": {
+                "additionalProperties": false,
+                "properties": {
+                  "admin": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "maintain": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "pull": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "push": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "triage": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "delete_branch_on_merge": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "files": {
+                "additionalProperties": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "branch": {
+                      "type": "string"
+                    },
+                    "commit_author": {
+                      "type": "string"
+                    },
+                    "commit_email": {
+                      "type": "string"
+                    },
+                    "commit_message": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "overwrite_on_create": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              "gitignore_template": {
+                "type": "string"
+              },
+              "has_downloads": {
+                "type": "boolean"
+              },
+              "has_issues": {
+                "type": "boolean"
+              },
+              "has_projects": {
+                "type": "boolean"
+              },
+              "has_wiki": {
+                "type": "boolean"
+              },
+              "homepage_url": {
+                "type": "string"
+              },
+              "ignore_vulnerability_alerts_during_read": {
+                "type": "boolean"
+              },
+              "is_template": {
+                "type": "boolean"
+              },
+              "license_template": {
+                "type": "string"
+              },
+              "pages": {
+                "additionalProperties": false,
+                "properties": {
+                  "cname": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "branch": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "teams": {
+                "additionalProperties": false,
+                "properties": {
+                  "admin": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "maintain": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "pull": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "push": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "triage": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "template": {
+                "additionalProperties": false,
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  },
+                  "repository": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "topics": {
+                "items": {
                   "type": "string"
                 },
-                "path": {
-                  "type": "string"
-                }
+                "type": "array"
+              },
+              "visibility": {
+                "type": "string"
+              },
+              "vulnerability_alerts": {
+                "type": "boolean"
               }
             },
-            "cname": {
-              "type": "string"
-            }
-          }
-        },
-        "template": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "owner": {
-              "type": "string"
-            },
-            "repository": {
-              "type": "string"
-            }
-          }
-        },
-        "topics": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "visibility": {
-          "type": "string"
-        },
-        "vulnerability_alerts": {
-          "type": "boolean"
-        },
-        "collaborators": {
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^(admin|maintain|push|triage|pull)$": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/RepositoryCollaborator"
-              }
-            }
-          }
+            "type": "object"
+          },
+          "type": "object"
         },
         "teams": {
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^(admin|maintain|push|triage|pull)$": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/RepositoryTeam"
-              }
-            }
-          }
-        },
-        "files": {
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^.+$": {
-              "$ref": "#/definitions/RepositoryFile"
-            }
-          }
-        },
-        "branch_protection": {
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^.+$": {
-              "$ref": "#/definitions/RepositoryBranchProtection"
-            }
-          }
-        }
-      }
-    },
-    "RepositoryCollaborator": {
-      "type": "string"
-    },
-    "RepositoryTeam": {
-      "type": "string"
-    },
-    "RepositoryFile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "content"
-      ],
-      "properties": {
-        "content": {
-          "type": "string"
-        },
-        "branch": {
-          "type": "string"
-        },
-        "commit_author": {
-          "type": "string"
-        },
-        "commit_email": {
-          "type": "string"
-        },
-        "commit_message": {
-          "type": "string"
-        },
-        "overwrite_on_create": {
-          "type": "boolean"
-        }
-      }
-    },
-    "RepositoryBranchProtection": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "allows_deletions": {
-          "type": "boolean"
-        },
-        "allows_force_pushes": {
-          "type": "boolean"
-        },
-        "enforce_admins": {
-          "type": "boolean"
-        },
-        "push_restrictions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "require_conversation_resolution": {
-          "type": "boolean"
-        },
-        "require_signed_commits": {
-          "type": "boolean"
-        },
-        "required_linear_history": {
-          "type": "boolean"
-        },
-        "required_pull_request_reviews": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "dismiss_stale_reviews": {
-              "type": "boolean"
-            },
-            "dismissal_restrictions": {
-              "type": "array",
-              "items": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "create_default_maintainer": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "members": {
+                "additionalProperties": false,
+                "properties": {
+                  "maintainer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "member": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "parent_team_id": {
+                "type": "string"
+              },
+              "privacy": {
+                "enum": [
+                  "closed",
+                  "secret"
+                ],
                 "type": "string"
               }
             },
-            "pull_request_bypassers": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "require_code_owner_reviews": {
-              "type": "boolean"
-            },
-            "required_approving_review_count": {
-              "type": "number"
-            },
-            "restrict_dismissals": {
-              "type": "boolean"
-            }
-          }
-        },
-        "required_status_checks": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "contexts": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "strict": {
-              "type": "boolean"
-            }
-          }
+            "type": "object"
+          },
+          "type": "object"
         }
-      }
+      },
+      "type": "object"
     }
   }
 }

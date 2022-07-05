@@ -75,7 +75,8 @@ jobs:
       - name: Sync
         run: |
           npm install
-          npm run sync
+          npm run build
+          npm run main
         working-directory: scripts
       - uses: ./.github/actions/git-config-user
       - env:

@@ -16,9 +16,7 @@ repositories:
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
-    topics: []
     visibility: public
     vulnerability_alerts: false
   github-mgmt:
@@ -28,26 +26,11 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
-    delete_branch_on_merge: true
-    description: ""
-    has_downloads: true
-    has_issues: true
-    has_projects: false
-    has_wiki: false
-    homepage_url: ""
-    is_template: false
-    template:
-      owner: protocol
-      repository: github-mgmt-template
-    topics: []
-    visibility: public
-    vulnerability_alerts: false
     branch_protection:
       master:
         allows_deletions: false
         allows_force_pushes: false
         enforce_admins: false
-        push_restrictions: []
         require_conversation_resolution: false
         require_signed_commits: false
         required_linear_history: false
@@ -62,9 +45,7 @@ repositories:
           contexts:
             - Plan
           strict: true
-    teams:
-      triage:
-        - ipdx
+    delete_branch_on_merge: true
     files:
       README.md:
         branch: master
@@ -73,6 +54,19 @@ repositories:
         commit_message: Update README
         content: README.md
         overwrite_on_create: false
+    has_downloads: true
+    has_issues: true
+    has_projects: false
+    has_wiki: false
+    is_template: false
+    teams:
+      triage:
+        - ipdx
+    template:
+      owner: protocol
+      repository: github-mgmt-template
+    visibility: public
+    vulnerability_alerts: false
   ipdx:
     allow_auto_merge: false
     allow_merge_commit: true
@@ -81,14 +75,11 @@ repositories:
     archived: false
     auto_init: false
     delete_branch_on_merge: false
-    description: ""
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
-    topics: []
     visibility: public
     vulnerability_alerts: false
   projects-migration:
@@ -98,13 +89,14 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
+    collaborators:
+      admin:
+        - galargh
     delete_branch_on_merge: false
-    description: ""
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
     pages:
       cname: ""
@@ -116,9 +108,6 @@ repositories:
       - graphql
     visibility: public
     vulnerability_alerts: false
-    collaborators:
-      admin:
-        - galargh
   projects-status-history:
     allow_auto_merge: false
     allow_merge_commit: true
@@ -126,20 +115,17 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
+    collaborators:
+      admin:
+        - galargh
     delete_branch_on_merge: false
-    description: ""
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
-    topics: []
     visibility: public
     vulnerability_alerts: false
-    collaborators:
-      admin:
-        - galargh
   rust-sccache-action:
     allow_auto_merge: false
     allow_merge_commit: true
@@ -147,20 +133,17 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
+    collaborators:
+      admin:
+        - galargh
     delete_branch_on_merge: false
-    description: ""
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
-    topics: []
     visibility: public
     vulnerability_alerts: true
-    collaborators:
-      admin:
-        - galargh
   tf-aws-gh-runner:
     allow_auto_merge: false
     allow_merge_commit: true
@@ -169,24 +152,20 @@ repositories:
     archived: false
     auto_init: false
     delete_branch_on_merge: false
-    description: ""
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ""
     is_template: false
-    topics: []
-    visibility: public
-    vulnerability_alerts: false
     teams:
       maintain:
         - ipdx
+    visibility: public
+    vulnerability_alerts: false
 teams:
   ipdx:
-    description: ""
-    privacy: closed
     members:
       maintainer:
         - galargh
         - laurentsenta
+    privacy: closed
