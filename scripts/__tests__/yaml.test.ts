@@ -206,15 +206,20 @@ test('removes a comment on property update', async () => {
   const allowAutoMerge = (
     (existingResource as config.Resource).value.value as YAML.YAMLMap
   ).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
-  expect(allowAutoMerge).toBeDefined();
-  ((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment = 'I will survive'
+  expect(allowAutoMerge).toBeDefined()
+  ;((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment =
+    'I will survive'
 
   expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).value).toBeFalsy()
 
   cfg.update(resource)
 
-  expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).value).toBeTruthy()
-  expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment).toBeUndefined()
+  expect(
+    ((allowAutoMerge as YAML.Pair).value as YAML.Scalar).value
+  ).toBeTruthy()
+  expect(
+    ((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment
+  ).toBeUndefined()
 })
 
 test('does not upate properties when the values match', async () => {
@@ -238,15 +243,18 @@ test('does not upate properties when the values match', async () => {
   const allowAutoMerge = (
     (existingResource as config.Resource).value.value as YAML.YAMLMap
   ).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
-  expect(allowAutoMerge).toBeDefined();
-  ((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment = 'I will survive'
+  expect(allowAutoMerge).toBeDefined()
+  ;((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment =
+    'I will survive'
 
   expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).value).toBeFalsy()
 
   cfg.update(resource)
 
   expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).value).toBeFalsy()
-  expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment).toEqual('I will survive')
+  expect(((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment).toEqual(
+    'I will survive'
+  )
 })
 
 test('removes properties from the ignore array on updates', async () => {
