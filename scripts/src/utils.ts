@@ -1,6 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+export const env = {
+  TF_EXEC: process.env.TF_EXEC || true,
+  TF_LOCK: process.env.TF_LOCK || true,
+  TF_WORKING_DIR: '../terraform',
+  FILES_DIR: '../files',
+  GITHUB_DIR: '../github',
+}
+
 export function camelCaseToSnakeCase(str: string): string {
   return `${str.charAt(0).toLowerCase()}${str.slice(1).replace(/([A-Z])/g, '_$1').toLowerCase()}`
 }

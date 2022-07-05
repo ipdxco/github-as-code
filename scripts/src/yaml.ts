@@ -1,7 +1,7 @@
 import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
-import { ManagedResources } from './terraform'
-import { camelCaseToSnakeCase } from './utils'
+import { ManagedResources, State } from './terraform'
+import { camelCaseToSnakeCase, env } from './utils'
 import * as fs from 'fs'
 
 function equals(a: unknown, b: unknown): boolean {
@@ -10,13 +10,13 @@ function equals(a: unknown, b: unknown): boolean {
   } else if (YAML.isPair(a) && YAML.isPair(b) && YAML.isScalar(a.key) && YAML.isScalar(b.key)) {
     return a.key.value === b.key.value
   } else {
-    throw new Error(`Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${JSON.stringify(a)} and ${JSON.stringify(b)}`)
+    throw new Error(`Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${a} and ${b}`)
   }
 }
 
 function isEmpty(a: unknown): boolean {
   if (YAML.isScalar(a)) {
-    return a.value === undefined && a.value === null
+    return a.value === undefined || a.value === null// || a.value === ''
   } else if (YAML.isCollection(a)) {
     return a.items.length === 0
   } else {
@@ -174,8 +174,12 @@ class Config {
     return this.document.toJSON()
   }
 
+  sort(): void {
+    YAML.visit(this.document, { Map(_, { items }) { items.sort(new YAML.Schema({ sortMapEntries: true }).sortMapEntries!); } })
+  }
+
   toString(): string {
-    return this.document.toString({ collectionStyle: 'block' });
+    return this.document.toString({ collectionStyle: 'block', singleQuote: false })
   }
 
   matchIn(type: string, path: string[]): Resource[] {
@@ -232,29 +236,33 @@ class Config {
   }
 
   remove(resource: Resource): void {
-    const item = this.document.getIn(resource.path)
-    if (YAML.isCollection(item)) {
-      item.items = item.items.filter(i => {
-        return !equals(i, resource.value)
-      })
-    } else {
-      throw new Error(`Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(item)}`)
+    if (this.contains(resource)) {
+      const item = this.document.getIn(resource.path)
+      if (YAML.isCollection(item)) {
+        item.items = item.items.filter(i => {
+          return !equals(i, resource.value)
+        })
+      } else {
+        throw new Error(`Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(item)}`)
+      }
     }
   }
 
   add(resource: Resource): void {
-    const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
-    const item = this.document.getIn(resource.path)
-    if (item === undefined) {
-      if (YAML.isScalar(resource.value)) {
-        this.document.addIn(parsedPath, YAML.parseDocument('[]').contents)
-      } else if (YAML.isPair(resource.value)) {
-        this.document.addIn(parsedPath, YAML.parseDocument('{}').contents)
-      } else {
-        throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(resource.value)}`)
+    if (! this.contains(resource)) {
+      const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
+      const item = this.document.getIn(resource.path)
+      if (item === undefined) {
+        if (YAML.isScalar(resource.value)) {
+          this.document.addIn(parsedPath, YAML.parseDocument('[]').contents)
+        } else if (YAML.isPair(resource.value)) {
+          this.document.addIn(parsedPath, YAML.parseDocument('{}').contents)
+        } else {
+          throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(resource.value)}`)
+        }
       }
+      this.document.addIn(parsedPath, resource.value)
     }
-    this.document.addIn(parsedPath, resource.value)
   }
 
   update(resource: Resource, ignore: string[] = []): void {
@@ -290,6 +298,32 @@ class Config {
       throw new Error(`Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(resource.value)}`)
     }
   }
+
+  sync(state: State, ignoredChanges: Record<string, string[]>): Config {
+    const resourcesInTFState = state.getManagedResources().map(resource => resource.getYAMLResource(state))
+    const resourcesInConfig = this.getResources()
+
+    // remove all the resources (from YAML config) that Terraform doesn't know about anymore
+    resourcesInConfig.filter(resource => {
+      return !resourcesInTFState.find(r => r.equals(resource))
+    }).forEach(resource => {
+      this.remove(resource)
+    })
+
+    // add all the resources (to YAML config) that YAML config doesn't know about yet
+    resourcesInTFState.filter(resource => {
+      return !resourcesInConfig.find(r => r.equals(resource))
+    }).forEach(resource => {
+      this.add(resource)
+    })
+
+    // update all the resources (in YAML config) with the values from Terraform state
+    resourcesInTFState.forEach(resource => {
+      this.update(resource, ignoredChanges[resource.type])
+    })
+
+    return this
+  }
 }
 
 export { Resource, File, BranchProtection, Repository, Team }
@@ -299,6 +333,11 @@ export function parse(yaml: string): Config {
 }
 
 export function getConfig(organization: string): Config {
-  const yaml = fs.readFileSync(`../github/${organization}.yml`).toString()
+  const yaml = fs.readFileSync(`${env.GITHUB_DIR}/${organization}.yml`).toString()
   return parse(yaml)
+}
+
+export function saveConfig(organization: string, config: Config) {
+  config.sort()
+  fs.writeFileSync(`${env.GITHUB_DIR}/${organization}.yml`, config.toString())
 }

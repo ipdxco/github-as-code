@@ -5,13 +5,13 @@ import * as config from '../src/yaml'
 import * as YAML from 'yaml'
 
 test('parses yaml config', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   config.parse(yaml)
 })
 
 test('finds all 19 resources', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
   const resources = cfg.getResources()
@@ -23,7 +23,7 @@ test('finds all 19 resources', async () => {
 })
 
 test('removes all 2 admins', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -41,7 +41,7 @@ test('removes all 2 admins', async () => {
 })
 
 test('removes 3 out of 7 repository', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -59,7 +59,7 @@ test('removes 3 out of 7 repository', async () => {
 })
 
 test('adds 2 new members', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -83,14 +83,14 @@ test('adds 2 new members', async () => {
 })
 
 test('adds 1 new file', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
   const file = new config.Resource(
     'github_repository_file',
     ['repositories', 'github-mgmt', 'files'],
-    YAML.parseDocument('file: {}').contents as YAML.Scalar
+    (YAML.parseDocument('file: {}').contents as YAML.YAMLMap).items[0] as YAML.Pair
   )
 
   cfg.add(file)
@@ -100,7 +100,7 @@ test('adds 1 new file', async () => {
 })
 
 test('updates all team descriptions', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -128,7 +128,7 @@ test('updates all team descriptions', async () => {
 })
 
 test('updates all team descriptions', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -156,7 +156,7 @@ test('updates all team descriptions', async () => {
 })
 
 test('removes a comment on property update', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -169,19 +169,20 @@ test('removes a comment on property update', async () => {
   );
 
   const existingResource = cfg.find(resource)
-  const allowAutoMergePrior = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
+  const allowAutoMerge = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge');
+  (allowAutoMerge!.value as YAML.Scalar).comment = 'I will survive'
 
-  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
+  expect((allowAutoMerge!.value as YAML.Scalar).value).toBeFalsy()
 
   cfg.update(resource)
 
-  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeTruthy()
-  expect((allowAutoMergePrior!.value as YAML.Scalar).comment?.trim()).toBeUndefined()
+  expect((allowAutoMerge!.value as YAML.Scalar).value).toBeTruthy()
+  expect((allowAutoMerge!.value as YAML.Scalar).comment?.trim()).toBeUndefined()
 })
 
 
 test('does not upate properties when the values match', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 
@@ -194,18 +195,19 @@ test('does not upate properties when the values match', async () => {
   );
 
   const existingResource = cfg.find(resource)
-  const allowAutoMergePrior = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
+  const allowAutoMerge = (existingResource!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge');
+  (allowAutoMerge!.value as YAML.Scalar).comment = 'I will survive'
 
-  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
+  expect((allowAutoMerge!.value as YAML.Scalar).value).toBeFalsy()
 
   cfg.update(resource)
 
-  expect((allowAutoMergePrior!.value as YAML.Scalar).value).toBeFalsy()
-  expect((allowAutoMergePrior!.value as YAML.Scalar).comment?.trim()).toEqual('I will survive')
+  expect((allowAutoMerge!.value as YAML.Scalar).value).toBeFalsy()
+  expect((allowAutoMerge!.value as YAML.Scalar).comment).toEqual('I will survive')
 })
 
 test('removes properties from the ignore array on updates', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/config.yaml').toString()
+  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
 

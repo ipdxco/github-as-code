@@ -4,11 +4,7 @@ import * as YAML from 'yaml'
 import * as cli from '@actions/exec'
 import * as HCL from 'hcl2-parser'
 import * as fs from 'fs'
-import {camelCaseToSnakeCase, findFileByContent} from './utils'
-
-const TF_LOCK = process.env.TF_LOCK || true
-const TF_WORKING_DIR = '../terraform'
-const FILES_DIR = '../files'
+import {camelCaseToSnakeCase, findFileByContent, env} from './utils'
 
 interface Identifiable {
   id: string
@@ -24,11 +20,15 @@ class Resource {
   }
 
   async import() {
-    await cli.exec(`terraform import -lock=${TF_LOCK} "${this.address.replaceAll('"', '\\"')}" "${this.values.id.replaceAll('"', '\\"')}"`, undefined, { cwd: TF_WORKING_DIR });
+    if (env.TF_EXEC) {
+      await cli.exec(`terraform import -lock=${env.TF_LOCK} "${this.address.replaceAll('"', '\\"')}" "${this.values.id.replaceAll('"', '\\"')}"`, undefined, { cwd: env.TF_WORKING_DIR });
+    }
   }
 
   async remove() {
-    await cli.exec(`terraform state rm -lock=${TF_LOCK} "${this.address.replaceAll('"', '\\"')}"`, undefined, { cwd: TF_WORKING_DIR });
+    if (env.TF_EXEC) {
+      await cli.exec(`terraform state rm -lock=${env.TF_LOCK} "${this.address.replaceAll('"', '\\"')}"`, undefined, { cwd: env.TF_WORKING_DIR });
+    }
   }
 }
 
@@ -70,9 +70,19 @@ class GithubRepository extends ManagedResource {
   static yamlPath = ["repositories"]
   override values!: Identifiable & {
     name: string
+    template: {}[] | {}
+    pages: {
+      source: {}[] | {}
+    }[] | { source?: {} }
   }
   override getYAMLResource(context: State): Config.Resource {
-    const value = plainToClass(Config.Repository, this.values, { excludeExtraneousValues: true})
+    const values = {...this.values}
+    values.pages = {...(values.pages as {}[])[0] || {}}
+    if (values.pages.source) {
+      values.pages.source = (values.pages.source as {}[])[0] || {}
+    }
+    values.template = (values.template as {}[])[0] || {}
+    const value = plainToClass(Config.Repository, values, { excludeExtraneousValues: true})
     return new Config.Resource(
       this.type,
       ['repositories'],
@@ -104,10 +114,10 @@ class GithubRepositoryFile extends ManagedResource {
     content: string
   }
   override getYAMLResource(context: State): Config.Resource {
-    const values = Object.assign({}, this.values)
-    const file = findFileByContent(FILES_DIR, values.content)
+    const values = {...this.values}
+    const file = findFileByContent(env.FILES_DIR, values.content)
     if (file) {
-      values.content = file.substring(FILES_DIR.length)
+      values.content = file.substring(env.FILES_DIR.length + 1)
     }
     const value = plainToClass(Config.File, values, { excludeExtraneousValues: true})
     return new Config.Resource(
@@ -122,9 +132,14 @@ class GithubBranchProtection extends ManagedResource {
   override values!: Identifiable & {
     repository: string
     pattern: string
+    required_pull_request_reviews: {}[] | {}
+    required_status_checks: {}[] | {}
   }
   override getYAMLResource(context: State): Config.Resource {
-    const value = plainToClass(Config.BranchProtection, this.values, { excludeExtraneousValues: true})
+    const values = {...this.values}
+    values.required_pull_request_reviews = (values.required_pull_request_reviews as {}[])[0] || {}
+    values.required_status_checks = (values.required_status_checks as {}[])[0] || {}
+    const value = plainToClass(Config.BranchProtection, values, { excludeExtraneousValues: true})
     return new Config.Resource(
       this.type,
       ['repositories', this.index.split(':')[0], 'branch_protection'],
@@ -139,7 +154,7 @@ class GithubTeam extends ManagedResource {
     parent_team_id: string | null
   }
   override getYAMLResource(context: State): Config.Resource {
-    const values = Object.assign({}, this.values)
+    const values = {...this.values}
     if (values.parent_team_id) {
       const parentTeam = context.getManagedResources().find(r => r instanceof GithubTeam && values.parent_team_id === r.values.id)
       if (parentTeam) {
@@ -179,8 +194,8 @@ class GithubTeamRepository extends ManagedResource {
   override getYAMLResource(context: State): Config.Resource {
     return new Config.Resource(
       this.type,
-      ['repositories', this.index.split(':')[1], 'teams', this.values.permission],
-      YAML.parseDocument(this.values.repository).contents as YAML.Scalar
+      ['repositories', this.values.repository, 'teams', this.values.permission],
+      YAML.parseDocument(this.index.split(':')[0]).contents as YAML.Scalar
     )
   }
 }
@@ -360,7 +375,7 @@ class Values {
   root_module!: Module
 }
 
-class State {
+export class State {
   @Type(() => Values)
   values!: Values
 
@@ -428,6 +443,20 @@ class State {
 
     return resourcesToRemove
   }
+
+  async sync(managedResourceTypes: string[]): Promise<State> {
+    // remove all the resources (from Terraform state) that GitHub doesn't know about anymore
+    this.getResourcesToRemove(managedResourceTypes).forEach(resource => {
+      resource.remove()
+    })
+
+    // import all the resources (to Terraform state) that Terraform doesn't know about yet
+    this.getResourcesToImport(managedResourceTypes).forEach(resource => {
+      resource.import()
+    })
+
+    return await getState()
+  }
 }
 
 export function parse(json: string): State {
@@ -436,48 +465,60 @@ export function parse(json: string): State {
 
 export async function getWorkspace(): Promise<string> {
   let workspace = '';
-  await cli.exec('terraform workspace show', undefined, {
-    cwd: TF_WORKING_DIR,
-    listeners: { stdout: data => { workspace += data.toString(); } }
-  })
+  if (env.TF_EXEC) {
+    await cli.exec('terraform workspace show', undefined, {
+      cwd: env.TF_WORKING_DIR,
+      listeners: { stdout: data => { workspace += data.toString(); } }
+    })
+  } else {
+    workspace = 'default'
+  }
   return workspace.trim();
 }
 
 export async function refreshState() {
-  await cli.exec(`terraform refresh -lock=${TF_LOCK}`, undefined, { cwd: TF_WORKING_DIR })
+  if (env.TF_EXEC) {
+    await cli.exec(`terraform refresh -lock=${env.TF_LOCK}`, undefined, { cwd: env.TF_WORKING_DIR })
+  }
 }
 
 export async function getState(): Promise<State> {
   let json = '';
-  await cli.exec('terraform show -json', undefined, {
-    cwd: TF_WORKING_DIR,
-    listeners: { stdout: data => { json += data.toString(); } },
-    silent: true
-  });
+  if (env.TF_EXEC) {
+    await cli.exec('terraform show -json', undefined, {
+      cwd: env.TF_WORKING_DIR,
+      listeners: { stdout: data => { json += data.toString(); } },
+      silent: true
+    });
+  } else {
+    json = fs.readFileSync(`${env.TF_WORKING_DIR}/terraform.tfstate`).toString();
+  }
   return parse(json);
 }
 
 type LocalsTF = {
   locals?: {
     resource_types?: string[]
-  }
+  }[]
 }
 
 export function getManagedResourceTypes(): string[] {
-  if (fs.existsSync(`${TF_WORKING_DIR}/locals_override.tf`)) {
-    const overrides: LocalsTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals_override.tf`))[0];
-    if (overrides.locals !== undefined && overrides.locals.resource_types !== undefined) {
-      return overrides.locals.resource_types;
+  if (fs.existsSync(`${env.TF_WORKING_DIR}/locals_override.tf`)) {
+    const overrides: LocalsTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/locals_override.tf`))[0];
+    if (overrides.locals !== undefined && overrides.locals[0]?.resource_types !== undefined) {
+      return overrides.locals[0].resource_types;
     }
   }
-  return HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals.tf`))[0]!.locals!.resource_types;
+  return HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/locals.tf`))[0].locals[0].resource_types;
 }
 
 type ResourcesTF = {
   resource?: Record<string, {
-    lifecycle?: {
-      ignore_changes?: string[]
-    }
+    this?: {
+      lifecycle?: {
+        ignore_changes?: string[]
+      }[]
+    }[]
   }>
 }
 
@@ -486,16 +527,16 @@ export function getIgnoredChanges(): Record<string, string[]> {
   function _updateIgnoredChanges(resources: ResourcesTF) {
     if (resources.resource) {
       Object.entries(resources.resource).forEach(([name, resource]) => {
-        if (resource.lifecycle && resource.lifecycle.ignore_changes) {
-          ignoredChanges[name] = resource.lifecycle.ignore_changes;
+        if (resource.this && resource.this[0].lifecycle && resource.this[0].lifecycle[0].ignore_changes) {
+          ignoredChanges[name] = resource.this[0].lifecycle[0].ignore_changes.map(change => change.substring(2, change.length - 1))
         }
       })
     }
   }
-  const resources: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/locals.tf`))[0]
+  const resources: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/resources.tf`))[0]
   _updateIgnoredChanges(resources)
-  if (fs.existsSync(`${TF_WORKING_DIR}/resources_override.tf`)) {
-    const overrides: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${TF_WORKING_DIR}/resources_override.tf`))[0];
+  if (fs.existsSync(`${env.TF_WORKING_DIR}/resources_override.tf`)) {
+    const overrides: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/resources_override.tf`))[0];
     _updateIgnoredChanges(overrides)
   }
   return ignoredChanges
