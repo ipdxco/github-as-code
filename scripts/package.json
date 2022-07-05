@@ -5,10 +5,10 @@
   "description": "Sync",
   "main": "lib/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint **/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "jest --passWithNoTests",
     "all": "npm run build && npm run format && npm run lint && npm test",

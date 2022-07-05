@@ -1,14 +1,13 @@
 import 'reflect-metadata'
-import * as terraform from '../src/terraform';
-import * as yaml from '../src/yaml';
-import { env } from '../src/utils';
-
+import * as terraform from '../src/terraform'
+import * as yaml from '../src/yaml'
+import {env} from '../src/utils'
 
 test('e2e synchronization', async () => {
-  env.TF_EXEC = false;
-  env.TF_LOCK = false;
-  env.TF_WORKING_DIR = '__tests__/resources/terraform';
-  env.GITHUB_DIR = '__tests__/resources/github';
+  env.TF_EXEC = false
+  env.TF_LOCK = false
+  env.TF_WORKING_DIR = '__tests__/resources/terraform'
+  env.GITHUB_DIR = '__tests__/resources/github'
   env.FILES_DIR = '__tests__/resources/files'
 
   const organization = await terraform.getWorkspace()
@@ -25,5 +24,7 @@ test('e2e synchronization', async () => {
 
   config.sort()
 
-  expect(syncedConfig.toString()).toEqual(yaml.getConfig(organization).toString())
+  expect(syncedConfig.toString()).toEqual(
+    yaml.getConfig(organization).toString()
+  )
 })

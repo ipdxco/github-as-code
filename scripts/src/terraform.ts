@@ -1,10 +1,11 @@
-import {Type, Transform, plainToClass, ClassConstructor} from 'class-transformer'
 import * as Config from './yaml'
+import * as HCL from 'hcl2-parser'
 import * as YAML from 'yaml'
 import * as cli from '@actions/exec'
-import * as HCL from 'hcl2-parser'
 import * as fs from 'fs'
-import {camelCaseToSnakeCase, findFileByContent, env} from './utils'
+import * as transformer from 'class-transformer'
+import {Transform, Type} from 'class-transformer'
+import {camelCaseToSnakeCase, env, findFileByContent} from './utils'
 
 interface Identifiable {
   id: string
@@ -19,15 +20,29 @@ class Resource {
     return this.address === other.address
   }
 
-  async import() {
+  async import(): Promise<void> {
     if (env.TF_EXEC) {
-      await cli.exec(`terraform import -lock=${env.TF_LOCK} "${this.address.replaceAll('"', '\\"')}" "${this.values.id.replaceAll('"', '\\"')}"`, undefined, { cwd: env.TF_WORKING_DIR });
+      await cli.exec(
+        `terraform import -lock=${env.TF_LOCK} "${this.address.replaceAll(
+          '"',
+          '\\"'
+        )}" "${this.values.id.replaceAll('"', '\\"')}"`,
+        undefined,
+        {cwd: env.TF_WORKING_DIR}
+      )
     }
   }
 
-  async remove() {
+  async remove(): Promise<void> {
     if (env.TF_EXEC) {
-      await cli.exec(`terraform state rm -lock=${env.TF_LOCK} "${this.address.replaceAll('"', '\\"')}"`, undefined, { cwd: env.TF_WORKING_DIR });
+      await cli.exec(
+        `terraform state rm -lock=${env.TF_LOCK} "${this.address.replaceAll(
+          '"',
+          '\\"'
+        )}"`,
+        undefined,
+        {cwd: env.TF_WORKING_DIR}
+      )
     }
   }
 }
@@ -53,12 +68,12 @@ class DesiredResource extends Resource {
 class NullResource extends Resource {}
 
 class GithubMembership extends ManagedResource {
-  static yamlPath = ["members", ".+"]
+  static yamlPath = ['members', '.+']
   override values!: Identifiable & {
     role: 'admin' | 'member'
     username: string
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     return new Config.Resource(
       this.type,
       ['members', this.values.role],
@@ -67,88 +82,112 @@ class GithubMembership extends ManagedResource {
   }
 }
 class GithubRepository extends ManagedResource {
-  static yamlPath = ["repositories"]
+  static yamlPath = ['repositories']
   override values!: Identifiable & {
     name: string
     template: {}[] | {}
-    pages: {
-      source: {}[] | {}
-    }[] | { source?: {} }
+    pages:
+      | {
+          source: {}[] | {}
+        }[]
+      | {source?: {}}
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     const values = {...this.values}
-    values.pages = {...(values.pages as {}[])[0] || {}}
+    values.pages = {...((values.pages as {}[])[0] || {})}
     if (values.pages.source) {
       values.pages.source = (values.pages.source as {}[])[0] || {}
     }
     values.template = (values.template as {}[])[0] || {}
-    const value = plainToClass(Config.Repository, values, { excludeExtraneousValues: true})
+    const value = transformer.plainToClass(Config.Repository, values, {
+      excludeExtraneousValues: true
+    })
     return new Config.Resource(
       this.type,
       ['repositories'],
-      (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+      (
+        YAML.parseDocument(YAML.stringify({[this.values.name]: value}))
+          .contents as YAML.YAMLMap
+      ).items[0]
     )
   }
 }
 class GithubRepositoryCollaborator extends ManagedResource {
-  static yamlPath = ["repositories", ".+", "collaborators", ".+"]
+  static yamlPath = ['repositories', '.+', 'collaborators', '.+']
   override values!: Identifiable & {
     username: string
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     return new Config.Resource(
       this.type,
-      ['repositories',  this.values.repository, 'collaborators', this.values.permission],
+      [
+        'repositories',
+        this.values.repository,
+        'collaborators',
+        this.values.permission
+      ],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
   }
 }
 class GithubRepositoryFile extends ManagedResource {
-  static yamlPath = ["repositories", ".+", "files"]
+  static yamlPath = ['repositories', '.+', 'files']
   override values!: Identifiable & {
     branch: string
     file: string
     repository: string
     content: string
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     const values = {...this.values}
     const file = findFileByContent(env.FILES_DIR, values.content)
     if (file) {
       values.content = file.substring(env.FILES_DIR.length + 1)
     }
-    const value = plainToClass(Config.File, values, { excludeExtraneousValues: true})
+    const value = transformer.plainToClass(Config.File, values, {
+      excludeExtraneousValues: true
+    })
     return new Config.Resource(
       this.type,
       ['repositories', this.values.repository, 'files'],
-      (YAML.parseDocument(YAML.stringify({[this.values.file]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+      (
+        YAML.parseDocument(YAML.stringify({[this.values.file]: value}))
+          .contents as YAML.YAMLMap
+      ).items[0]
     )
   }
 }
 class GithubBranchProtection extends ManagedResource {
-  static yamlPath = ["repositories", ".+", "branch_protection"]
+  static yamlPath = ['repositories', '.+', 'branch_protection']
   override values!: Identifiable & {
     repository: string
     pattern: string
     required_pull_request_reviews: {}[] | {}
     required_status_checks: {}[] | {}
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     const values = {...this.values}
-    values.required_pull_request_reviews = (values.required_pull_request_reviews as {}[])[0] || {}
-    values.required_status_checks = (values.required_status_checks as {}[])[0] || {}
-    const value = plainToClass(Config.BranchProtection, values, { excludeExtraneousValues: true})
+    values.required_pull_request_reviews =
+      (values.required_pull_request_reviews as {}[])[0] || {}
+    values.required_status_checks =
+      (values.required_status_checks as {}[])[0] || {}
+    const value = transformer.plainToClass(Config.BranchProtection, values, {
+      excludeExtraneousValues: true
+    })
     return new Config.Resource(
       this.type,
       ['repositories', this.index.split(':')[0], 'branch_protection'],
-      (YAML.parseDocument(YAML.stringify({[this.values.pattern]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+      (
+        YAML.parseDocument(YAML.stringify({[this.values.pattern]: value}))
+          .contents as YAML.YAMLMap
+      ).items[0]
     )
   }
 }
 class GithubTeam extends ManagedResource {
-  static yamlPath = ["teams"]
+  static yamlPath = ['teams']
   override values!: Identifiable & {
     name: string
     parent_team_id: string | null
@@ -156,28 +195,39 @@ class GithubTeam extends ManagedResource {
   override getYAMLResource(context: State): Config.Resource {
     const values = {...this.values}
     if (values.parent_team_id) {
-      const parentTeam = context.getManagedResources().find(r => r instanceof GithubTeam && values.parent_team_id === r.values.id)
+      const parentTeam = context
+        .getManagedResources()
+        .find(
+          r => r instanceof GithubTeam && values.parent_team_id === r.values.id
+        )
       if (parentTeam) {
         values.parent_team_id = (parentTeam as GithubTeam).values.name
       } else {
-        throw new Error(`Expected to find parent team with id: ${values.parent_team_id}`)
+        throw new Error(
+          `Expected to find parent team with id: ${values.parent_team_id}`
+        )
       }
     }
-    const value = plainToClass(Config.Team, values, { excludeExtraneousValues: true})
+    const value = transformer.plainToClass(Config.Team, values, {
+      excludeExtraneousValues: true
+    })
     return new Config.Resource(
       this.type,
       ['teams'],
-      (YAML.parseDocument(YAML.stringify({[this.values.name]: value})).contents as YAML.YAMLMap).items[0] as YAML.Pair
+      (
+        YAML.parseDocument(YAML.stringify({[this.values.name]: value}))
+          .contents as YAML.YAMLMap
+      ).items[0]
     )
   }
 }
 class GithubTeamMembership extends ManagedResource {
-  static yamlPath = ["teams", ".+", "members", ".+"]
+  static yamlPath = ['teams', '.+', 'members', '.+']
   override values!: Identifiable & {
     username: string
     role: 'maintainer' | 'member'
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     return new Config.Resource(
       this.type,
       ['teams', this.index.split(':')[0], 'members', this.values.role],
@@ -186,12 +236,12 @@ class GithubTeamMembership extends ManagedResource {
   }
 }
 class GithubTeamRepository extends ManagedResource {
-  static yamlPath = ["repositories", ".+", "teams", ".+"]
+  static yamlPath = ['repositories', '.+', 'teams', '.+']
   override values!: Identifiable & {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
-  override getYAMLResource(context: State): Config.Resource {
+  override getYAMLResource(_context: State): Config.Resource {
     return new Config.Resource(
       this.type,
       ['repositories', this.values.repository, 'teams', this.values.permission],
@@ -201,16 +251,16 @@ class GithubTeamRepository extends ManagedResource {
 }
 class GithubOrganizationData extends DataResource {
   override values!: Identifiable & {
-    login: string,
-    members: string[],
+    login: string
+    members: string[]
   }
   override getDesiredResources(): DesiredResource[] {
     return this.values.members.map(member => {
       const resource = new DesiredResource(
         `github_membership.this["${member}"]`,
-        { id: `${this.values.login}:${member}` }
+        {id: `${this.values.login}:${member}`}
       )
-      return resource;
+      return resource
     })
   }
 }
@@ -233,7 +283,7 @@ class GithubCollaboratorsData extends DataResource {
   override values!: Identifiable & {
     collaborator: {
       login: string
-    }[],
+    }[]
     repository: string
   }
   override getDesiredResources(): DesiredResource[] {
@@ -261,7 +311,7 @@ class GithubRepositoryData extends DataResource {
       .map(branch => {
         const resource = new DesiredResource(
           `github_branch_protection.this["${this.values.name}:${branch.name}"]`,
-          { id: `${this.values.name}:${branch.name}` }
+          {id: `${this.values.name}:${branch.name}`}
         )
         return resource
       })
@@ -330,7 +380,7 @@ export const ManagedResources = [
   GithubBranchProtection,
   GithubTeam,
   GithubTeamMembership,
-  GithubTeamRepository,
+  GithubTeamRepository
 ]
 
 export const DataResources = [
@@ -340,30 +390,51 @@ export const DataResources = [
   GithubRepositoryData,
   GithubOrganizationTeamsData,
   GithubBranchData,
-  GithubTreeData,
+  GithubTreeData
 ]
 
 class Module {
-  @Transform(({ value, options }) => {
-    return (value as any[]).map(v => {
-      if (v.type == 'null_resource') {
-        return plainToClass(NullResource, v, options);
+  @Transform(({value, options}) => {
+    return (value as {type: string; mode: string; address: string}[]).map(v => {
+      if (v.type === 'null_resource') {
+        return transformer.plainToClass(NullResource, v, options)
       } else if (v.mode === 'managed') {
-        const cls = ManagedResources.find(cls => camelCaseToSnakeCase(cls.name) === v.type)
+        const cls = ManagedResources.find(
+          c => camelCaseToSnakeCase(c.name) === v.type
+        )
         if (cls !== undefined) {
-          return plainToClass(cls as ClassConstructor<ManagedResource>, v, options)
+          return transformer.plainToClass(
+            cls as transformer.ClassConstructor<ManagedResource>,
+            v,
+            options
+          )
         } else {
-          throw new Error(`Expected to find a matching class for: ${JSON.stringify(v)}`)
+          throw new Error(
+            `Expected to find a matching class for: ${JSON.stringify(v)}`
+          )
         }
       } else if (v.mode === 'data') {
-        const cls = DataResources.find(cls => camelCaseToSnakeCase(cls.name) === `${v.address.split('.')[1]}_data`)
+        const cls = DataResources.find(
+          c =>
+            camelCaseToSnakeCase(c.name) === `${v.address.split('.')[1]}_data`
+        )
         if (cls !== undefined) {
-          return plainToClass(cls as ClassConstructor<DataResource>, v, options)
+          return transformer.plainToClass(
+            cls as transformer.ClassConstructor<DataResource>,
+            v,
+            options
+          )
         } else {
-          throw new Error(`Expected to find a matching class for: ${JSON.stringify(v)}`)
+          throw new Error(
+            `Expected to find a matching class for: ${JSON.stringify(v)}`
+          )
         }
       } else {
-        throw new Error(`Expected either a null_resource, ManagedResource or a DataResource, got this instead: ${JSON.stringify(v)}`)
+        throw new Error(
+          `Expected either a null_resource, ManagedResource or a DataResource, got this instead: ${JSON.stringify(
+            v
+          )}`
+        )
       }
     })
   })
@@ -380,7 +451,9 @@ export class State {
   values!: Values
 
   getYAMLResources(): Config.Resource[] {
-    return this.getManagedResources().map(resource => resource.getYAMLResource(this))
+    return this.getManagedResources().map(resource =>
+      resource.getYAMLResource(this)
+    )
   }
 
   getDataResources(): DataResource[] {
@@ -406,8 +479,11 @@ export class State {
     const desiredResources = this.getDesiredResources()
 
     const resourcesToImport = desiredResources.filter(desiredResource => {
-      return managedResourceTypes.includes(desiredResource.type) && !managedResources.find(managedResource =>
-        managedResource.equals(desiredResource)
+      return (
+        managedResourceTypes.includes(desiredResource.type) &&
+        !managedResources.find(managedResource =>
+          managedResource.equals(desiredResource)
+        )
       )
     })
 
@@ -419,7 +495,7 @@ export class State {
     const desiredResources = this.getDesiredResources()
 
     const resourcesToRemove = managedResources.filter(managedResource => {
-      if (! managedResourceTypes.includes(managedResource.type)) {
+      if (!managedResourceTypes.includes(managedResource.type)) {
         return true
       } else if (managedResource instanceof GithubRepositoryFile) {
         return !(
@@ -446,54 +522,64 @@ export class State {
 
   async sync(managedResourceTypes: string[]): Promise<State> {
     // remove all the resources (from Terraform state) that GitHub doesn't know about anymore
-    this.getResourcesToRemove(managedResourceTypes).forEach(resource => {
+    for (const resource of this.getResourcesToRemove(managedResourceTypes)) {
       resource.remove()
-    })
+    }
 
     // import all the resources (to Terraform state) that Terraform doesn't know about yet
-    this.getResourcesToImport(managedResourceTypes).forEach(resource => {
+    for (const resource of this.getResourcesToImport(managedResourceTypes)) {
       resource.import()
-    })
+    }
 
     return await getState()
   }
 }
 
 export function parse(json: string): State {
-  return plainToClass(State, JSON.parse(json))
+  return transformer.plainToClass(State, JSON.parse(json))
 }
 
 export async function getWorkspace(): Promise<string> {
-  let workspace = '';
+  let workspace = ''
   if (env.TF_EXEC) {
     await cli.exec('terraform workspace show', undefined, {
       cwd: env.TF_WORKING_DIR,
-      listeners: { stdout: data => { workspace += data.toString(); } }
+      listeners: {
+        stdout: data => {
+          workspace += data.toString()
+        }
+      }
     })
   } else {
     workspace = 'default'
   }
-  return workspace.trim();
+  return workspace.trim()
 }
 
-export async function refreshState() {
+export async function refreshState(): Promise<void> {
   if (env.TF_EXEC) {
-    await cli.exec(`terraform refresh -lock=${env.TF_LOCK}`, undefined, { cwd: env.TF_WORKING_DIR })
+    await cli.exec(`terraform refresh -lock=${env.TF_LOCK}`, undefined, {
+      cwd: env.TF_WORKING_DIR
+    })
   }
 }
 
 export async function getState(): Promise<State> {
-  let json = '';
+  let json = ''
   if (env.TF_EXEC) {
     await cli.exec('terraform show -json', undefined, {
       cwd: env.TF_WORKING_DIR,
-      listeners: { stdout: data => { json += data.toString(); } },
+      listeners: {
+        stdout: data => {
+          json += data.toString()
+        }
+      },
       silent: true
-    });
+    })
   } else {
-    json = fs.readFileSync(`${env.TF_WORKING_DIR}/terraform.tfstate`).toString();
+    json = fs.readFileSync(`${env.TF_WORKING_DIR}/terraform.tfstate`).toString()
   }
-  return parse(json);
+  return parse(json)
 }
 
 type LocalsTF = {
@@ -504,39 +590,60 @@ type LocalsTF = {
 
 export function getManagedResourceTypes(): string[] {
   if (fs.existsSync(`${env.TF_WORKING_DIR}/locals_override.tf`)) {
-    const overrides: LocalsTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/locals_override.tf`))[0];
-    if (overrides.locals !== undefined && overrides.locals[0]?.resource_types !== undefined) {
-      return overrides.locals[0].resource_types;
+    const overrides: LocalsTF = HCL.parseToObject(
+      fs.readFileSync(`${env.TF_WORKING_DIR}/locals_override.tf`)
+    )[0]
+    if (
+      overrides.locals !== undefined &&
+      overrides.locals[0]?.resource_types !== undefined
+    ) {
+      return overrides.locals[0].resource_types
     }
   }
-  return HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/locals.tf`))[0].locals[0].resource_types;
+  return HCL.parseToObject(
+    fs.readFileSync(`${env.TF_WORKING_DIR}/locals.tf`)
+  )[0].locals[0].resource_types
 }
 
 type ResourcesTF = {
-  resource?: Record<string, {
-    this?: {
-      lifecycle?: {
-        ignore_changes?: string[]
+  resource?: Record<
+    string,
+    {
+      this?: {
+        lifecycle?: {
+          ignore_changes?: string[]
+        }[]
       }[]
-    }[]
-  }>
+    }
+  >
 }
 
 export function getIgnoredChanges(): Record<string, string[]> {
-  const ignoredChanges: Record<string, string[]> = {};
-  function _updateIgnoredChanges(resources: ResourcesTF) {
+  const ignoredChanges: Record<string, string[]> = {}
+  function _updateIgnoredChanges(resources: ResourcesTF): void {
     if (resources.resource) {
-      Object.entries(resources.resource).forEach(([name, resource]) => {
-        if (resource.this && resource.this[0].lifecycle && resource.this[0].lifecycle[0].ignore_changes) {
-          ignoredChanges[name] = resource.this[0].lifecycle[0].ignore_changes.map(change => change.substring(2, change.length - 1))
+      for (const [name, resource] of Object.entries(resources.resource)) {
+        if (
+          resource.this &&
+          resource.this[0].lifecycle &&
+          resource.this[0].lifecycle[0].ignore_changes
+        ) {
+          ignoredChanges[name] =
+            resource.this[0].lifecycle[0].ignore_changes.map(change =>
+              change.substring(2, change.length - 1)
+            )
         }
-      })
+      }
     }
   }
-  const resources: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/resources.tf`))[0]
+  const resources: ResourcesTF = HCL.parseToObject(
+    fs.readFileSync(`${env.TF_WORKING_DIR}/resources.tf`)
+  )[0]
   _updateIgnoredChanges(resources)
   if (fs.existsSync(`${env.TF_WORKING_DIR}/resources_override.tf`)) {
-    const overrides: ResourcesTF = HCL.parseToObject(fs.readFileSync(`${env.TF_WORKING_DIR}/resources_override.tf`))[0];
+    const overrides: ResourcesTF = HCL.parseToObject(
+      fs.readFileSync(`${env.TF_WORKING_DIR}/resources_override.tf`)
+    )[0]
     _updateIgnoredChanges(overrides)
   }
   return ignoredChanges

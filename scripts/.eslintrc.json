@@ -12,7 +12,7 @@
       "eslint-comments/no-use": "off",
       "import/no-namespace": "off",
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-unused-vars": ["error", {"argsIgnorePattern": "^_"}],
       "@typescript-eslint/explicit-member-accessibility": ["error", {"accessibility": "no-public"}],
       "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/array-type": "error",
@@ -45,7 +45,8 @@
       "semi": "off",
       "@typescript-eslint/semi": ["error", "never"],
       "@typescript-eslint/type-annotation-spacing": "error",
-      "@typescript-eslint/unbound-method": "error"
+      "@typescript-eslint/unbound-method": "error",
+      "filenames/match-regex": ["error", "^([a-z0-9]+)([A-Z][a-z0-9]+)*(\\.test)?$"]
     },
     "env": {
       "node": true,

@@ -1,16 +1,23 @@
-import {Type, Expose} from 'class-transformer'
 import * as YAML from 'yaml'
-import { ManagedResources, State } from './terraform'
-import { camelCaseToSnakeCase, env } from './utils'
 import * as fs from 'fs'
+import {Expose, Type} from 'class-transformer'
+import {ManagedResources, State} from './terraform'
+import {camelCaseToSnakeCase, env} from './utils'
 
 function equals(a: unknown, b: unknown): boolean {
   if (YAML.isScalar(a) && YAML.isScalar(b)) {
     return a.value === b.value
-  } else if (YAML.isPair(a) && YAML.isPair(b) && YAML.isScalar(a.key) && YAML.isScalar(b.key)) {
+  } else if (
+    YAML.isPair(a) &&
+    YAML.isPair(b) &&
+    YAML.isScalar(a.key) &&
+    YAML.isScalar(b.key)
+  ) {
     return a.key.value === b.key.value
   } else {
-    throw new Error(`Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${a} and ${b}`)
+    throw new Error(
+      `Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${a} and ${b}`
+    )
   }
 }
 
@@ -36,7 +43,11 @@ class Resource {
   }
 
   equals(other: Resource): boolean {
-    return this.type === other.type && JSON.stringify(this.path) === JSON.stringify(other.path) && equals(this.value, other.value);
+    return (
+      this.type === other.type &&
+      JSON.stringify(this.path) === JSON.stringify(other.path) &&
+      equals(this.value, other.value)
+    )
   }
 }
 
@@ -47,7 +58,8 @@ class RepositoryPagesSource {
 
 class RepositoryPages {
   @Type(() => RepositoryPagesSource)
-  @Expose() source?: RepositoryPagesSource
+  @Expose()
+  source?: RepositoryPagesSource
   @Expose() cname?: string
 }
 
@@ -76,9 +88,11 @@ class Repository {
   @Expose() is_template?: boolean
   @Expose() license_template?: string
   @Type(() => RepositoryPages)
-  @Expose() pages?: RepositoryPages
+  @Expose()
+  pages?: RepositoryPages
   @Type(() => RepositoryTemplate)
-  @Expose() template?: RepositoryTemplate
+  @Expose()
+  template?: RepositoryTemplate
   @Expose() topics?: string[]
   @Expose() visibility?: string
   @Expose() vulnerability_alerts?: boolean
@@ -116,9 +130,11 @@ class BranchProtection {
   @Expose() require_signed_commits?: boolean
   @Expose() required_linear_history?: boolean
   @Type(() => BranchProtectionRequiredPullRequestReviews)
-  @Expose() required_pull_request_reviews?: BranchProtectionRequiredPullRequestReviews
+  @Expose()
+  required_pull_request_reviews?: BranchProtectionRequiredPullRequestReviews
   @Type(() => BranchProtectionRequiredStatusChecks)
-  @Expose() required_status_checks?: BranchProtectionRequiredStatusChecks
+  @Expose()
+  required_status_checks?: BranchProtectionRequiredStatusChecks
 }
 
 class RepositoryContainer extends Repository {
@@ -144,12 +160,12 @@ class Team {
   @Expose() create_default_maintainer?: boolean
   @Expose() description?: string
   @Expose() parent_team_id?: string
-  @Expose() privacy?: "closed" | "secret"
+  @Expose() privacy?: 'closed' | 'secret'
 }
 
 class TeamContainer extends Team {
   members?: {
-    maintainer?: string[],
+    maintainer?: string[]
     member?: string[]
   }
 }
@@ -175,43 +191,75 @@ class Config {
   }
 
   sort(): void {
-    YAML.visit(this.document, { Map(_, { items }) { items.sort(new YAML.Schema({ sortMapEntries: true }).sortMapEntries!); } })
+    const compare = new YAML.Schema({sortMapEntries: true}).sortMapEntries as (
+      a: YAML.Pair<unknown, unknown>,
+      b: YAML.Pair<unknown, unknown>
+    ) => number
+    YAML.visit(this.document, {
+      Map(_, {items}) {
+        items.sort(compare)
+      }
+    })
   }
 
   toString(): string {
-    return this.document.toString({ collectionStyle: 'block', singleQuote: false })
+    return this.document.toString({
+      collectionStyle: 'block',
+      singleQuote: false
+    })
   }
 
   matchIn(type: string, path: string[]): Resource[] {
-    function _matchIn(path: string[], node: YAML.YAMLMap, history: string[]): Resource[] {
-      const [key, ...rest] = path
+    function _matchIn(
+      partialPath: string[],
+      node: YAML.YAMLMap,
+      history: string[]
+    ): Resource[] {
+      const [key, ...rest] = partialPath
       return node.items
         .filter(item => {
           if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
             return item.key.value.match(`^${key}$`)
           } else {
-            throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item.key)}`)
+            throw new Error(
+              `Expected a string Scalar, got this instead: ${JSON.stringify(
+                item.key
+              )}`
+            )
           }
         })
         .flatMap(item => {
-          const path: string[] = [...history, (item.key as YAML.Scalar).value as string]
+          const newHistory: string[] = [
+            ...history,
+            (item.key as YAML.Scalar).value as string
+          ]
           if (rest.length === 0) {
             if (YAML.isCollection(item.value)) {
               return item.value.items.map(i => {
                 if (YAML.isScalar(i) || YAML.isPair(i)) {
-                  return new Resource(type, path, i)
+                  return new Resource(type, newHistory, i)
                 } else {
-                  throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(i)}`)
+                  throw new Error(
+                    `Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(
+                      i
+                    )}`
+                  )
                 }
               })
             } else {
-              throw new Error(`Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(item)}`)
+              throw new Error(
+                `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
+                  item
+                )}`
+              )
             }
           } else {
             if (YAML.isMap(item.value)) {
-              return _matchIn(rest, item.value, path)
+              return _matchIn(rest, item.value, newHistory)
             } else {
-              throw new Error(`Expected a YAMLMap, got this instead: ${JSON.stringify(item)}`)
+              throw new Error(
+                `Expected a YAMLMap, got this instead: ${JSON.stringify(item)}`
+              )
             }
           }
         })
@@ -243,13 +291,17 @@ class Config {
           return !equals(i, resource.value)
         })
       } else {
-        throw new Error(`Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(item)}`)
+        throw new Error(
+          `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
+            item
+          )}`
+        )
       }
     }
   }
 
   add(resource: Resource): void {
-    if (! this.contains(resource)) {
+    if (!this.contains(resource)) {
       const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
       const item = this.document.getIn(resource.path)
       if (item === undefined) {
@@ -258,7 +310,11 @@ class Config {
         } else if (YAML.isPair(resource.value)) {
           this.document.addIn(parsedPath, YAML.parseDocument('{}').contents)
         } else {
-          throw new Error(`Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(resource.value)}`)
+          throw new Error(
+            `Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(
+              resource.value
+            )}`
+          )
         }
       }
       this.document.addIn(parsedPath, resource.value)
@@ -268,14 +324,23 @@ class Config {
   update(resource: Resource, ignore: string[] = []): void {
     if (YAML.isScalar(resource.value)) {
       // do nothing, there's nothing to update in scalar values
-    } else if (YAML.isPair(resource.value) && YAML.isMap(resource.value.value)) {
+    } else if (
+      YAML.isPair(resource.value) &&
+      YAML.isMap(resource.value.value)
+    ) {
       const existingResource = this.find(resource)
-      if (existingResource !== undefined && YAML.isPair(existingResource.value) && YAML.isMap(existingResource.value.value)) {
+      if (
+        existingResource !== undefined &&
+        YAML.isPair(existingResource.value) &&
+        YAML.isMap(existingResource.value.value)
+      ) {
         const existingValue = existingResource.value.value
-        resource.value.value.items.forEach(item => {
+        for (const item of resource.value.value.items) {
           const existingItem = existingValue.items.find(i => equals(i, item))
           if (existingItem !== undefined) {
-            if (JSON.stringify(existingItem.value) !== JSON.stringify(item.value)) {
+            if (
+              JSON.stringify(existingItem.value) !== JSON.stringify(item.value)
+            ) {
               existingItem.value = item.value
             } else {
               // do nothing, there's no need to update this item
@@ -283,61 +348,80 @@ class Config {
           } else {
             existingValue.items.push(item)
           }
-        })
+        }
         existingValue.items = existingValue.items.filter(item => {
           if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
-            return ! ignore.includes(item.key.value) && ! isEmpty(item.value)
+            return !ignore.includes(item.key.value) && !isEmpty(item.value)
           } else {
-            throw new Error(`Expected a string Scalar, got this instead: ${JSON.stringify(item.key)}`)
+            throw new Error(
+              `Expected a string Scalar, got this instead: ${JSON.stringify(
+                item.key
+              )}`
+            )
           }
         })
       } else {
-        throw new Error(`Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(existingResource?.value)}`)
+        throw new Error(
+          `Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(
+            existingResource?.value
+          )}`
+        )
       }
     } else {
-      throw new Error(`Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(resource.value)}`)
+      throw new Error(
+        `Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(
+          resource.value
+        )}`
+      )
     }
   }
 
   sync(state: State, ignoredChanges: Record<string, string[]>): Config {
-    const resourcesInTFState = state.getManagedResources().map(resource => resource.getYAMLResource(state))
+    const resourcesInTFState = state
+      .getManagedResources()
+      .map(resource => resource.getYAMLResource(state))
     const resourcesInConfig = this.getResources()
 
     // remove all the resources (from YAML config) that Terraform doesn't know about anymore
-    resourcesInConfig.filter(resource => {
+    const resourcesToRemove = resourcesInConfig.filter(resource => {
       return !resourcesInTFState.find(r => r.equals(resource))
-    }).forEach(resource => {
-      this.remove(resource)
     })
+    for (const resource of resourcesToRemove) {
+      this.remove(resource)
+    }
 
     // add all the resources (to YAML config) that YAML config doesn't know about yet
-    resourcesInTFState.filter(resource => {
+    const resourcesToAdd = resourcesInTFState.filter(resource => {
       return !resourcesInConfig.find(r => r.equals(resource))
-    }).forEach(resource => {
-      this.add(resource)
     })
+    for (const resource of resourcesToAdd) {
+      this.add(resource)
+    }
 
     // update all the resources (in YAML config) with the values from Terraform state
-    resourcesInTFState.forEach(resource => {
+    const resourcesToUpdate = resourcesInTFState
+    for (const resource of resourcesToUpdate) {
       this.update(resource, ignoredChanges[resource.type])
-    })
+    }
 
     return this
   }
 }
 
-export { Resource, File, BranchProtection, Repository, Team }
+export {Resource, File, BranchProtection, Repository, Team}
 
 export function parse(yaml: string): Config {
   return new Config(yaml)
 }
 
 export function getConfig(organization: string): Config {
-  const yaml = fs.readFileSync(`${env.GITHUB_DIR}/${organization}.yml`).toString()
+  const yaml = fs
+    .readFileSync(`${env.GITHUB_DIR}/${organization}.yml`)
+    .toString()
   return parse(yaml)
 }
 
-export function saveConfig(organization: string, config: Config) {
+export function saveConfig(organization: string, config: Config): void {
   config.sort()
   fs.writeFileSync(`${env.GITHUB_DIR}/${organization}.yml`, config.toString())
 }
