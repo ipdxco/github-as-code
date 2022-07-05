@@ -498,6 +498,8 @@ export class State {
       if (!managedResourceTypes.includes(managedResource.type)) {
         return true
       } else if (managedResource instanceof GithubRepositoryFile) {
+        // GithubRepositoryFile is a special case because we do not want to import ALL the files from repository
+        // because of that desired resources of this type do not exist
         return !(
           this.values.root_module.resources.filter(
             resource => resource instanceof GithubTreeData
@@ -536,6 +538,7 @@ export class State {
 }
 
 export function parse(json: string): State {
+  // turns an unstructured JSON object into a State class instance
   return transformer.plainToClass(State, JSON.parse(json))
 }
 
@@ -589,6 +592,8 @@ type LocalsTF = {
 }
 
 export function getManagedResourceTypes(): string[] {
+  // tries to get locals.resource_types from locals_override first
+  // falls back to locals
   if (fs.existsSync(`${env.TF_WORKING_DIR}/locals_override.tf`)) {
     const overrides: LocalsTF = HCL.parseToObject(
       fs.readFileSync(`${env.TF_WORKING_DIR}/locals_override.tf`)
@@ -636,6 +641,7 @@ export function getIgnoredChanges(): Record<string, string[]> {
       }
     }
   }
+  // reads resources first so that values from resources_override can override them
   const resources: ResourcesTF = HCL.parseToObject(
     fs.readFileSync(`${env.TF_WORKING_DIR}/resources.tf`)
   )[0]

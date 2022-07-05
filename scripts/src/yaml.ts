@@ -209,6 +209,7 @@ class Config {
     })
   }
 
+  // similar to YAML.Document.getIn but accepts regex pattern in the path
   matchIn(type: string, path: string[]): Resource[] {
     function _matchIn(
       partialPath: string[],
@@ -284,6 +285,8 @@ class Config {
   }
 
   remove(resource: Resource): void {
+    // the resource might not exist anymore
+    // e.g. if we removed a repository but then we try to remove repository collaborators
     if (this.contains(resource)) {
       const item = this.document.getIn(resource.path)
       if (YAML.isCollection(item)) {
@@ -301,6 +304,8 @@ class Config {
   }
 
   add(resource: Resource): void {
+    // the resource might already exist
+    // e.g. if we added repository collaborators and now we try to add repository
     if (!this.contains(resource)) {
       const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
       const item = this.document.getIn(resource.path)
@@ -399,6 +404,7 @@ class Config {
     }
 
     // update all the resources (in YAML config) with the values from Terraform state
+    // we use resourcesInTFState because we want to update the config to the values from TF state
     const resourcesToUpdate = resourcesInTFState
     for (const resource of resourcesToUpdate) {
       this.update(resource, ignoredChanges[resource.type])
