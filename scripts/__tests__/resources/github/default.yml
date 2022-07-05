@@ -16,7 +16,6 @@ repositories:
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     visibility: public
     vulnerability_alerts: false
@@ -47,7 +46,6 @@ repositories:
             - Plan
           strict: true
     delete_branch_on_merge: true
-    description: ''
     files:
       README.md:
         branch: master
@@ -60,7 +58,6 @@ repositories:
     has_issues: true
     has_projects: false
     has_wiki: false
-    homepage_url: ''
     is_template: false
     teams:
       triage:
@@ -78,12 +75,10 @@ repositories:
     archived: false
     auto_init: false
     delete_branch_on_merge: false
-    description: ''
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     visibility: public
     vulnerability_alerts: false
@@ -98,15 +93,13 @@ repositories:
       admin:
         - galargh
     delete_branch_on_merge: false
-    description: ''
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     pages:
-      cname: ''
+      cname: ""
       source:
         branch: main
         path: /docs
@@ -126,12 +119,10 @@ repositories:
       admin:
         - galargh
     delete_branch_on_merge: false
-    description: ''
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     visibility: public
     vulnerability_alerts: false
@@ -146,12 +137,10 @@ repositories:
       admin:
         - galargh
     delete_branch_on_merge: false
-    description: ''
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     visibility: public
     vulnerability_alerts: true
@@ -163,12 +152,10 @@ repositories:
     archived: false
     auto_init: false
     delete_branch_on_merge: false
-    description: ''
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
-    homepage_url: ''
     is_template: false
     teams:
       maintain:
@@ -177,7 +164,6 @@ repositories:
     vulnerability_alerts: false
 teams:
   ipdx:
-    description: ''
     members:
       maintainer:
         - galargh

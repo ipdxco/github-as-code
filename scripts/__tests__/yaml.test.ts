@@ -99,7 +99,7 @@ test('adds 1 new file', async () => {
   expect(cfg.getResources().length).toEqual(20)
 })
 
-test('updates all team descriptions', async () => {
+test('updates all team privacy settings', async () => {
   const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
 
   const cfg = config.parse(yaml)
@@ -108,13 +108,13 @@ test('updates all team descriptions', async () => {
 
   const teamUpdates = teams.map(team => {
     const resource = new config.Resource(team.type, team.path, team.value.clone() as YAML.Pair);
-    ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
+    ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'privacy') as YAML.Scalar).value = 'secret'
     return resource
   })
 
   teams.forEach(team => {
-    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
-    expect(description).not.toEqual('TEST')
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'privacy') as YAML.Scalar).value
+    expect(description).not.toEqual('secret')
   })
 
   teamUpdates.forEach(team => {
@@ -122,36 +122,8 @@ test('updates all team descriptions', async () => {
   })
 
   teams.forEach(team => {
-    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
-    expect(description).toEqual('TEST')
-  })
-})
-
-test('updates all team descriptions', async () => {
-  const yaml = fs.readFileSync('__tests__/resources/github/default.yml').toString()
-
-  const cfg = config.parse(yaml)
-
-  const teams = cfg.matchIn('github_team', ['teams'])
-
-  const teamUpdates = teams.map(team => {
-    const resource = new config.Resource(team.type, team.path, team.value.clone() as YAML.Pair);
-    ((resource.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value = 'TEST'
-    return resource
-  })
-
-  teams.forEach(team => {
-    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
-    expect(description).not.toEqual('TEST')
-  })
-
-  teamUpdates.forEach(team => {
-    cfg.update(team)
-  })
-
-  teams.forEach(team => {
-    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description') as YAML.Scalar).value
-    expect(description).toEqual('TEST')
+    const description = ((team.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'privacy') as YAML.Scalar).value
+    expect(description).toEqual('secret')
   })
 })
 
@@ -214,10 +186,10 @@ test('removes properties from the ignore array on updates', async () => {
   const teams = cfg.matchIn('github_team', ['teams'])
 
   teams.forEach(team => {
-    const descriptionPrior = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description')
+    const descriptionPrior = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'privacy')
     expect(descriptionPrior).toBeDefined()
-    cfg.update(team, ['description'])
-    const descriptionPost = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'description')
+    cfg.update(team, ['privacy'])
+    const descriptionPost = (team!.value.value as YAML.YAMLMap).items.find(item => (item.key as YAML.Scalar).value === 'privacy')
     expect(descriptionPost).toBeUndefined()
   })
 })

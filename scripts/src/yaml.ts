@@ -16,7 +16,7 @@ function equals(a: unknown, b: unknown): boolean {
 
 function isEmpty(a: unknown): boolean {
   if (YAML.isScalar(a)) {
-    return a.value === undefined || a.value === null// || a.value === ''
+    return a.value === undefined || a.value === null || a.value === ''
   } else if (YAML.isCollection(a)) {
     return a.items.length === 0
   } else {
