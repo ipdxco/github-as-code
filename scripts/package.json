@@ -16,9 +16,7 @@
   },
   "dependencies": {
     "@actions/exec": "^1.1.1",
-    "@actions/glob": "^0.3.0",
     "class-transformer": "^0.5.1",
-    "deepmerge": "^4.2.2",
     "hcl2-parser": "^1.0.3",
     "reflect-metadata": "^0.1.13",
     "yaml": "^2.1.1"
