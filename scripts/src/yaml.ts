@@ -269,9 +269,16 @@ class Config {
   }
 
   find(resource: Resource): Resource | undefined {
-    return this.matchIn(resource.type, resource.path).find(matchingResource => {
+    const matchingResources = this.matchIn(resource.type, resource.path).filter(matchingResource => {
       return equals(resource.value, matchingResource.value)
     })
+    if (matchingResources.length === 0) {
+      return undefined
+    } else if (matchingResources.length === 1) {
+      return matchingResources[0]
+    } else {
+      throw new Error(`Expected to find at most 1 matching resource, got these: ${JSON.stringify(matchingResources)}`)
+    }
   }
 
   contains(resource: Resource): boolean {
@@ -307,6 +314,7 @@ class Config {
     // the resource might already exist
     // e.g. if we added repository collaborators and now we try to add repository
     if (!this.contains(resource)) {
+      // this turns strings into string Scalars which we need for YAML.Document.addIn to work as expected
       const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
       const item = this.document.getIn(resource.path)
       if (item === undefined) {
