@@ -24,15 +24,19 @@ class Resource {
   async import(): Promise<void> {
     core.info(`Importing ${JSON.stringify(this)}`)
     if (env.TF_EXEC) {
-      await cli.exec(
-        `terraform import -lock=${env.TF_LOCK} "${this.address
-          .toString()
-          .replaceAll('"', '\\"')}" "${this.values.id
-          .toString()
-          .replaceAll('"', '\\"')}"`,
-        undefined,
-        {cwd: env.TF_WORKING_DIR}
-      )
+      try {
+        await cli.exec(
+          `terraform import -lock=${env.TF_LOCK} "${this.address
+            .toString()
+            .replaceAll('"', '\\"')}" "${this.values.id
+            .toString()
+            .replaceAll('"', '\\"')}"`,
+          undefined,
+          {cwd: env.TF_WORKING_DIR}
+        )
+      } catch (e) {
+        core.warning(`Skipping import of ${JSON.stringify(this)}, got this error: ${e}`)
+      }
     }
   }
 
