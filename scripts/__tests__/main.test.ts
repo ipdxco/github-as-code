@@ -17,9 +17,9 @@ test('e2e synchronization', async () => {
   await terraform.refreshState()
 
   const state = await terraform.getState()
-  const syncedState = await state.sync(managedResourceTypes)
-
   const config = yaml.getConfig(organization)
+
+  const syncedState = await state.sync(config, managedResourceTypes)
   const syncedConfig = config.sync(syncedState, ignoredChanges)
 
   config.sort()

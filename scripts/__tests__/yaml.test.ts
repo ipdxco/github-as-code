@@ -12,14 +12,14 @@ test('parses yaml config', async () => {
   config.parse(yaml)
 })
 
-test('finds all 19 resources', async () => {
+test('finds all 22 resources', async () => {
   const yaml = fs
     .readFileSync('__tests__/resources/github/default.yml')
     .toString()
 
   const cfg = config.parse(yaml)
   const resources = cfg.getResources()
-  expect(resources.length).toEqual(19)
+  expect(resources.length).toEqual(22)
 
   for (const resource of resources) {
     expect(cfg.contains(resource)).toBeTruthy()
@@ -52,7 +52,7 @@ test('removes all 2 admins', async () => {
       JSON.stringify(resource.path) === JSON.stringify(['members', 'admin'])
   )
 
-  expect(resourcesPost.length).toEqual(17)
+  expect(resourcesPost.length).toEqual(20)
   expect(adminsPost.length).toEqual(0)
 })
 
@@ -111,7 +111,7 @@ test('adds 2 new members', async () => {
   expect(
     cfg.matchIn('github_membership', ['members', 'member']).length
   ).toEqual(2)
-  expect(cfg.getResources().length).toEqual(21)
+  expect(cfg.getResources().length).toEqual(24)
 })
 
 test('adds 1 new file', async () => {
@@ -136,7 +136,7 @@ test('adds 1 new file', async () => {
       'files'
     ]).length
   ).toEqual(2)
-  expect(cfg.getResources().length).toEqual(20)
+  expect(cfg.getResources().length).toEqual(23)
 })
 
 test('updates all team privacy settings', async () => {

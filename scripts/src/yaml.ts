@@ -1,4 +1,5 @@
 import * as YAML from 'yaml'
+import * as core from '@actions/core'
 import * as fs from 'fs'
 import {Expose, Type} from 'class-transformer'
 import {ManagedResources, State} from './terraform'
@@ -179,7 +180,7 @@ export default class Schema {
   teams?: Record<string, TeamContainer>
 }
 
-class Config {
+export class Config {
   document: YAML.Document
 
   constructor(yaml: string) {
@@ -269,15 +270,21 @@ class Config {
   }
 
   find(resource: Resource): Resource | undefined {
-    const matchingResources = this.matchIn(resource.type, resource.path).filter(matchingResource => {
-      return equals(resource.value, matchingResource.value)
-    })
+    const matchingResources = this.matchIn(resource.type, resource.path).filter(
+      matchingResource => {
+        return equals(resource.value, matchingResource.value)
+      }
+    )
     if (matchingResources.length === 0) {
       return undefined
     } else if (matchingResources.length === 1) {
       return matchingResources[0]
     } else {
-      throw new Error(`Expected to find at most 1 matching resource, got these: ${JSON.stringify(matchingResources)}`)
+      throw new Error(
+        `Expected to find at most 1 matching resource, got these: ${JSON.stringify(
+          matchingResources
+        )}`
+      )
     }
   }
 
@@ -285,13 +292,16 @@ class Config {
     return this.find(resource) !== undefined
   }
 
-  getResources(): Resource[] {
-    return ManagedResources.flatMap(cls => {
+  getResources(
+    classes: typeof ManagedResources = ManagedResources
+  ): Resource[] {
+    return classes.flatMap(cls => {
       return this.matchIn(camelCaseToSnakeCase(cls.name), cls.yamlPath)
     })
   }
 
   remove(resource: Resource): void {
+    core.info(`Removing ${JSON.stringify(resource)}`)
     // the resource might not exist anymore
     // e.g. if we removed a repository but then we try to remove repository collaborators
     if (this.contains(resource)) {
@@ -311,6 +321,7 @@ class Config {
   }
 
   add(resource: Resource): void {
+    core.info(`Adding ${JSON.stringify(resource)}`)
     // the resource might already exist
     // e.g. if we added repository collaborators and now we try to add repository
     if (!this.contains(resource)) {
@@ -335,6 +346,7 @@ class Config {
   }
 
   update(resource: Resource, ignore: string[] = []): void {
+    core.info(`Updating ${JSON.stringify(resource)}`)
     if (YAML.isScalar(resource.value)) {
       // do nothing, there's nothing to update in scalar values
     } else if (
@@ -390,6 +402,7 @@ class Config {
   }
 
   sync(state: State, ignoredChanges: Record<string, string[]>): Config {
+    core.info('Syncing YAML config with TF state...')
     const resourcesInTFState = state
       .getManagedResources()
       .map(resource => resource.getYAMLResource(state))

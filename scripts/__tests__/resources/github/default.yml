@@ -17,6 +17,9 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    teams:
+      maintain:
+        - ipdx
     visibility: public
     vulnerability_alerts: false
   github-mgmt:
@@ -45,6 +48,9 @@ repositories:
           contexts:
             - Plan
           strict: true
+    collaborators:
+      admin:
+        - galargh
     delete_branch_on_merge: true
     files:
       README.md:
@@ -80,6 +86,9 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    teams:
+      admin:
+        - ipdx
     visibility: public
     vulnerability_alerts: false
   projects-migration:
@@ -89,9 +98,6 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
-    collaborators:
-      admin:
-        - galargh
     delete_branch_on_merge: false
     has_downloads: true
     has_issues: true
@@ -103,6 +109,9 @@ repositories:
       source:
         branch: main
         path: /docs
+    teams:
+      maintain:
+        - ipdx
     topics:
       - github
       - graphql
@@ -115,15 +124,15 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
-    collaborators:
-      admin:
-        - galargh
     delete_branch_on_merge: false
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
     is_template: false
+    teams:
+      maintain:
+        - ipdx
     visibility: public
     vulnerability_alerts: false
   rust-sccache-action:
@@ -133,15 +142,15 @@ repositories:
     allow_squash_merge: true
     archived: false
     auto_init: false
-    collaborators:
-      admin:
-        - galargh
     delete_branch_on_merge: false
     has_downloads: true
     has_issues: true
     has_projects: true
     has_wiki: true
     is_template: false
+    teams:
+      maintain:
+        - ipdx
     visibility: public
     vulnerability_alerts: true
   tf-aws-gh-runner:

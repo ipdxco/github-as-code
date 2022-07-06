@@ -14,10 +14,10 @@ async function run(): Promise<void> {
   await terraform.refreshState()
 
   const state = await terraform.getState()
-  // imports/removes managed resources as needed
-  const syncedState = await state.sync(managedResourceTypes)
-
   const config = yaml.getConfig(organization)
+
+  // imports/removes managed resources as needed
+  const syncedState = await state.sync(config, managedResourceTypes)
   // adds/removes/updates yaml config as needed
   const syncedConfig = config.sync(syncedState, ignoredChanges)
 

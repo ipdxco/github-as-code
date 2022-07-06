@@ -83,13 +83,9 @@ jobs:
           terraform_version: 1.1.4
       - name: Initialize terraform
         run: terraform init
-      - name: Retrieve targets from config
-        id: target
-        run: echo "::set-output name=this::$(jq -r 'split(" ")[:-1] | map("-target=github_\(sub(".json$"; "")).this") | join(" ")' <<< '"'"$(ls | tr '\n' ' ')"'"')"
-        working-directory: github/${{ env.TF_WORKSPACE }}
       - name: Terraform Plan Download
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh run download -n ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan --repo ${{ github.repository }}
       - name: Terraform Apply
-        run: terraform apply -auto-approve -lock-timeout=0s -no-color ${{ env.TF_WORKSPACE }}.tfplan
+        run: terraform apply -lock-timeout=0s -no-color ${{ env.TF_WORKSPACE }}.tfplan

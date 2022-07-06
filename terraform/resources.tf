@@ -179,14 +179,14 @@ resource "github_team" "this" {
   for_each = contains(local.resource_types, "github_team") ? {
     for team, config in lookup(local.config, "teams", {}) : team => merge(config, {
       name           = team
-      parent_team_id = try(try(element(data.github_organization_teams.this, index(data.github_organization_teams.this.*.id, config.parent_team_id)), config.parent_team_id), null)
+      parent_team_id = try(try(element(data.github_organization_teams.this[0], index(data.github_organization_teams.this[0].*.id, config.parent_team_id)), config.parent_team_id), null)
     })
   } : {}
 
-  name                      = each.value.name
-  description               = try(each.value.description, null)
-  parent_team_id            = try(each.value.parent_team_id, null)
-  privacy                   = try(each.value.privacy, null)
+  name           = each.value.name
+  description    = try(each.value.description, null)
+  parent_team_id = try(each.value.parent_team_id, null)
+  privacy        = try(each.value.privacy, null)
 
   lifecycle {
     ignore_changes = [
@@ -280,17 +280,4 @@ resource "github_repository_file" "this" {
       overwrite_on_create,
     ]
   }
-}
-
-resource "null_resource" "resources" {
-  depends_on = [
-    github_membership.this,
-    github_repository.this,
-    github_repository_collaborator.this,
-    github_branch_protection.this,
-    github_team.this,
-    github_team_membership.this,
-    github_team_membership.this,
-    github_repository_file.this
-  ]
 }
