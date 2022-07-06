@@ -1,12 +1,12 @@
 resource "github_membership" "this" {
-  for_each = contains(local.resource_types, "github_membership") ? merge([
+  for_each = merge([
     for role, members in lookup(local.config, "members", {}) : {
       for member in members : "${member}" => {
         username = member
         role     = role
       }
     }
-  ]...) : object()
+  ]...)
 
   username = each.value.username
   role     = each.value.role
@@ -97,7 +97,7 @@ resource "github_repository" "this" {
 }
 
 resource "github_repository_collaborator" "this" {
-  for_each = contains(local.resource_types, "github_repository_collaborator") ? merge(flatten([
+  for_each = merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
       for permission, members in lookup(repository_config, "collaborators", {}) : {
@@ -108,7 +108,7 @@ resource "github_repository_collaborator" "this" {
         }
       }
     ]
-  ])...) : object()
+  ])...)
 
   depends_on = [github_repository.this]
 
@@ -122,7 +122,7 @@ resource "github_repository_collaborator" "this" {
 }
 
 resource "github_branch_protection" "this" {
-  for_each = contains(local.resource_types, "github_branch_protection") ? merge([
+  for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
       for pattern, config in lookup(repository_config, "branch_protection", {}) : "${repository}:${pattern}" => merge(config, {
@@ -130,7 +130,7 @@ resource "github_branch_protection" "this" {
         repository_id = github_repository.this[repository].node_id
       })
     }
-  ]...) : object()
+  ]...)
 
   pattern                         = each.value.pattern
   repository_id                   = each.value.repository_id
@@ -176,12 +176,12 @@ resource "github_branch_protection" "this" {
 }
 
 resource "github_team" "this" {
-  for_each = contains(local.resource_types, "github_team") ? {
+  for_each = {
     for team, config in lookup(local.config, "teams", {}) : team => merge(config, {
       name           = team
       parent_team_id = try(try(element(data.github_organization_teams.this[0], index(data.github_organization_teams.this[0].*.id, config.parent_team_id)), config.parent_team_id), null)
     })
-  } : object()
+  }
 
   name           = each.value.name
   description    = try(each.value.description, null)
@@ -198,7 +198,7 @@ resource "github_team" "this" {
 }
 
 resource "github_team_repository" "this" {
-  for_each = contains(local.resource_types, "github_team_repository") ? merge(flatten([
+  for_each = merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
       for permission, teams in lookup(repository_config, "teams", {}) : {
@@ -209,7 +209,7 @@ resource "github_team_repository" "this" {
         }
       }
     ]
-  ])...) : object()
+  ])...)
 
   depends_on = [
     github_repository.this
@@ -226,7 +226,7 @@ resource "github_team_repository" "this" {
 }
 
 resource "github_team_membership" "this" {
-  for_each = contains(local.resource_types, "github_team_membership") ? merge(flatten([
+  for_each = merge(flatten([
     for team, team_config in lookup(local.config, "teams", {}) :
     [
       for role, members in lookup(team_config, "members", {}) : {
@@ -237,7 +237,7 @@ resource "github_team_membership" "this" {
         }
       }
     ]
-  ])...) : object()
+  ])...)
 
   team_id  = each.value.team_id
   username = each.value.username
@@ -249,7 +249,7 @@ resource "github_team_membership" "this" {
 }
 
 resource "github_repository_file" "this" {
-  for_each = contains(local.resource_types, "github_repository_file") ? merge([
+  for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
       for config in [
@@ -261,7 +261,7 @@ resource "github_repository_file" "this" {
         }) if contains(keys(config), "content")
       ] : "${config.repository}/${config.file}" => config
     }
-  ]...) : object()
+  ]...)
 
   repository          = each.value.repository
   file                = each.value.file
