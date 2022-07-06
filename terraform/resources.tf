@@ -6,7 +6,7 @@ resource "github_membership" "this" {
         role     = role
       }
     }
-  ]...) : {}
+  ]...) : object()
 
   username = each.value.username
   role     = each.value.role
@@ -108,7 +108,7 @@ resource "github_repository_collaborator" "this" {
         }
       }
     ]
-  ])...) : {}
+  ])...) : object()
 
   depends_on = [github_repository.this]
 
@@ -130,7 +130,7 @@ resource "github_branch_protection" "this" {
         repository_id = github_repository.this[repository].node_id
       })
     }
-  ]...) : {}
+  ]...) : object()
 
   pattern                         = each.value.pattern
   repository_id                   = each.value.repository_id
@@ -181,7 +181,7 @@ resource "github_team" "this" {
       name           = team
       parent_team_id = try(try(element(data.github_organization_teams.this[0], index(data.github_organization_teams.this[0].*.id, config.parent_team_id)), config.parent_team_id), null)
     })
-  } : {}
+  } : object()
 
   name           = each.value.name
   description    = try(each.value.description, null)
@@ -209,7 +209,7 @@ resource "github_team_repository" "this" {
         }
       }
     ]
-  ])...) : {}
+  ])...) : object()
 
   depends_on = [
     github_repository.this
@@ -237,7 +237,7 @@ resource "github_team_membership" "this" {
         }
       }
     ]
-  ])...) : {}
+  ])...) : object()
 
   team_id  = each.value.team_id
   username = each.value.username
@@ -261,7 +261,7 @@ resource "github_repository_file" "this" {
         }) if contains(keys(config), "content")
       ] : "${config.repository}/${config.file}" => config
     }
-  ]...) : {}
+  ]...) : object()
 
   repository          = each.value.repository
   file                = each.value.file
