@@ -136,11 +136,11 @@
 
 *NOTE*: Advanced users might want to modify the resource types and their arguments/attributes managed by GitHub Management at this stage.
 
-*NOTE*: You can manage more than one organization from a single GitHub Management repository. To do so create more subdirectories under `github` directory. Remember to set up secrets for all your organizations.
+*NOTE*: You can manage more than one organization from a single GitHub Management repository. To do so create more YAMLs under `github` directory. Remember to set up secrets for all your organizations.
 
 - [ ] [Clone the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
 - [ ] Replace placeholder strings in the clone - *the repository needs to be customised for the specific organization it is supposed to manage*
-    - [ ] Rename the `$GITHUB_ORGANIZATION_NAME` directory in `github` to the name of the GitHub organization
+    - [ ] Rename the `$GITHUB_ORGANIZATION_NAME.yml` in `github` to the name of the GitHub organization
 - [ ] Push the changes to `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH`
 
 ## GitHub Management Sync Flow
@@ -160,25 +160,18 @@
    - [ ] If the repository is public, [require approval for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks)
    - [ ] If the repository is private, [disable sending write tokens or secrets to worfklows from fork pull requests](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-private-repository-forks)
 - [ ] Pull remote changes to the default branch
-- [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME/branch_protection.json](github/$ORGANIZATION_NAME/branch_protection.json) contains the following entry:
-    ```
-    "$GITHUB_MGMT_REPOSITORY_NAME": {
-      "$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH": {
-        "required_pull_request_reviews": [
-          {
-            "required_approving_review_count": 1
-          }
-        ],
-        "required_status_checks": [
-          {
-            "contexts": [
-              "Plan"
-            ],
-            "strict": true
-          }
-        ]
-      }
-    }
+- [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME.yml](github/$ORGANIZATION_NAME.yml) contains the following entry:
+    ```yaml
+    repositories:
+      $GITHUB_MGMT_REPOSITORY_NAME:
+        branch_protection:
+          $GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH:
+            required_pull_request_reviews:
+              required_approving_review_count: 1
+            required_status_checks:
+              contexts:
+                - Plan
+              strict": true
     ```
 - [ ] Push the changes to a branch other than the default branch
 

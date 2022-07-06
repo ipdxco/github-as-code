@@ -58,7 +58,7 @@ jobs:
           ref: ${{ steps.github.outputs.ref }}
       - name: Discover workspaces
         id: workspaces
-        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.]' | jq -sc add)"
+        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
   plan:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
@@ -102,13 +102,9 @@ jobs:
         run: terraform fmt -check
       - name: Validate terraform
         run: terraform validate -no-color
-      - name: Retrieve targets from config
-        id: target
-        run: echo "::set-output name=this::$(jq -r 'split(" ")[:-1] | map("-target=github_\(sub(".json$"; "")).this") | join(" ")' <<< '"'"$(ls | tr '\n' ' ')"'"')"
-        working-directory: github/${{ env.TF_WORKSPACE }}
       - name: Plan terraform
         id: plan
-        run: terraform plan ${{ steps.target.outputs.this }} -refresh=false -lock=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
+        run: terraform plan -refresh=false -lock=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
       - name: Upload terraform plan
         uses: actions/upload-artifact@v2
         with:
