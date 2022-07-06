@@ -202,13 +202,15 @@ class GithubTeam extends ManagedResource {
   override getYAMLResource(context: State): cfg.Resource {
     const values = {...this.values}
     if (values.parent_team_id) {
-      const parentTeam = context
-        .getManagedResources()
+      const parentTeam = (context
+        .getDataResources()
         .find(
-          r => r instanceof GithubTeam && values.parent_team_id === r.values.id
-        )
+          r => r instanceof GithubOrganizationTeamsData && values.parent_team_id === r.values.id
+        ) as GithubOrganizationTeamsData)?.values?.teams?.find(team => {
+          return values.parent_team_id === team.id
+        })
       if (parentTeam) {
-        values.parent_team_id = (parentTeam as GithubTeam).values.name
+        values.parent_team_id = parentTeam.name
       } else {
         throw new Error(
           `Expected to find parent team with id: ${values.parent_team_id}`
