@@ -267,16 +267,10 @@ resource "github_repository_file" "this" {
   file                = each.value.file
   content             = each.value.content
   branch              = each.value.branch
-  commit_author       = try(each.value.commit_author, null)
-  commit_email        = try(each.value.commit_email, null)
-  commit_message      = try(each.value.commit_message, null)
   overwrite_on_create = try(each.value.overwrite_on_create, null)
 
   lifecycle {
     ignore_changes = [
-      commit_author,
-      commit_email,
-      commit_message,
       overwrite_on_create,
     ]
   }

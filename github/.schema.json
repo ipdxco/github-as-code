@@ -175,15 +175,6 @@
                     "branch": {
                       "type": "string"
                     },
-                    "commit_author": {
-                      "type": "string"
-                    },
-                    "commit_email": {
-                      "type": "string"
-                    },
-                    "commit_message": {
-                      "type": "string"
-                    },
                     "content": {
                       "type": "string"
                     },

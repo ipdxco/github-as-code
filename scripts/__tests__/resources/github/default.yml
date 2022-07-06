@@ -55,9 +55,6 @@ repositories:
     files:
       README.md:
         branch: master
-        commit_author: galargh
-        commit_email: piotr.galar@gmail.com
-        commit_message: Update README
         content: README.md
         overwrite_on_create: false
     has_downloads: true

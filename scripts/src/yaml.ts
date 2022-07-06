@@ -102,9 +102,6 @@ class Repository {
 class File {
   @Expose() content?: string
   @Expose() branch?: string
-  @Expose() commit_author?: string
-  @Expose() commit_email?: string
-  @Expose() commit_message?: string
   @Expose() overwrite_on_create?: boolean
 }
 
