@@ -208,9 +208,7 @@ class GithubTeam extends ManagedResource {
         context
           .getDataResources()
           .find(
-            r =>
-              r instanceof GithubOrganizationTeamsData &&
-              values.parent_team_id === r.values.id
+            r => r instanceof GithubOrganizationTeamsData
           ) as GithubOrganizationTeamsData
       )?.values?.teams?.find(team => {
         return values.parent_team_id === team.id
