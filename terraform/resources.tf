@@ -179,7 +179,7 @@ resource "github_team" "this" {
   for_each = {
     for team, config in lookup(local.config, "teams", {}) : team => merge(config, {
       name           = team
-      parent_team_id = try(try(element(data.github_organization_teams.this[0], index(data.github_organization_teams.this[0].*.name, config.parent_team_id)).id, config.parent_team_id), null)
+      parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, config.parent_team_id)).id, config.parent_team_id), null)
     })
   }
 
