@@ -35,7 +35,9 @@ class Resource {
           {cwd: env.TF_WORKING_DIR}
         )
       } catch (e) {
-        core.warning(`Skipping import of ${JSON.stringify(this)}, got this error: ${e}`)
+        core.warning(
+          `Skipping import of ${JSON.stringify(this)}, got this error: ${e}`
+        )
       }
     }
   }
@@ -202,13 +204,17 @@ class GithubTeam extends ManagedResource {
   override getYAMLResource(context: State): cfg.Resource {
     const values = {...this.values}
     if (values.parent_team_id) {
-      const parentTeam = (context
-        .getDataResources()
-        .find(
-          r => r instanceof GithubOrganizationTeamsData && values.parent_team_id === r.values.id
-        ) as GithubOrganizationTeamsData)?.values?.teams?.find(team => {
-          return values.parent_team_id === team.id
-        })
+      const parentTeam = (
+        context
+          .getDataResources()
+          .find(
+            r =>
+              r instanceof GithubOrganizationTeamsData &&
+              values.parent_team_id === r.values.id
+          ) as GithubOrganizationTeamsData
+      )?.values?.teams?.find(team => {
+        return values.parent_team_id === team.id
+      })
       if (parentTeam) {
         values.parent_team_id = parentTeam.name
       } else {
