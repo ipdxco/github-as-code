@@ -11,7 +11,7 @@ data "github_repositories" "this" {
     toset(["github_repository", "github_branch_protection", "github_repository_collaborator"]),
     toset(local.resource_types)
   )) == 0 ? 0 : 1
-  query = "org:${local.organization}"
+  query = "org:${local.organization} fork:true"
 }
 
 data "github_collaborators" "this" {
