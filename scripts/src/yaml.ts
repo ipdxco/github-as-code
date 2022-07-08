@@ -398,11 +398,12 @@ export class Config {
     }
   }
 
-  sync(state: State, ignoredChanges: Record<string, string[]>): Config {
+  async sync(
+    state: State,
+    ignoredChanges: Record<string, string[]>
+  ): Promise<Config> {
     core.info('Syncing YAML config with TF state...')
-    const resourcesInTFState = state
-      .getManagedResources()
-      .map(resource => resource.getYAMLResource(state))
+    const resourcesInTFState = await state.getYAMLResources()
     const resourcesInConfig = this.getResources()
 
     // remove all the resources (from YAML config) that Terraform doesn't know about anymore
@@ -430,6 +431,10 @@ export class Config {
 
     return this
   }
+
+  save(): void {
+    fs.writeFileSync(`${env.GITHUB_DIR}/${env.GITHUB_ORG}.yml`, this.toString())
+  }
 }
 
 export {Resource, File, BranchProtection, Repository, Team}
@@ -438,14 +443,9 @@ export function parse(yaml: string): Config {
   return new Config(yaml)
 }
 
-export function getConfig(organization: string): Config {
+export function getConfig(): Config {
   const yaml = fs
-    .readFileSync(`${env.GITHUB_DIR}/${organization}.yml`)
+    .readFileSync(`${env.GITHUB_DIR}/${env.GITHUB_ORG}.yml`)
     .toString()
   return parse(yaml)
-}
-
-export function saveConfig(organization: string, config: Config): void {
-  config.sort()
-  fs.writeFileSync(`${env.GITHUB_DIR}/${organization}.yml`, config.toString())
 }

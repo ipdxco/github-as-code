@@ -18,6 +18,11 @@
   "dependencies": {
     "@actions/core": "^1.9.0",
     "@actions/exec": "^1.1.1",
+    "@octokit/auth-app": "^4.0.2",
+    "@octokit/graphql": "^4.8.0",
+    "@octokit/plugin-retry": "^3.0.9",
+    "@octokit/plugin-throttling": "^4.0.1",
+    "@octokit/rest": "^19.0.1",
     "class-transformer": "^0.5.1",
     "hcl2-parser": "^1.0.3",
     "reflect-metadata": "^0.1.13",
