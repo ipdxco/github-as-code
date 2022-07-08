@@ -117,11 +117,11 @@ class GithubRepository extends ManagedResource {
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
     const values = {...this.values}
-    values.pages = {...((values.pages as {}[])[0] || {})}
+    values.pages = {...((values.pages as {}[])?.at(0) || {})}
     if (values.pages.source) {
-      values.pages.source = (values.pages.source as {}[])[0] || {}
+      values.pages.source = (values.pages.source as {}[])?.at(0) || {}
     }
-    values.template = (values.template as {}[])[0] || {}
+    values.template = (values.template as {}[])?.at(0) || {}
     const value = transformer.plainToClass(cfg.Repository, values, {
       excludeExtraneousValues: true
     })
@@ -202,7 +202,6 @@ class GithubRepositoryFile extends ManagedResource {
     })
   }
   override values!: Identifiable & {
-    branch: string
     file: string
     repository: string
     content: string

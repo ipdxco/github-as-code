@@ -18,7 +18,7 @@ type Repositories = GetResponseDataTypeFromEndpointMethod<
 type Teams = GetResponseDataTypeFromEndpointMethod<typeof Endpoints.teams.list>
 
 export class GitHub {
-  private static github: GitHub
+  static github: GitHub
   static async getGitHub(): Promise<GitHub> {
     if (GitHub.github === undefined) {
       const auth = createAppAuth({
@@ -41,7 +41,10 @@ export class GitHub {
     this.client = new Client({
       auth: token,
       throttle: {
-        onRateLimit: (retryAfter: any, options: any, octokit: any) => {
+        onRateLimit: (
+          retryAfter: number,
+          options: {method: string; url: string; request: {retryCount: number}}
+        ) => {
           core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`
           )
@@ -52,7 +55,10 @@ export class GitHub {
             return true
           }
         },
-        onSecondaryRateLimit: (retryAfter: any, options: any, octokit: any) => {
+        onSecondaryRateLimit: (
+          retryAfter: number,
+          options: {method: string; url: string; request: {retryCount: number}}
+        ) => {
           core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`
           )
@@ -111,7 +117,7 @@ export class GitHub {
       core.info(`Listing ${repository.name} collaborators...`)
       const collaborators = await this.client.paginate(
         this.client.repos.listCollaborators,
-        {owner: env.GITHUB_ORG, repo: repository.name, affiliation: "direct"}
+        {owner: env.GITHUB_ORG, repo: repository.name, affiliation: 'direct'}
       )
       repositoryCollaborators.push(
         ...collaborators.map(collaborator => ({repository, collaborator}))

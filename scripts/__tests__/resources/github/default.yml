@@ -54,7 +54,6 @@ repositories:
     delete_branch_on_merge: true
     files:
       README.md:
-        branch: master
         content: README.md
         overwrite_on_create: false
     has_downloads: true

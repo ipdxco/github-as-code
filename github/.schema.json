@@ -172,9 +172,6 @@
                 "additionalProperties": {
                   "additionalProperties": false,
                   "properties": {
-                    "branch": {
-                      "type": "string"
-                    },
                     "content": {
                       "type": "string"
                     },

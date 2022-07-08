@@ -101,7 +101,6 @@ class Repository {
 
 class File {
   @Expose() content?: string
-  @Expose() branch?: string
   @Expose() overwrite_on_create?: boolean
 }
 
