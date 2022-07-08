@@ -256,7 +256,7 @@ resource "github_repository_file" "this" {
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
           repository = repository
           file       = file
-          branch     = try(config.branch, github_repository.this[repository].default_branch)
+          branch     = github_repository.this[repository].default_branch
           content    = try(file("${path.module}/../files/${config.content}"), config.content)
         }) if contains(keys(config), "content")
       ] : "${config.repository}/${config.file}" => config
