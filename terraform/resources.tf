@@ -268,6 +268,7 @@ resource "github_repository_file" "this" {
   content             = each.value.content
   branch              = each.value.branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
+  commit_message      = "chore: Update ${each.value.file} [skip ci]"
 
   lifecycle {
     ignore_changes = [
