@@ -66,7 +66,7 @@ class DesiredResource extends Resource {
   }
 }
 
-class GithubMembership extends ManagedResource {
+export class GithubMembership extends ManagedResource {
   static yamlPath = ['members', '.+']
   static async getDesiredResources(
     _context: cfg.Config
@@ -92,7 +92,7 @@ class GithubMembership extends ManagedResource {
     )
   }
 }
-class GithubRepository extends ManagedResource {
+export class GithubRepository extends ManagedResource {
   static yamlPath = ['repositories']
   static async getDesiredResources(
     _context: cfg.Config
@@ -135,7 +135,7 @@ class GithubRepository extends ManagedResource {
     )
   }
 }
-class GithubRepositoryCollaborator extends ManagedResource {
+export class GithubRepositoryCollaborator extends ManagedResource {
   static yamlPath = ['repositories', '.+', 'collaborators', '.+']
   static async getDesiredResources(
     _context: cfg.Config
@@ -167,7 +167,7 @@ class GithubRepositoryCollaborator extends ManagedResource {
     )
   }
 }
-class GithubRepositoryFile extends ManagedResource {
+export class GithubRepositoryFile extends ManagedResource {
   static yamlPath = ['repositories', '.+', 'files']
   static async getDesiredResources(
     context: cfg.Config
@@ -225,7 +225,7 @@ class GithubRepositoryFile extends ManagedResource {
     )
   }
 }
-class GithubBranchProtection extends ManagedResource {
+export class GithubBranchProtection extends ManagedResource {
   static yamlPath = ['repositories', '.+', 'branch_protection']
   static async getDesiredResources(
     _context: cfg.Config
@@ -267,7 +267,7 @@ class GithubBranchProtection extends ManagedResource {
     )
   }
 }
-class GithubTeam extends ManagedResource {
+export class GithubTeam extends ManagedResource {
   static yamlPath = ['teams']
   static async getDesiredResources(
     _context: cfg.Config
@@ -314,7 +314,7 @@ class GithubTeam extends ManagedResource {
     )
   }
 }
-class GithubTeamMembership extends ManagedResource {
+export class GithubTeamMembership extends ManagedResource {
   static yamlPath = ['teams', '.+', 'members', '.+']
   static async getDesiredResources(
     _context: cfg.Config
@@ -340,7 +340,7 @@ class GithubTeamMembership extends ManagedResource {
     )
   }
 }
-class GithubTeamRepository extends ManagedResource {
+export class GithubTeamRepository extends ManagedResource {
   static yamlPath = ['repositories', '.+', 'teams', '.+']
   static async getDesiredResources(
     _context: cfg.Config
