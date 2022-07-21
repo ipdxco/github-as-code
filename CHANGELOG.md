@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Provider: upgraded to v4.23.0
 - Upgrade workflows: accept github-mgmt-template ref to upgrade to
 - Commit message for repository files: added chore: prefix and [skip ci] suffix
+- scripts: to export tf resource definitions and always sort before save
 
 ### Fixed
 - links to supported resources in HOWTOs
