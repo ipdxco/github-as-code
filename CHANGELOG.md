@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README: extracted sections to separate docs
 - GitHub Provider: upgraded to v4.23.0
 - Upgrade workflows: accept github-mgmt-template ref to upgrade to
+- Commit message for repository files: added chore: prefix and [skip ci] suffix
 
 ### Fixed
 - links to supported resources in HOWTOs
