@@ -16,7 +16,7 @@ jobs:
         github.event.workflow_run.conclusion == 'success')
     permissions:
       actions: read
-      contents: read
+      contents: write
       statuses: write
     name: Prepare
     runs-on: ubuntu-latest
@@ -25,6 +25,7 @@ jobs:
       sha: ${{ steps.github.outputs.sha }}
       ref: ${{ steps.github.outputs.ref }}
       number: ${{ steps.github.outputs.number }}
+      status: ${{ steps.status.outputs.this }}
     defaults:
       run:
         shell: bash
@@ -51,17 +52,50 @@ jobs:
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh api 'repos/${{ github.repository }}/statuses/${{ steps.github.outputs.sha }}' -f context='Plan' -f state='pending' -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-      - name: Checkout
+      - name: Checkout head
         uses: actions/checkout@v2
         with:
           repository: ${{ github.repository }}
           ref: ${{ steps.github.outputs.ref }}
+          path: head
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+        working-directory: head
+      - name: Checkout base
+        uses: actions/checkout@v2
+        with:
+          path: base
+      - name: Build scripts
+        run: |
+          npm install
+          npm run build
+        working-directory: base/scripts
+      - name: Run actions
+        id: status
+        run: |
+          if [[ "$(git log --oneline -1)" == *\[plan\] ]]; then
+            while read workspace; do
+              TF_WORKSPACE="$workspace" node ../../base/scripts/lib/actions/*.js
+            done <<< "$(jq -r '.[]' <<< '${{ steps.workspaces.outputs.this }}')"
+          fi
+          echo "::set-output name=this::$(git diff-index --quiet HEAD; echo $?)"
+        working-directory: head/scripts
+      - name: Prepare git
+        if: steps.status.outputs.this == '1'
+        uses: ./.github/actions/git-config-user
+      - name: Push changes
+        if: steps.status.outputs.this == '1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add --all
+          git commit --message='chore: Update github/*.yml [plan]'
+          git push
+        working-directory: head
   plan:
     needs: [prepare]
-    if: needs.prepare.outputs.workspaces != ''
+    if: needs.prepare.outputs.workspaces != '' && needs.prepare.outputs.status == '0'
     permissions:
       contents: read
     strategy:
@@ -83,7 +117,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform
+        working-directory: head/terraform
     steps:
       - uses: actions/checkout@v2
         with:
@@ -114,7 +148,7 @@ jobs:
           retention-days: 90
   comment:
     needs: [prepare, plan]
-    if: github.event_name == 'workflow_run'
+    if: github.event_name == 'workflow_run' && needs.prepare.outputs.status == '0'
     permissions:
       contents: read
       pull-requests: write
@@ -126,7 +160,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform
+        working-directory: head/terraform
     steps:
       - uses: actions/checkout@v2
         with:
