@@ -431,7 +431,10 @@ export class Config {
     return this
   }
 
-  save(): void {
+  save(sort = true): void {
+    if (sort) {
+      this.sort()
+    }
     fs.writeFileSync(`${env.GITHUB_DIR}/${env.GITHUB_ORG}.yml`, this.toString())
   }
 }

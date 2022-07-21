@@ -19,7 +19,6 @@ async function run(): Promise<void> {
   // adds/removes/updates yaml config as needed
   const syncedConfig = await config.sync(syncedState, ignoredChanges)
 
-  syncedConfig.sort()
   syncedConfig.save()
 }
 
