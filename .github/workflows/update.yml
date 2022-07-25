@@ -34,6 +34,11 @@ jobs:
           while read pr; do
             if [[ ! -z "$pr" ]]; then
               number="$(jq -r '.number' <<< "$pr")"
+              user_type="$(jq -r '.user.type' <<< "$pr")"
+              if [[ "$user_type" == 'Bot' ]]; then
+                echo '{"message":"Not updating pull request branch. The pull request was created by a bot user.","url":"https://api.github.com/repos/${{ github.repository }}/pulls/'"$number"'"}'
+                continue
+              fi
               private="$(jq -r '.head.repo.private' <<< "$pr")"
               if [[ "$private" == 'false' ]]; then
                 base_label="$(jq -r '.base.label' <<< "$pr")"
