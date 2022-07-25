@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - repository.default_branch support
 - ability to run user defined TS actions after merge
 - scheduled sync runs
+- shared TS action which ensures default branch is protected in all repos
 
 ### Changed
 - Synchronization script: to use GitHub API directly instead of relying on TF GH Provider's Data Sources
