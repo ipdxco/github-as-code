@@ -20,7 +20,6 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
   github-mgmt:
     files: # This group defines repository files (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file)
       README.md:
-        branch: master # This field defaults to the default branch of the repository
         content: README.md # This field accepts either a relative path to a file from ./files directory...
       docs/HELLO.md:
         content: > # ... or a content string
@@ -72,6 +71,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
     allow_auto_merge: false
     archived: false
     auto_init: false
+    default_branch: master
     delete_branch_on_merge: false
     description: GitHub Management
     homepage_url: https://github.com/protocol/github-mgmt-template
