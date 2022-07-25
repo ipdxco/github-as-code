@@ -48,3 +48,6 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 - [github_team_membership](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership)
 - [github_repository_file](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file)
 
+# User Defined Actions
+
+GitHub Management allows running user defined actions as a part of the framework. The actions are executed by the `Act` workflow after each merge to the default branch, after the changes have been applied by the `Apply` workflow. You can update the YAML configuration files using the actions. If any modification to the configuration files are detected, a new PR is created. To define a new action, create a new .ts file in the `scripts/src/actions` directory.
