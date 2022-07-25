@@ -62,6 +62,8 @@ jobs:
   plan:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
+    concurrency:
+      group: plan-${{ needs.prepare.outputs.number }}
     permissions:
       contents: read
     strategy:
@@ -115,6 +117,8 @@ jobs:
   comment:
     needs: [prepare, plan]
     if: github.event_name == 'workflow_run'
+    concurrency:
+      group: comment-${{ needs.prepare.outputs.number }}
     permissions:
       contents: read
       pull-requests: write
