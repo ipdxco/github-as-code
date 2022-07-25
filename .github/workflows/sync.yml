@@ -1,6 +1,8 @@
 name: Sync
 
 on:
+  schedule:
+    - cron: 0 0 * * 0
   workflow_dispatch:
     inputs:
       workspaces:
@@ -85,7 +87,7 @@ jobs:
           git_branch='${{ github.ref_name }}-sync-${{ env.TF_WORKSPACE }}'
           git checkout -B "$git_branch"
           git add --all
-          git diff-index --quiet HEAD || git commit --message='sync ${{ env.TF_WORKSPACE }} (#${{ github.run_number }})'
+          git diff-index --quiet HEAD || git commit --message='chore: sync ${{ env.TF_WORKSPACE }} (#${{ github.run_number }})'
           git push origin "$git_branch" --force
   pull_request:
     needs: [prepare, sync]
