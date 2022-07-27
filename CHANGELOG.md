@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - repository_file support
 - repository.default_branch support
 - weekly schedule to the synchronization workflow
+- fix workflow which executes user defined config transforms on PRs and after Apply
 
 ### Changed
 - Synchronization script: to use GitHub API directly instead of relying on TF GH Provider's Data Sources
