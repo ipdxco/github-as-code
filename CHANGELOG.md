@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade workflows: accept github-mgmt-template ref to upgrade to
 - Commit message for repository files: added chore: prefix and [skip ci] suffix
 - scripts: to export tf resource definitions and always sort before save
+- plan: to be triggered on pull_request_target
+- plan: to only check out github directory from the PR
 
 ### Fixed
 - links to supported resources in HOWTOs

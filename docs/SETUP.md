@@ -170,7 +170,7 @@
               required_approving_review_count: 1
             required_status_checks:
               contexts:
-                - Plan
+                - Comment
               strict": true
     ```
 - [ ] Push the changes to a branch other than the default branch
