@@ -1,0 +1,168 @@
+name: Fix
+
+on:
+  pull_request_target:
+    branches: [master]
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - "Apply"
+    types:
+      - completed
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: fix-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    if: github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'pull_request_target' &&
+        github.event.pull_request.head.repo.private == false) ||
+        (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success')
+    permissions:
+      contents: read
+      pull-requests: read
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      workspaces: ${{ steps.workspaces.outputs.this }}
+      skip-fix: ${{ steps.skip-fix.outputs.this }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - if: github.event_name == 'pull_request_target'
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head
+          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Discover workspaces
+        id: workspaces
+        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+      - name: Check last commit
+        id: skip-fix
+        run: |
+          if [[ "$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha || github.sha }} | head -n 1)" == *"[skip fix]" ]] || ! ls scripts/src/fix/rules/*.ts 2> /dev/null; then
+            echo "::set-output name=this::true"
+          else
+            echo "::set-output name=this::false"
+          fi
+  fix:
+    needs: [prepare]
+    if: needs.prepare.outputs.skip-fix == 'false'
+    permissions:
+      contents: read
+      pull-requests: read
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.prepare.outputs.workspaces || '[]') }}
+    name: Fix
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      TF_WORKSPACE: ${{ matrix.workspace }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_APP_ID: ${{ secrets.RO_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
+      TF_VAR_write_delay_ms: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - if: github.event_name == 'pull_request_target'
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head
+          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        with:
+          terraform_version: 1.1.4
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: terraform
+      - name: Initialize scripts
+        run: npm install && npm run build
+        working-directory: scripts
+      - name: Fix
+        run: node lib/fix/rules/*.js
+        working-directory: scripts
+      - name: Upload YAML config
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.TF_WORKSPACE }}.yml
+          path: github/${{ env.TF_WORKSPACE }}.yml
+          if-no-files-found: error
+          retention-days: 1
+  push:
+    needs: [prepare, fix]
+    permissions:
+      contents: read
+    name: Push
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Generate app token
+        id: token
+        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        with:
+          app_id: ${{ secrets.RW_GITHUB_APP_ID }}
+          installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
+          private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          token: ${{ steps.token.outputs.token }}
+          path: head
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: base
+      - name: Download YAML configs
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+      - name: Copy YAML configs
+        run: cp artifacts/**/*.yml head/github
+      - name: Check if github was modified
+        id: github-modified
+        run: |
+          if [ -z "$(git status --porcelain -- github)" ]; then
+            echo "::set-output name=this::false"
+          else
+            echo "::set-output name=this::true"
+          fi
+        working-directory: head
+      - uses: ./base/.github/actions/git-config-user
+        if: steps.github-modified.outputs.this == 'true'
+      - if: steps.github-modified.outputs.this == 'true'
+        run: |
+          git add --all -- github
+          git commit -m "chore: fix [skip fix]"
+        working-directory: head
+      - if: steps.github-modified.outputs.this == 'true' && github.event_name == 'pull_request_target'
+        run: |
+          git checkout -B ${{ github.event.pull_request.head.ref }}
+          git push origin ${{ github.event.pull_request.head.ref }}
+        working-directory: head
+      - if: steps.github-modified.outputs.this == 'true' && github.event_name != 'pull_request_target'
+        uses: ./base/.github/actions/git-push
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        with:
+          suffix: fix
+          working-directory: head

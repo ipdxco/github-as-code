@@ -108,16 +108,17 @@ I push my changes to a new branch and create a PR. An admin reviews the PR, sync
 - Run `Clean` GitHub Action workflow with a chosen regex
 - Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github)
 
-### ...add a shared TS action?
+### ...add a new fix rule?
 
-- Create a new .ts file in `scripts/src/actions` directory
+- Create a new _.ts_ file in `scripts/src/fix/rules` directory
 
 *Example*
 
 I want to ensure that all repositories in my organization have their default branches protected.
 
-To do that, I create `scripts/src/actions/protect-default-branches.ts` file with the following content:
+To do that, I create `scripts/src/fix/rules/public-default-branches-are-protected.ts` file with the following content:
 ```ts
+import 'reflect-metadata'
 import { protectDefaultBranches } from './shared/protect-default-branches'
 
 protectDefaultBranches()

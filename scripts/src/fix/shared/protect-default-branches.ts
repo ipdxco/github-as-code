@@ -1,11 +1,10 @@
-import 'reflect-metadata'
 import * as terraform from '../../terraform'
 import * as yaml from '../../yaml'
 import YAML from 'yaml'
 
 // TODO: run this script as part of some workflow (PR?, sync?), for now run:
 //       npm run build && TF_WORKSPACE=ipfs node lib/actions/protect-default-branches.js
-export async function protectDefaultBranches(): Promise<void> {
+export async function protectDefaultBranches(includePrivate: boolean = false): Promise<void> {
   const config = yaml.getConfig()
 
   // TODO: we need a better abstraction for things that are defined in the YAML
@@ -22,6 +21,13 @@ export async function protectDefaultBranches(): Promise<void> {
     const pattern = (((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(pair => {
       return (pair.key as YAML.Scalar<string>).value === 'default_branch'
     })?.value as YAML.Scalar<string>)?.value || 'main'
+    const visibility = (((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(pair => {
+      return (pair.key as YAML.Scalar<string>).value === 'visibility'
+    })?.value as YAML.Scalar<string>)?.value || 'public'
+
+    if (!includePrivate && visibility === 'private') {
+      continue
+    }
 
     // TODO: we need a better abstraction here, one which has a proper constructor
     //       and doesn't know anything about terraform (i.e. values.id)
