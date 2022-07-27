@@ -245,15 +245,25 @@ export class GithubBranchProtection extends ManagedResource {
   override values!: Identifiable & {
     repository: string
     pattern: string
-    required_pull_request_reviews: {}[] | {}
-    required_status_checks: {}[] | {}
+    required_pull_request_reviews: {}[]
+    required_status_checks: {}[]
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const values = {...this.values}
-    values.required_pull_request_reviews =
-      (values.required_pull_request_reviews as {}[])[0] || {}
-    values.required_status_checks =
-      (values.required_status_checks as {}[])[0] || {}
+    const values: any = {...this.values} // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (
+      values.required_pull_request_reviews &&
+      values.required_pull_request_reviews.length
+    ) {
+      values.required_pull_request_reviews =
+        values.required_pull_request_reviews[0]
+    } else {
+      delete values.required_pull_request_reviews
+    }
+    if (values.required_status_checks && values.required_status_checks.length) {
+      values.required_status_checks = values.required_status_checks[0]
+    } else {
+      delete values.required_status_checks
+    }
     const value = transformer.plainToClass(cfg.BranchProtection, values, {
       excludeExtraneousValues: true
     })
@@ -335,7 +345,13 @@ export class GithubTeamMembership extends ManagedResource {
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
     return new cfg.Resource(
       this.type,
-      ['teams', this.index.split(':')[0], 'members', this.values.role],
+      // team names, unlike usernames or repository names, allow : in them
+      [
+        'teams',
+        this.index.split(':').slice(0, -1).join(':'),
+        'members',
+        this.values.role
+      ],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
   }

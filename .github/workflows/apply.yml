@@ -2,12 +2,13 @@ name: Apply
 
 on:
   push:
+    branches:
+      - master # we want this to be executed on the default branch only
   workflow_dispatch:
 
 jobs:
   prepare:
-    if: github.ref_name == github.event.repository.default_branch &&
-        github.event.repository.is_template == false
+    if: github.event.repository.is_template == false
     permissions:
       contents: read
       issues: read
