@@ -4,7 +4,9 @@ import YAML from 'yaml'
 
 // TODO: run this script as part of some workflow (PR?, sync?), for now run:
 //       npm run build && TF_WORKSPACE=ipfs node lib/actions/protect-default-branches.js
-export async function protectDefaultBranches(includePrivate: boolean = false): Promise<void> {
+export async function protectDefaultBranches(
+  includePrivate: boolean = false
+): Promise<void> {
   const config = yaml.getConfig()
 
   // TODO: we need a better abstraction for things that are defined in the YAML
@@ -17,13 +19,24 @@ export async function protectDefaultBranches(includePrivate: boolean = false): P
     //       ideally, we should be able to replace all of this with something like:
     //       const name = repository.getName()
     //       const pattern = repository.getPattern()
-    const name = ((repository.value as YAML.Pair).key as YAML.Scalar<string>).value
-    const pattern = (((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(pair => {
-      return (pair.key as YAML.Scalar<string>).value === 'default_branch'
-    })?.value as YAML.Scalar<string>)?.value || 'main'
-    const visibility = (((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(pair => {
-      return (pair.key as YAML.Scalar<string>).value === 'visibility'
-    })?.value as YAML.Scalar<string>)?.value || 'public'
+    const name = ((repository.value as YAML.Pair).key as YAML.Scalar<string>)
+      .value
+    const pattern =
+      (
+        ((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(
+          pair => {
+            return (pair.key as YAML.Scalar<string>).value === 'default_branch'
+          }
+        )?.value as YAML.Scalar<string>
+      )?.value || 'main'
+    const visibility =
+      (
+        ((repository.value as YAML.Pair).value as YAML.YAMLMap).items.find(
+          pair => {
+            return (pair.key as YAML.Scalar<string>).value === 'visibility'
+          }
+        )?.value as YAML.Scalar<string>
+      )?.value || 'public'
 
     if (!includePrivate && visibility === 'private') {
       continue
@@ -40,7 +53,7 @@ export async function protectDefaultBranches(includePrivate: boolean = false): P
       repository: name,
       pattern: pattern,
       required_pull_request_reviews: [],
-      required_status_checks: [],
+      required_status_checks: []
     }
 
     // TODO: we should be able to get a YAML representation of a resource without providing a terraform context
