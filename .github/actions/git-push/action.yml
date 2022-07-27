@@ -26,6 +26,7 @@ runs:
 
         if [[ "$protected" == 'true' ]]; then
           git push origin "$git_branch" --force
+          // fetching PR base because we want to compare against it and it might not have been checked out yet
           git fetch origin ${{ github.ref_name }}
           if [[ ! -z "$(git diff --name-only 'origin/${{ github.ref_name }}')" ]]; then
             state="$(gh pr view "$git_branch" --json state --jq .state 2> /dev/null || echo '')"

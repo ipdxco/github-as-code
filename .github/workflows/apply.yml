@@ -3,7 +3,7 @@ name: Apply
 on:
   push:
     branches:
-      - master
+      - master # we want this to be executed on the default branch only
   workflow_dispatch:
 
 jobs:
