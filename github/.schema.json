@@ -162,6 +162,9 @@
                 },
                 "type": "object"
               },
+              "default_branch": {
+                "type": "string"
+              },
               "delete_branch_on_merge": {
                 "type": "boolean"
               },

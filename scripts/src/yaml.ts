@@ -77,6 +77,7 @@ class Repository {
   @Expose() archive_on_destroy?: boolean
   @Expose() archived?: boolean
   @Expose() auto_init?: boolean
+  @Expose() default_branch?: string
   @Expose() delete_branch_on_merge?: boolean
   @Expose() description?: string
   @Expose() gitignore_template?: string
