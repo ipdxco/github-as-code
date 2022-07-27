@@ -249,9 +249,13 @@ export class GithubBranchProtection extends ManagedResource {
     required_status_checks: {}[]
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const values: any = {...this.values}
-    if (values.required_pull_request_reviews && values.required_pull_request_reviews.length) {
-      values.required_pull_request_reviews = values.required_pull_request_reviews[0]
+    const values: any = {...this.values} // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (
+      values.required_pull_request_reviews &&
+      values.required_pull_request_reviews.length
+    ) {
+      values.required_pull_request_reviews =
+        values.required_pull_request_reviews[0]
     } else {
       delete values.required_pull_request_reviews
     }
@@ -342,7 +346,12 @@ export class GithubTeamMembership extends ManagedResource {
     return new cfg.Resource(
       this.type,
       // team names, unlike usernames or repository names, allow : in them
-      ['teams', this.index.split(':').slice(0, -1).join(':'), 'members', this.values.role],
+      [
+        'teams',
+        this.index.split(':').slice(0, -1).join(':'),
+        'members',
+        this.values.role
+      ],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
   }
