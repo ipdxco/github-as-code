@@ -341,7 +341,8 @@ export class GithubTeamMembership extends ManagedResource {
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
     return new cfg.Resource(
       this.type,
-      ['teams', this.index.split(':')[0], 'members', this.values.role],
+      // team names, unlike usernames or repository names, allow : in them
+      ['teams', this.index.split(':').slice(0, -1).join(':'), 'members', this.values.role],
       YAML.parseDocument(this.values.username).contents as YAML.Scalar
     )
   }
