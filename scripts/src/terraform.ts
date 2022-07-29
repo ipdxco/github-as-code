@@ -4,6 +4,7 @@ import * as cli from '@actions/exec'
 import * as cfg from './yaml'
 import * as core from '@actions/core'
 import * as fs from 'fs'
+import * as schema from './schema'
 import * as transformer from 'class-transformer'
 import {GitHub} from './github'
 import {Transform, Type} from 'class-transformer'
@@ -122,7 +123,7 @@ export class GithubRepository extends ManagedResource {
       values.pages.source = (values.pages.source as {}[])?.at(0) || {}
     }
     values.template = (values.template as {}[])?.at(0) || {}
-    const value = transformer.plainToClass(cfg.Repository, values, {
+    const value = transformer.plainToClass(schema.Repository, values, {
       excludeExtraneousValues: true
     })
     return new cfg.Resource(
@@ -212,7 +213,7 @@ export class GithubRepositoryFile extends ManagedResource {
     if (file) {
       values.content = file.substring(env.FILES_DIR.length + 1)
     }
-    const value = transformer.plainToClass(cfg.File, values, {
+    const value = transformer.plainToClass(schema.File, values, {
       excludeExtraneousValues: true
     })
     return new cfg.Resource(
@@ -264,7 +265,7 @@ export class GithubBranchProtection extends ManagedResource {
     } else {
       delete values.required_status_checks
     }
-    const value = transformer.plainToClass(cfg.BranchProtection, values, {
+    const value = transformer.plainToClass(schema.BranchProtection, values, {
       excludeExtraneousValues: true
     })
     return new cfg.Resource(
@@ -311,7 +312,7 @@ export class GithubTeam extends ManagedResource {
         )
       }
     }
-    const value = transformer.plainToClass(cfg.Team, values, {
+    const value = transformer.plainToClass(schema.Team, values, {
       excludeExtraneousValues: true
     })
     return new cfg.Resource(
