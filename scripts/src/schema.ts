@@ -1,24 +1,23 @@
-
 import {Expose, Type} from 'class-transformer'
 
-class RepositoryPagesSource {
+export class RepositoryPagesSource {
   @Expose() branch?: string
   @Expose() path?: string
 }
 
-class RepositoryPages {
+export class RepositoryPages {
   @Type(() => RepositoryPagesSource)
   @Expose()
   source?: RepositoryPagesSource
   @Expose() cname?: string
 }
 
-class RepositoryTemplate {
+export class RepositoryTemplate {
   @Expose() owner?: string
   @Expose() repository?: string
 }
 
-class Repository {
+export class Repository {
   @Expose() allow_auto_merge?: boolean
   @Expose() allow_merge_commit?: boolean
   @Expose() allow_rebase_merge?: boolean
@@ -49,12 +48,12 @@ class Repository {
   @Expose() vulnerability_alerts?: boolean
 }
 
-class File {
+export class File {
   @Expose() content?: string
   @Expose() overwrite_on_create?: boolean
 }
 
-class BranchProtectionRequiredPullRequestReviews {
+export class BranchProtectionRequiredPullRequestReviews {
   @Expose() dismiss_stale_reviews?: boolean
   @Expose() dismissal_restrictions?: string[]
   @Expose() pull_request_bypassers?: string[]
@@ -63,12 +62,12 @@ class BranchProtectionRequiredPullRequestReviews {
   @Expose() restrict_dismissals?: boolean
 }
 
-class BranchProtectionRequiredStatusChecks {
+export class BranchProtectionRequiredStatusChecks {
   @Expose() contexts?: string[]
   @Expose() strict?: boolean
 }
 
-class BranchProtection {
+export class BranchProtection {
   @Expose() allows_deletions?: boolean
   @Expose() allows_force_pushes?: boolean
   @Expose() enforce_admins?: boolean
@@ -84,8 +83,8 @@ class BranchProtection {
   required_status_checks?: BranchProtectionRequiredStatusChecks
 }
 
-type RepositoryCollaborator = string
-type RepositoryTeam = string
+export class RepositoryCollaborator extends String {}
+export class RepositoryTeam extends String {}
 
 class RepositoryContainer extends Repository {
   collaborators?: {
@@ -106,14 +105,14 @@ class RepositoryContainer extends Repository {
   branch_protection?: Record<string, BranchProtection>
 }
 
-class Team {
+export class Team {
   @Expose() create_default_maintainer?: boolean
   @Expose() description?: string
   @Expose() parent_team_id?: string
   @Expose() privacy?: 'closed' | 'secret'
 }
 
-type TeamMember = string
+export class TeamMember extends String {}
 
 class TeamContainer extends Team {
   members?: {
@@ -122,9 +121,9 @@ class TeamContainer extends Team {
   }
 }
 
-type Member = string
+export class Member extends String {}
 
-export default class Schema {
+export class Schema {
   members?: {
     admin?: Member[]
     member?: Member[]
@@ -132,5 +131,3 @@ export default class Schema {
   repositories?: Record<string, RepositoryContainer>
   teams?: Record<string, TeamContainer>
 }
-
-export {Schema, File, BranchProtection, Repository, RepositoryCollaborator, RepositoryTeam, Team, TeamMember, Member}
