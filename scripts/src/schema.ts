@@ -84,20 +84,23 @@ class BranchProtection {
   required_status_checks?: BranchProtectionRequiredStatusChecks
 }
 
+type RepositoryCollaborator = string
+type RepositoryTeam = string
+
 class RepositoryContainer extends Repository {
   collaborators?: {
-    admin?: string[]
-    maintain?: string[]
-    push?: string[]
-    triage?: string[]
-    pull?: string[]
+    admin?: RepositoryCollaborator[]
+    maintain?: RepositoryCollaborator[]
+    push?: RepositoryCollaborator[]
+    triage?: RepositoryCollaborator[]
+    pull?: RepositoryCollaborator[]
   }
   teams?: {
-    admin?: string[]
-    maintain?: string[]
-    push?: string[]
-    triage?: string[]
-    pull?: string[]
+    admin?: RepositoryTeam[]
+    maintain?: RepositoryTeam[]
+    push?: RepositoryTeam[]
+    triage?: RepositoryTeam[]
+    pull?: RepositoryTeam[]
   }
   files?: Record<string, File>
   branch_protection?: Record<string, BranchProtection>
@@ -110,20 +113,24 @@ class Team {
   @Expose() privacy?: 'closed' | 'secret'
 }
 
+type TeamMember = string
+
 class TeamContainer extends Team {
   members?: {
-    maintainer?: string[]
-    member?: string[]
+    maintainer?: TeamMember[]
+    member?: TeamMember[]
   }
 }
 
+type Member = string
+
 export default class Schema {
   members?: {
-    admin?: string[]
-    member?: string[]
+    admin?: Member[]
+    member?: Member[]
   }
   repositories?: Record<string, RepositoryContainer>
   teams?: Record<string, TeamContainer>
 }
 
-export {Schema, File, BranchProtection, Repository, Team}
+export {Schema, File, BranchProtection, Repository, RepositoryCollaborator, RepositoryTeam, Team, TeamMember, Member}

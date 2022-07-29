@@ -11,7 +11,7 @@
     "lint": "eslint **/*.ts",
     "test": "jest --passWithNoTests",
     "all": "npm run build && npm run format && npm run lint && npm test",
-    "schema": "npx ts-json-schema-generator --tsconfig tsconfig.json --path src/yaml.ts --type Schema --out ../github/.schema.json",
+    "schema": "npx ts-json-schema-generator --tsconfig tsconfig.json --path src/schema.ts --type Schema --out ../github/.schema.json",
     "main": "node lib/main.js"
   },
   "dependencies": {
