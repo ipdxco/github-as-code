@@ -1,23 +1,25 @@
 import {Expose, Type} from 'class-transformer'
 
-export class RepositoryPagesSource {
+export interface Definition {}
+
+export class RepositoryPagesSource implements Definition {
   @Expose() branch?: string
   @Expose() path?: string
 }
 
-export class RepositoryPages {
+export class RepositoryPages implements Definition {
   @Type(() => RepositoryPagesSource)
   @Expose()
   source?: RepositoryPagesSource
   @Expose() cname?: string
 }
 
-export class RepositoryTemplate {
+export class RepositoryTemplate implements Definition {
   @Expose() owner?: string
   @Expose() repository?: string
 }
 
-export class Repository {
+export class Repository implements Definition {
   @Expose() allow_auto_merge?: boolean
   @Expose() allow_merge_commit?: boolean
   @Expose() allow_rebase_merge?: boolean
@@ -48,12 +50,12 @@ export class Repository {
   @Expose() vulnerability_alerts?: boolean
 }
 
-export class File {
+export class File implements Definition {
   @Expose() content?: string
   @Expose() overwrite_on_create?: boolean
 }
 
-export class BranchProtectionRequiredPullRequestReviews {
+export class BranchProtectionRequiredPullRequestReviews implements Definition {
   @Expose() dismiss_stale_reviews?: boolean
   @Expose() dismissal_restrictions?: string[]
   @Expose() pull_request_bypassers?: string[]
@@ -62,12 +64,12 @@ export class BranchProtectionRequiredPullRequestReviews {
   @Expose() restrict_dismissals?: boolean
 }
 
-export class BranchProtectionRequiredStatusChecks {
+export class BranchProtectionRequiredStatusChecks implements Definition {
   @Expose() contexts?: string[]
   @Expose() strict?: boolean
 }
 
-export class BranchProtection {
+export class BranchProtection implements Definition {
   @Expose() allows_deletions?: boolean
   @Expose() allows_force_pushes?: boolean
   @Expose() enforce_admins?: boolean
@@ -83,8 +85,8 @@ export class BranchProtection {
   required_status_checks?: BranchProtectionRequiredStatusChecks
 }
 
-export class RepositoryCollaborator extends String {}
-export class RepositoryTeam extends String {}
+export class RepositoryCollaborator extends String implements Definition {}
+export class RepositoryTeam extends String implements Definition {}
 
 class RepositoryContainer extends Repository {
   collaborators?: {
@@ -105,14 +107,14 @@ class RepositoryContainer extends Repository {
   branch_protection?: Record<string, BranchProtection>
 }
 
-export class Team {
+export class Team implements Definition {
   @Expose() create_default_maintainer?: boolean
   @Expose() description?: string
   @Expose() parent_team_id?: string
   @Expose() privacy?: 'closed' | 'secret'
 }
 
-export class TeamMember extends String {}
+export class TeamMember extends String implements Definition {}
 
 class TeamContainer extends Team {
   members?: {
@@ -121,7 +123,7 @@ class TeamContainer extends Team {
   }
 }
 
-export class Member extends String {}
+export class Member extends String implements Definition {}
 
 export class Schema {
   members?: {
