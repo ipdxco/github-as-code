@@ -86,10 +86,13 @@ export class GithubMembership extends ManagedResource {
     username: string
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
+    const value = transformer.plainToClass(schema.Member, this.values.username, {
+      excludeExtraneousValues: true
+    })
     return new cfg.Resource(
       this.type,
       ['members', this.values.role],
-      YAML.parseDocument(this.values.username).contents as YAML.Scalar
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
     )
   }
 }
@@ -156,6 +159,9 @@ export class GithubRepositoryCollaborator extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
+    const value = transformer.plainToClass(schema.RepositoryCollaborator, this.values.username, {
+      excludeExtraneousValues: true
+    })
     return new cfg.Resource(
       this.type,
       [
@@ -164,7 +170,7 @@ export class GithubRepositoryCollaborator extends ManagedResource {
         'collaborators',
         this.values.permission
       ],
-      YAML.parseDocument(this.values.username).contents as YAML.Scalar
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
     )
   }
 }
@@ -344,6 +350,9 @@ export class GithubTeamMembership extends ManagedResource {
     role: 'maintainer' | 'member'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
+    const value = transformer.plainToClass(schema.TeamMember, this.values.username, {
+      excludeExtraneousValues: true
+    })
     return new cfg.Resource(
       this.type,
       // team names, unlike usernames or repository names, allow : in them
@@ -353,7 +362,7 @@ export class GithubTeamMembership extends ManagedResource {
         'members',
         this.values.role
       ],
-      YAML.parseDocument(this.values.username).contents as YAML.Scalar
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
     )
   }
 }
@@ -376,10 +385,13 @@ export class GithubTeamRepository extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
+    const value = transformer.plainToClass(schema.RepositoryTeam, this.index.split(':')[0], {
+      excludeExtraneousValues: true
+    })
     return new cfg.Resource(
       this.type,
       ['repositories', this.values.repository, 'teams', this.values.permission],
-      YAML.parseDocument(this.index.split(':')[0]).contents as YAML.Scalar
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
     )
   }
 }
