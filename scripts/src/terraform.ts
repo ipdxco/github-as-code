@@ -97,7 +97,7 @@ export class GithubMembership extends ManagedResource {
   }
 }
 export class GithubRepository extends ManagedResource {
-  static yamlPath = ['repositories']
+  static yamlPath = ['repositories', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -131,11 +131,8 @@ export class GithubRepository extends ManagedResource {
     })
     return new cfg.Resource(
       this.type,
-      ['repositories'],
-      (
-        YAML.parseDocument(YAML.stringify({[this.values.name]: value}))
-          .contents as YAML.YAMLMap
-      ).items[0]
+      ['repositories', this.values.name],
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
     )
   }
 }
@@ -175,7 +172,7 @@ export class GithubRepositoryCollaborator extends ManagedResource {
   }
 }
 export class GithubRepositoryFile extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'files']
+  static yamlPath = ['repositories', '.+', 'files', '.+']
   static async getDesiredResources(
     context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -224,16 +221,13 @@ export class GithubRepositoryFile extends ManagedResource {
     })
     return new cfg.Resource(
       this.type,
-      ['repositories', this.values.repository, 'files'],
-      (
-        YAML.parseDocument(YAML.stringify({[this.values.file]: value}))
-          .contents as YAML.YAMLMap
-      ).items[0]
+      ['repositories', this.values.repository, 'files', this.values.file],
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
     )
   }
 }
 export class GithubBranchProtection extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'branch_protection']
+  static yamlPath = ['repositories', '.+', 'branch_protection', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -276,16 +270,13 @@ export class GithubBranchProtection extends ManagedResource {
     })
     return new cfg.Resource(
       this.type,
-      ['repositories', this.index.split(':')[0], 'branch_protection'],
-      (
-        YAML.parseDocument(YAML.stringify({[this.values.pattern]: value}))
-          .contents as YAML.YAMLMap
-      ).items[0]
+      ['repositories', this.index.split(':')[0], 'branch_protection', this.values.pattern],
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
     )
   }
 }
 export class GithubTeam extends ManagedResource {
-  static yamlPath = ['teams']
+  static yamlPath = ['teams', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -323,11 +314,8 @@ export class GithubTeam extends ManagedResource {
     })
     return new cfg.Resource(
       this.type,
-      ['teams'],
-      (
-        YAML.parseDocument(YAML.stringify({[this.values.name]: value}))
-          .contents as YAML.YAMLMap
-      ).items[0]
+      ['teams', this.values.name],
+      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
     )
   }
 }

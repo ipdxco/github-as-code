@@ -9,15 +9,13 @@ function equals(a: unknown, b: unknown): boolean {
   if (YAML.isScalar(a) && YAML.isScalar(b)) {
     return a.value === b.value
   } else if (
-    YAML.isPair(a) &&
-    YAML.isPair(b) &&
-    YAML.isScalar(a.key) &&
-    YAML.isScalar(b.key)
+    YAML.isMap(a) &&
+    YAML.isMap(b)
   ) {
-    return a.key.value === b.key.value
+    return true
   } else {
     throw new Error(
-      `Expected eiter 2 Scalars or 2 Pairs with Scalar keys, got these instead: ${a} and ${b}`
+      `Expected eiter 2 Scalars or 2 Maps, got these instead: ${a} and ${b}`
     )
   }
 }
@@ -35,9 +33,9 @@ function isEmpty(a: unknown): boolean {
 class Resource {
   type: string
   path: string[]
-  value: YAML.Scalar | YAML.Pair
+  value: YAML.Scalar | YAML.YAMLMap
 
-  constructor(type: string, path: string[], value: YAML.Scalar | YAML.Pair) {
+  constructor(type: string, path: string[], value: YAML.Scalar | YAML.YAMLMap) {
     this.type = type
     this.path = path
     this.value = value
@@ -108,18 +106,20 @@ export class Config {
             (item.key as YAML.Scalar).value as string
           ]
           if (rest.length === 0) {
-            if (YAML.isCollection(item.value)) {
+            if (YAML.isSeq(item.value)) {
               return item.value.items.map(i => {
-                if (YAML.isScalar(i) || YAML.isPair(i)) {
+                if (YAML.isScalar(i)) {
                   return new Resource(type, newHistory, i)
                 } else {
                   throw new Error(
-                    `Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(
+                    `Expected a Scalar, got this instead: ${JSON.stringify(
                       i
                     )}`
                   )
                 }
               })
+            } else if (YAML.isMap(item.value)) {
+              return [new Resource(type, newHistory, item.value)]
             } else {
               throw new Error(
                 `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
@@ -178,10 +178,12 @@ export class Config {
     // e.g. if we removed a repository but then we try to remove repository collaborators
     if (this.contains(resource)) {
       const item = this.document.getIn(resource.path)
-      if (YAML.isCollection(item)) {
+      if (YAML.isSeq(item)) {
         item.items = item.items.filter(i => {
           return !equals(i, resource.value)
         })
+      } else if (YAML.isMap(item)) {
+        this.document.deleteIn(resource.path)
       } else {
         throw new Error(
           `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
@@ -203,11 +205,11 @@ export class Config {
       if (item === undefined) {
         if (YAML.isScalar(resource.value)) {
           this.document.addIn(parsedPath, YAML.parseDocument('[]').contents)
-        } else if (YAML.isPair(resource.value)) {
-          this.document.addIn(parsedPath, YAML.parseDocument('{}').contents)
+        } else if (YAML.isMap(resource.value)) {
+          // do nothing
         } else {
           throw new Error(
-            `Expected either a Scalar or a Pair, got this instead: ${JSON.stringify(
+            `Expected either a Scalar or a Map, got this instead: ${JSON.stringify(
               resource.value
             )}`
           )
@@ -222,18 +224,22 @@ export class Config {
     if (YAML.isScalar(resource.value)) {
       // do nothing, there's nothing to update in scalar values
     } else if (
-      YAML.isPair(resource.value) &&
-      YAML.isMap(resource.value.value)
+      YAML.isMap(resource.value)
     ) {
       const existingResource = this.find(resource)
       if (
         existingResource !== undefined &&
-        YAML.isPair(existingResource.value) &&
-        YAML.isMap(existingResource.value.value)
+        YAML.isMap(existingResource.value)
       ) {
-        const existingValue = existingResource.value.value
-        for (const item of resource.value.value.items) {
-          const existingItem = existingValue.items.find(i => equals(i, item))
+        const existingValue = existingResource.value
+        for (const item of resource.value.items) {
+          const existingItem = existingValue.items.find(i => {
+            if (YAML.isPair(item) && YAML.isPair(i) && YAML.isScalar(item.key) && YAML.isScalar(i.key)) {
+              return item.key.value === i.key.value
+            } else {
+              return false
+            }
+          })
           if (existingItem !== undefined) {
             if (
               JSON.stringify(existingItem.value) !== JSON.stringify(item.value)
@@ -259,15 +265,15 @@ export class Config {
         })
       } else {
         throw new Error(
-          `Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(
-            existingResource?.value
+          `Expected a YAMLMap, got this instead: ${JSON.stringify(
+            existingResource
           )}`
         )
       }
     } else {
       throw new Error(
-        `Expected a YAMLMap inside a Pair, got this instead: ${JSON.stringify(
-          resource.value
+        `Expected a YAMLMap, got this instead: ${JSON.stringify(
+          resource
         )}`
       )
     }

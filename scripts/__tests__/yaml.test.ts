@@ -66,8 +66,7 @@ test('removes 3 out of 7 repository', async () => {
   const repositoriesPrior = cfg
     .getResources()
     .filter(
-      resource =>
-        JSON.stringify(resource.path) === JSON.stringify(['repositories'])
+      resource => resource.type === 'github_repository'
     )
 
   expect(repositoriesPrior.length).toEqual(7)
@@ -78,8 +77,7 @@ test('removes 3 out of 7 repository', async () => {
 
   const resourcesPost = cfg.getResources()
   const repositoriesPost = resourcesPost.filter(
-    resource =>
-      JSON.stringify(resource.path) === JSON.stringify(['repositories'])
+    resource => resource.type === 'github_repository'
   )
 
   expect(resourcesPost.length).toEqual(13)
@@ -123,8 +121,8 @@ test('adds 1 new file', async () => {
 
   const file = new config.Resource(
     'github_repository_file',
-    ['repositories', 'github-mgmt', 'files'],
-    (YAML.parseDocument('file: {}').contents as YAML.YAMLMap).items[0]
+    ['repositories', 'github-mgmt', 'files', 'file'],
+    YAML.parseDocument('{}').contents as YAML.YAMLMap
   )
 
   cfg.add(file)
@@ -133,7 +131,8 @@ test('adds 1 new file', async () => {
     cfg.matchIn('github_repository_file', [
       'repositories',
       'github-mgmt',
-      'files'
+      'files',
+      '.+'
     ]).length
   ).toEqual(2)
   expect(cfg.getResources().length).toEqual(23)
@@ -146,16 +145,16 @@ test('updates all team privacy settings', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn('github_team', ['teams'])
+  const teams = cfg.matchIn('github_team', ['teams', '.+'])
 
   const teamUpdates = teams.map(team => {
     const resource = new config.Resource(
       team.type,
       team.path,
-      team.value.clone() as YAML.Pair
+      team.value.clone() as YAML.YAMLMap
     )
     ;(
-      (resource.value.value as YAML.YAMLMap).items.find(
+      (resource.value as YAML.YAMLMap).items.find(
         item => (item.key as YAML.Scalar).value === 'privacy'
       ) as YAML.Scalar
     ).value = 'secret'
@@ -164,7 +163,7 @@ test('updates all team privacy settings', async () => {
 
   for (const team of teams) {
     const description = (
-      (team.value.value as YAML.YAMLMap).items.find(
+      (team.value as YAML.YAMLMap).items.find(
         item => (item.key as YAML.Scalar).value === 'privacy'
       ) as YAML.Scalar
     ).value
@@ -177,7 +176,7 @@ test('updates all team privacy settings', async () => {
 
   for (const team of teams) {
     const description = (
-      (team.value.value as YAML.YAMLMap).items.find(
+      (team.value as YAML.YAMLMap).items.find(
         item => (item.key as YAML.Scalar).value === 'privacy'
       ) as YAML.Scalar
     ).value
@@ -194,17 +193,14 @@ test('removes a comment on property update', async () => {
 
   const resource = new config.Resource(
     'github_repository',
-    ['repositories'],
-    (
-      YAML.parseDocument('github-mgmt: { allow_auto_merge: true }')
-        .contents as YAML.YAMLMap
-    ).items[0]
+    ['repositories', 'github-mgmt'],
+    YAML.parseDocument('{ allow_auto_merge: true }').contents as YAML.YAMLMap
   )
 
   const existingResource = cfg.find(resource)
   expect(existingResource).toBeDefined()
   const allowAutoMerge = (
-    (existingResource as config.Resource).value.value as YAML.YAMLMap
+    (existingResource as config.Resource).value as YAML.YAMLMap
   ).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
   expect(allowAutoMerge).toBeDefined()
   ;((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment =
@@ -231,17 +227,14 @@ test('does not upate properties when the values match', async () => {
 
   const resource = new config.Resource(
     'github_repository',
-    ['repositories'],
-    (
-      YAML.parseDocument('github-mgmt: { allow_auto_merge: false }')
-        .contents as YAML.YAMLMap
-    ).items[0]
+    ['repositories', 'github-mgmt'],
+    YAML.parseDocument('{ allow_auto_merge: false }').contents as YAML.YAMLMap
   )
 
   const existingResource = cfg.find(resource)
   expect(existingResource).toBeDefined()
   const allowAutoMerge = (
-    (existingResource as config.Resource).value.value as YAML.YAMLMap
+    (existingResource as config.Resource).value as YAML.YAMLMap
   ).items.find(item => (item.key as YAML.Scalar).value === 'allow_auto_merge')
   expect(allowAutoMerge).toBeDefined()
   ;((allowAutoMerge as YAML.Pair).value as YAML.Scalar).comment =
@@ -264,17 +257,37 @@ test('removes properties from the ignore array on updates', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn('github_team', ['teams'])
+  const teams = cfg.matchIn('github_team', ['teams', '.+'])
 
   for (const team of teams) {
-    const descriptionPrior = (team.value.value as YAML.YAMLMap).items.find(
+    const descriptionPrior = (team.value as YAML.YAMLMap).items.find(
       item => (item.key as YAML.Scalar).value === 'privacy'
     )
     expect(descriptionPrior).toBeDefined()
     cfg.update(team, ['privacy'])
-    const descriptionPost = (team.value.value as YAML.YAMLMap).items.find(
+    const descriptionPost = (team.value as YAML.YAMLMap).items.find(
       item => (item.key as YAML.Scalar).value === 'privacy'
     )
     expect(descriptionPost).toBeUndefined()
   }
+})
+
+test('add repository followed by a branch protection rule', async () => {
+    const cfg = config.parse("{}")
+
+    const repository = new config.Resource(
+      "github_repository",
+      ["repositories", "github-mgmt"],
+      YAML.parseDocument(YAML.stringify({
+        archived: false
+      })).contents as YAML.YAMLMap
+    )
+
+    const branchProtection = new config.Resource(
+      "github_branch_protection",
+      ["repositories", "github-mgmt", "branch_protection", "master"],
+      YAML.parseDocument(YAML.stringify({
+        allows_deletions: false
+      })).contents as YAML.YAMLMap
+    )
 })
