@@ -77,7 +77,7 @@ test('finds all the resources to remove', async () => {
     terraform.ManagedResources.map(cls => camelCaseToSnakeCase(cls.name))
   )
 
-  expect(resourcesToRemove.length).toEqual(22 + 7)
+  expect(resourcesToRemove.length).toEqual(22)
 })
 
 test('finds all the unmanaged resources to remove', async () => {
@@ -88,7 +88,7 @@ test('finds all the unmanaged resources to remove', async () => {
 
   const resourcesToRemove = await state.getResourcesToRemove(EmptyConfig, [])
 
-  expect(resourcesToRemove.length).toEqual(22 + 7)
+  expect(resourcesToRemove.length).toEqual(22)
 })
 
 test('finds no id fields on YAML resources', async () => {

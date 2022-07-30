@@ -1,24 +1,9 @@
 import * as YAML from 'yaml'
 import * as core from '@actions/core'
 import * as fs from 'fs'
-import {ManagedResources, State} from './terraform'
-import {Schema} from './schema'
-import {camelCaseToSnakeCase, env} from './utils'
-
-function equals(a: unknown, b: unknown): boolean {
-  if (YAML.isScalar(a) && YAML.isScalar(b)) {
-    return a.value === b.value
-  } else if (
-    YAML.isMap(a) &&
-    YAML.isMap(b)
-  ) {
-    return true
-  } else {
-    throw new Error(
-      `Expected eiter 2 Scalars or 2 Maps, got these instead: ${a} and ${b}`
-    )
-  }
-}
+import {State} from './terraform'
+import * as schema from './schema'
+import {env} from './utils'
 
 function isEmpty(a: unknown): boolean {
   if (YAML.isScalar(a)) {
@@ -31,22 +16,27 @@ function isEmpty(a: unknown): boolean {
 }
 
 class Resource {
-  type: string
   path: string[]
-  value: YAML.Scalar | YAML.YAMLMap
+  value: schema.Definition
 
-  constructor(type: string, path: string[], value: YAML.Scalar | YAML.YAMLMap) {
-    this.type = type
+  constructor(path: string[], value: schema.Definition) {
     this.path = path
     this.value = value
   }
 
   equals(other: Resource): boolean {
-    return (
-      this.type === other.type &&
-      JSON.stringify(this.path) === JSON.stringify(other.path) &&
-      equals(this.value, other.value)
-    )
+    if (
+      typeof this.value === typeof other.value &&
+      JSON.stringify(this.path) === JSON.stringify(other.path)
+    ) {
+      if (this.value instanceof String && other.value instanceof String) {
+        return this.value.toString() == other.value.toString()
+      } else {
+        return true
+      }
+    } else {
+      return false
+    }
   }
 }
 
@@ -57,7 +47,7 @@ export class Config {
     this.document = YAML.parseDocument(yaml)
   }
 
-  getJSON(): Schema {
+  getJSON(): schema.Schema {
     return this.document.toJSON()
   }
 
@@ -81,7 +71,7 @@ export class Config {
   }
 
   // similar to YAML.Document.getIn but accepts regex pattern in the path
-  matchIn(type: string, path: string[]): Resource[] {
+  matchIn(prototype: schema.DefinitionClass, path: string[]): Resource[] {
     function _matchIn(
       partialPath: string[],
       node: YAML.YAMLMap,
@@ -109,7 +99,7 @@ export class Config {
             if (YAML.isSeq(item.value)) {
               return item.value.items.map(i => {
                 if (YAML.isScalar(i)) {
-                  return new Resource(type, newHistory, i)
+                  return new Resource(newHistory, prototype.fromPlain(i.toJSON()))
                 } else {
                   throw new Error(
                     `Expected a Scalar, got this instead: ${JSON.stringify(
@@ -119,7 +109,7 @@ export class Config {
                 }
               })
             } else if (YAML.isMap(item.value)) {
-              return [new Resource(type, newHistory, item.value)]
+              return [new Resource(newHistory, prototype.fromPlain(item.value.toJSON()))]
             } else {
               throw new Error(
                 `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
@@ -142,9 +132,9 @@ export class Config {
   }
 
   find(resource: Resource): Resource | undefined {
-    const matchingResources = this.matchIn(resource.type, resource.path).filter(
+    const matchingResources = this.matchIn(resource.value.constructor as schema.DefinitionClass, resource.path).filter(
       matchingResource => {
-        return equals(resource.value, matchingResource.value)
+        return resource.equals(matchingResource)
       }
     )
     if (matchingResources.length === 0) {
@@ -164,12 +154,14 @@ export class Config {
     return this.find(resource) !== undefined
   }
 
-  getResources(
-    classes: typeof ManagedResources = ManagedResources
-  ): Resource[] {
-    return classes.flatMap(cls => {
-      return this.matchIn(camelCaseToSnakeCase(cls.name), cls.yamlPath)
+  getAllResources(): Resource[] {
+    return schema.DefinitionClasses.flatMap(prototype => {
+      return this.getResources(prototype)
     })
+  }
+
+  getResources(prototype: schema.DefinitionClass): Resource[] {
+    return this.matchIn(prototype, prototype.wildcardPath)
   }
 
   remove(resource: Resource): void {
@@ -179,9 +171,9 @@ export class Config {
     if (this.contains(resource)) {
       const item = this.document.getIn(resource.path)
       if (YAML.isSeq(item)) {
-        item.items = item.items.filter(i => {
-          return !equals(i, resource.value)
-        })
+        const items = item.items.map(i => JSON.stringify((resource.value.constructor as schema.DefinitionClass).fromPlain(i)))
+        const index = items.indexOf(JSON.stringify(resource.value))
+        this.document.deleteIn([...resource.path, index])
       } else if (YAML.isMap(item)) {
         this.document.deleteIn(resource.path)
       } else {
@@ -196,86 +188,66 @@ export class Config {
 
   add(resource: Resource): void {
     core.info(`Adding ${JSON.stringify(resource)}`)
-    // the resource might already exist
-    // e.g. if we added repository collaborators and now we try to add repository
-    if (!this.contains(resource)) {
-      // this turns strings into string Scalars which we need for YAML.Document.addIn to work as expected
-      const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
-      const item = this.document.getIn(resource.path)
-      if (item === undefined) {
-        if (YAML.isScalar(resource.value)) {
+    // this turns strings into string Scalars which we need for YAML.Document.addIn to work as expected
+    const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
+    const parsedValue = YAML.parseDocument(YAML.stringify(resource.value)).contents
+    if (YAML.isScalar(parsedValue)) {
+      if (this.find(resource) === undefined) {
+        if (! this.document.hasIn(parsedPath)) {
           this.document.addIn(parsedPath, YAML.parseDocument('[]').contents)
-        } else if (YAML.isMap(resource.value)) {
-          // do nothing
-        } else {
-          throw new Error(
-            `Expected either a Scalar or a Map, got this instead: ${JSON.stringify(
-              resource.value
-            )}`
-          )
+        }
+        this.document.addIn(parsedPath, parsedValue)
+      }
+    } else if (YAML.isMap(parsedValue)) {
+      if (! this.document.hasIn(parsedPath)) {
+        this.document.addIn(parsedPath, parsedValue)
+      }
+      const valueObject: any = {...resource.value}
+      for (const key of Object.keys(valueObject)) {
+        if (valueObject[key] !== undefined) {
+          const path = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]
+          const value = YAML.parseDocument(YAML.stringify(valueObject[key])).contents
+          if (! this.document.hasIn(path)) {
+            this.document.addIn(path, value)
+          }
         }
       }
-      this.document.addIn(parsedPath, resource.value)
+    } else {
+      throw new Error(
+        `Expected either a Scalar or a Map, got this instead: ${JSON.stringify(
+          parsedValue
+        )}`
+      )
     }
   }
 
   update(resource: Resource, ignore: string[] = []): void {
     core.info(`Updating ${JSON.stringify(resource)}`)
-    if (YAML.isScalar(resource.value)) {
+    if (resource.value instanceof String) {
       // do nothing, there's nothing to update in scalar values
-    } else if (
-      YAML.isMap(resource.value)
-    ) {
-      const existingResource = this.find(resource)
-      if (
-        existingResource !== undefined &&
-        YAML.isMap(existingResource.value)
-      ) {
-        const existingValue = existingResource.value
-        for (const item of resource.value.items) {
-          const existingItem = existingValue.items.find(i => {
-            if (YAML.isPair(item) && YAML.isPair(i) && YAML.isScalar(item.key) && YAML.isScalar(i.key)) {
-              return item.key.value === i.key.value
-            } else {
-              return false
-            }
-          })
-          if (existingItem !== undefined) {
-            if (
-              JSON.stringify(existingItem.value) !== JSON.stringify(item.value)
-            ) {
-              existingItem.value = item.value
-            } else {
-              // do nothing, there's no need to update this item
-            }
-          } else {
-            existingValue.items.push(item)
+    } else {
+      const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
+      let existingResource = this.find(resource)
+      if (existingResource !== undefined) {
+        const updateValue: any = {...resource.value}
+        const existingValue: any = {...existingResource.value}
+        for (const key of Object.keys(updateValue)) {
+          if (! ignore.includes(key) && updateValue[key] !== undefined && updateValue[key] !== existingValue[key]) {
+            const updatePath = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]
+            const update = YAML.parseDocument(YAML.stringify(updateValue[key])).contents
+            this.document.setIn(updatePath, update)
           }
         }
-        existingValue.items = existingValue.items.filter(item => {
-          if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
-            return !ignore.includes(item.key.value) && !isEmpty(item.value)
-          } else {
-            throw new Error(
-              `Expected a string Scalar, got this instead: ${JSON.stringify(
-                item.key
-              )}`
-            )
-          }
-        })
-      } else {
-        throw new Error(
-          `Expected a YAMLMap, got this instead: ${JSON.stringify(
-            existingResource
-          )}`
-        )
       }
-    } else {
-      throw new Error(
-        `Expected a YAMLMap, got this instead: ${JSON.stringify(
-          resource
-        )}`
-      )
+      existingResource = this.find(resource)
+      if (existingResource !== undefined) {
+        const existingValue: any = {...existingResource.value}
+        for (const key of Object.keys(existingValue)) {
+          if (ignore.includes(key) || existingValue[key] === undefined || isEmpty(YAML.parseDocument(YAML.stringify(existingValue[key])).contents)) {
+            this.document.deleteIn([...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents])
+          }
+        }
+      }
     }
   }
 
@@ -285,7 +257,7 @@ export class Config {
   ): Promise<Config> {
     core.info('Syncing YAML config with TF state...')
     const resourcesInTFState = await state.getYAMLResources()
-    const resourcesInConfig = this.getResources()
+    const resourcesInConfig = this.getAllResources()
 
     // remove all the resources (from YAML config) that Terraform doesn't know about anymore
     const resourcesToRemove = resourcesInConfig.filter(resource => {
@@ -307,7 +279,7 @@ export class Config {
     // we use resourcesInTFState because we want to update the config to the values from TF state
     const resourcesToUpdate = resourcesInTFState
     for (const resource of resourcesToUpdate) {
-      this.update(resource, ignoredChanges[resource.type])
+      this.update(resource)
     }
 
     return this

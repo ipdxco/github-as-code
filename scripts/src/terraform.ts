@@ -1,5 +1,4 @@
 import * as HCL from 'hcl2-parser'
-import * as YAML from 'yaml'
 import * as cli from '@actions/exec'
 import * as cfg from './yaml'
 import * as core from '@actions/core'
@@ -68,7 +67,6 @@ class DesiredResource extends Resource {
 }
 
 export class GithubMembership extends ManagedResource {
-  static yamlPath = ['members', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -86,18 +84,14 @@ export class GithubMembership extends ManagedResource {
     username: string
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = transformer.plainToClass(schema.Member, this.values.username, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.Member.fromPlain(this.values.username)
     return new cfg.Resource(
-      this.type,
       ['members', this.values.role],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
+      value
     )
   }
 }
 export class GithubRepository extends ManagedResource {
-  static yamlPath = ['repositories', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -126,18 +120,14 @@ export class GithubRepository extends ManagedResource {
       values.pages.source = (values.pages.source as {}[])?.at(0) || {}
     }
     values.template = (values.template as {}[])?.at(0) || {}
-    const value = transformer.plainToClass(schema.Repository, values, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.Repository.fromPlain(values)
     return new cfg.Resource(
-      this.type,
       ['repositories', this.values.name],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
+      value
     )
   }
 }
 export class GithubRepositoryCollaborator extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'collaborators', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -156,46 +146,30 @@ export class GithubRepositoryCollaborator extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = transformer.plainToClass(schema.RepositoryCollaborator, this.values.username, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.RepositoryCollaborator.fromPlain(this.values.username)
     return new cfg.Resource(
-      this.type,
       [
         'repositories',
         this.values.repository,
         'collaborators',
         this.values.permission
       ],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
+      value
     )
   }
 }
 export class GithubRepositoryFile extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'files', '.+']
   static async getDesiredResources(
     context: cfg.Config
   ): Promise<DesiredResource[]> {
     const repositoryFiles = []
-    for (const resource of context.getResources([GithubRepositoryFile])) {
-      if (
-        YAML.isPair(resource.value) &&
-        YAML.isScalar(resource.value.key) &&
-        typeof resource.value.key.value === 'string'
-      ) {
-        const repository = resource.path[1]
-        const path = resource.value.key.value
-        const github = await GitHub.getGitHub()
-        const file = await github.getRepositoryFile(repository, path)
-        if (file) {
-          repositoryFiles.push({repository: resource.path[1], file})
-        }
-      } else {
-        throw new Error(
-          `Expected a Pair with a string Scalar key, got this instead: ${JSON.stringify(
-            resource.value
-          )}`
-        )
+    for (const resource of context.getResources(schema.File)) {
+      const repository = resource.path[1]
+      const path = resource.path[-1]
+      const github = await GitHub.getGitHub()
+      const file = await github.getRepositoryFile(repository, path)
+      if (file) {
+        repositoryFiles.push({repository: resource.path[1], file})
       }
     }
     return repositoryFiles.map(({repository, file}) => {
@@ -216,18 +190,14 @@ export class GithubRepositoryFile extends ManagedResource {
     if (file) {
       values.content = file.substring(env.FILES_DIR.length + 1)
     }
-    const value = transformer.plainToClass(schema.File, values, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.File.fromPlain(values)
     return new cfg.Resource(
-      this.type,
       ['repositories', this.values.repository, 'files', this.values.file],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
+      value
     )
   }
 }
 export class GithubBranchProtection extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'branch_protection', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -265,18 +235,14 @@ export class GithubBranchProtection extends ManagedResource {
     } else {
       delete values.required_status_checks
     }
-    const value = transformer.plainToClass(schema.BranchProtection, values, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.BranchProtection.fromPlain(values)
     return new cfg.Resource(
-      this.type,
       ['repositories', this.index.split(':')[0], 'branch_protection', this.values.pattern],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
+      value
     )
   }
 }
 export class GithubTeam extends ManagedResource {
-  static yamlPath = ['teams', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -309,18 +275,14 @@ export class GithubTeam extends ManagedResource {
         )
       }
     }
-    const value = transformer.plainToClass(schema.Team, values, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.Team.fromPlain(values)
     return new cfg.Resource(
-      this.type,
       ['teams', this.values.name],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.YAMLMap
+      value
     )
   }
 }
 export class GithubTeamMembership extends ManagedResource {
-  static yamlPath = ['teams', '.+', 'members', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -338,11 +300,8 @@ export class GithubTeamMembership extends ManagedResource {
     role: 'maintainer' | 'member'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = transformer.plainToClass(schema.TeamMember, this.values.username, {
-      excludeExtraneousValues: true
-    })
+    const value = schema.TeamMember.fromPlain(this.values.username)
     return new cfg.Resource(
-      this.type,
       // team names, unlike usernames or repository names, allow : in them
       [
         'teams',
@@ -350,12 +309,11 @@ export class GithubTeamMembership extends ManagedResource {
         'members',
         this.values.role
       ],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
+      value
     )
   }
 }
 export class GithubTeamRepository extends ManagedResource {
-  static yamlPath = ['repositories', '.+', 'teams', '.+']
   static async getDesiredResources(
     _context: cfg.Config
   ): Promise<DesiredResource[]> {
@@ -373,13 +331,10 @@ export class GithubTeamRepository extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = transformer.plainToClass(schema.RepositoryTeam, this.index.split(':')[0], {
-      excludeExtraneousValues: true
-    })
+    const value = schema.RepositoryTeam.fromPlain(this.index.split(':')[0])
     return new cfg.Resource(
-      this.type,
       ['repositories', this.values.repository, 'teams', this.values.permission],
-      YAML.parseDocument(YAML.stringify(value)).contents as YAML.Scalar
+      value
     )
   }
 }
@@ -397,11 +352,11 @@ export const ManagedResources = [
 
 class Module {
   @Transform(({value, options}) => {
-    return (value as {type: string}[]).map(v => {
+    return (value as {mode: string, type: string}[]).map(v => {
       const cls = ManagedResources.find(
         c => camelCaseToSnakeCase(c.name) === v.type
       )
-      if (cls !== undefined) {
+      if (v.mode === 'managed' && cls !== undefined) {
         return transformer.plainToClass(
           cls as transformer.ClassConstructor<ManagedResource>,
           v,
