@@ -22,8 +22,10 @@
     "@octokit/plugin-retry": "^3.0.9",
     "@octokit/plugin-throttling": "^4.0.1",
     "@octokit/rest": "^19.0.1",
+    "@types/jsonpath": "^0.2.0",
     "class-transformer": "^0.5.1",
     "hcl2-parser": "^1.0.3",
+    "jsonpath": "^1.1.1",
     "reflect-metadata": "^0.1.13",
     "yaml": "^2.1.1"
   },

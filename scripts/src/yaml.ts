@@ -4,6 +4,7 @@ import * as fs from 'fs'
 import {State} from './terraform'
 import * as schema from './schema'
 import {env} from './utils'
+import jsonpath from 'jsonpath'
 
 function isEmpty(a: unknown): boolean {
   if (YAML.isScalar(a)) {
@@ -72,63 +73,12 @@ export class Config {
 
   // similar to YAML.Document.getIn but accepts regex pattern in the path
   matchIn(prototype: schema.DefinitionClass, path: string[]): Resource[] {
-    function _matchIn(
-      partialPath: string[],
-      node: YAML.YAMLMap,
-      history: string[]
-    ): Resource[] {
-      const [key, ...rest] = partialPath
-      return node.items
-        .filter(item => {
-          if (YAML.isScalar(item.key) && typeof item.key.value === 'string') {
-            return item.key.value.match(`^${key}$`)
-          } else {
-            throw new Error(
-              `Expected a string Scalar, got this instead: ${JSON.stringify(
-                item.key
-              )}`
-            )
-          }
-        })
-        .flatMap(item => {
-          const newHistory: string[] = [
-            ...history,
-            (item.key as YAML.Scalar).value as string
-          ]
-          if (rest.length === 0) {
-            if (YAML.isSeq(item.value)) {
-              return item.value.items.map(i => {
-                if (YAML.isScalar(i)) {
-                  return new Resource(newHistory, prototype.fromPlain(i.toJSON()))
-                } else {
-                  throw new Error(
-                    `Expected a Scalar, got this instead: ${JSON.stringify(
-                      i
-                    )}`
-                  )
-                }
-              })
-            } else if (YAML.isMap(item.value)) {
-              return [new Resource(newHistory, prototype.fromPlain(item.value.toJSON()))]
-            } else {
-              throw new Error(
-                `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
-                  item
-                )}`
-              )
-            }
-          } else {
-            if (YAML.isMap(item.value)) {
-              return _matchIn(rest, item.value, newHistory)
-            } else {
-              throw new Error(
-                `Expected a YAMLMap, got this instead: ${JSON.stringify(item)}`
-              )
-            }
-          }
-        })
-    }
-    return _matchIn(path, this.document.contents as YAML.YAMLMap, [])
+    const p = jsonpath.stringify(['$', ...path]).replaceAll('["*"]', '[*]')
+    return jsonpath.nodes(this.getJSON(), p).flatMap(node => {
+      return (Array.isArray(node.value) ? node.value : [node.value]).map(v => {
+        return new Resource(node.path.slice(1).map(c => c.toString()), prototype.fromPlain(v))
+      })
+    })
   }
 
   find(resource: Resource): Resource | undefined {
@@ -208,6 +158,7 @@ export class Config {
           const path = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]
           const value = YAML.parseDocument(YAML.stringify(valueObject[key])).contents
           if (! this.document.hasIn(path)) {
+
             this.document.addIn(path, value)
           }
         }

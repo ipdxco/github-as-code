@@ -125,7 +125,7 @@ test('adds 1 new file', async () => {
       'repositories',
       'github-mgmt',
       'files',
-      '.+'
+      '*'
     ]).length
   ).toEqual(2)
   expect(cfg.getAllResources().length).toEqual(23)
@@ -138,7 +138,7 @@ test('updates all team privacy settings', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(schema.Team, ['teams', '.+'])
+  const teams = cfg.matchIn(schema.Team, ['teams', '*'])
 
   const teamUpdates = teams.map(team => {
     const teamUpdate = schema.Team.fromPlain({...team.value})
@@ -218,14 +218,14 @@ test('removes properties from the ignore array on updates', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(schema.Team, ['teams', '.+'])
+  const teams = cfg.matchIn(schema.Team, ['teams', '*'])
 
   for (const team of teams) {
     expect((team.value as schema.Team).privacy).toBeDefined()
     cfg.update(team, ['privacy'])
   }
 
-  const updatedTeams = cfg.matchIn(schema.Team, ['teams', '.+'])
+  const updatedTeams = cfg.matchIn(schema.Team, ['teams', '*'])
 
   for (const team of updatedTeams) {
     expect((team.value as schema.Team).privacy).toBeUndefined()

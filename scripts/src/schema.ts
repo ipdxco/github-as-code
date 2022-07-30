@@ -24,7 +24,7 @@ export class Repository {
       excludeExtraneousValues: true
     })
   }
-  static wildcardPath = ['repositories', '.+']
+  static wildcardPath = ['repositories', '*']
 
   @Expose() allow_auto_merge?: boolean
   @Expose() allow_merge_commit?: boolean
@@ -62,7 +62,7 @@ export class File {
       excludeExtraneousValues: true
     })
   }
-  static wildcardPath = ['repositories', '.+', 'files', '.+']
+  static wildcardPath = ['repositories', '*', 'files', '*']
 
   @Expose() content?: string
   @Expose() overwrite_on_create?: boolean
@@ -88,7 +88,7 @@ export class BranchProtection {
       excludeExtraneousValues: true
     })
   }
-  static wildcardPath = ['repositories', '.+', 'branch_protection', '.+']
+  static wildcardPath = ['repositories', '*', 'branch_protection', '*']
 
   @Expose() allows_deletions?: boolean
   @Expose() allows_force_pushes?: boolean
@@ -109,13 +109,13 @@ export class RepositoryCollaborator extends String {
   static fromPlain(plain: any): RepositoryCollaborator {
     return new RepositoryCollaborator(plain)
   }
-  static wildcardPath = ['repositories', '.+', 'collaborators', '.+']
+  static wildcardPath = ['repositories', '*', 'collaborators', '*']
 }
 export class RepositoryTeam extends String {
   static fromPlain(plain: any): RepositoryTeam {
     return new RepositoryTeam(plain)
   }
-  static wildcardPath = ['repositories', '.+', 'teams', '.+']
+  static wildcardPath = ['repositories', '*', 'teams', '*']
 }
 
 class RepositoryContainer extends Repository {
@@ -143,7 +143,7 @@ export class Team {
       excludeExtraneousValues: true
     })
   }
-  static wildcardPath = ['teams', '.+']
+  static wildcardPath = ['teams', '*']
 
   @Expose() create_default_maintainer?: boolean
   @Expose() description?: string
@@ -155,7 +155,7 @@ export class TeamMember extends String {
   static fromPlain(plain: any): TeamMember {
     return new TeamMember(plain)
   }
-  static wildcardPath = ['teams', '.+', 'members', '.+']
+  static wildcardPath = ['teams', '*', 'members', '*']
 }
 
 class TeamContainer extends Team {
@@ -169,7 +169,7 @@ export class Member extends String {
   static fromPlain(plain: any): Member {
     return new Member(plain)
   }
-  static wildcardPath = ['members', '.+']
+  static wildcardPath = ['members', '*']
 }
 
 export class Schema {
