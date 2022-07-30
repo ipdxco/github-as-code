@@ -3,8 +3,9 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as tf from './terraform'
 import * as schema from './schema'
-import {camelCaseToSnakeCase, env} from './utils'
+import {camelCaseToSnakeCase, pathsMatch, env} from './utils'
 import jsonpath from 'jsonpath'
+import * as transformer from 'class-transformer'
 
 function isEmpty(a: unknown): boolean {
   if (YAML.isScalar(a)) {
@@ -49,16 +50,17 @@ export class Config {
   }
 
   getJSON(): schema.Schema {
-    return this.document.toJSON()
+    const json = schema.plainToClass(schema.Schema, this.document.toJSON())
+    return json
   }
 
   fmt(managedResourceTypes: string[] = tf.getManagedResourceTypes(), ignoredChanges: Record<string, string[]> = tf.getIgnoredChanges()): void {
     const managedResources = managedResourceTypes.map(t => tf.ManagedResources.find(cls => camelCaseToSnakeCase(cls.name) == t)!)
-    const pathToIgnoredKeys: Record<string, string[]> = {}
+    const pathsWithIgnoredKeys: [string[], string[]][] = []
     for (const [key, value] of Object.entries(ignoredChanges)) {
       const managedResource = managedResources.find(cls => camelCaseToSnakeCase(cls.name) == key)
       if (managedResource !== undefined) {
-        pathToIgnoredKeys[managedResource.YAMLResourceClass.wildcardPath.join('\\.').replaceAll('*', '.+')] = value
+        pathsWithIgnoredKeys.push([managedResource.YAMLResourceClass.wildcardPath, value])
       }
     }
 
@@ -77,9 +79,9 @@ export class Config {
         if (isEmpty(value)) {
           return YAML.visit.REMOVE
         }
-        const path = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString()).join('.')
-        const pathAndIgnoredKeys = Object.entries(pathToIgnoredKeys).find(([wildcardPath, _]) => {
-          return new RegExp(`^${wildcardPath}$`).test(path)
+        const path = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString())
+        const pathAndIgnoredKeys = pathsWithIgnoredKeys.find(([wildcardPath, _]) => {
+          return pathsMatch(path, wildcardPath)
         })
         if (pathAndIgnoredKeys !== undefined && pathAndIgnoredKeys[1].includes(new String(key).toString())) {
           return YAML.visit.REMOVE
@@ -99,10 +101,34 @@ export class Config {
   matchIn(prototype: schema.DefinitionClass, path: string[]): Resource[] {
     const p = jsonpath.stringify(['$', ...path]).replaceAll('["*"]', '[*]')
     return jsonpath.nodes(this.getJSON(), p).flatMap(node => {
-      return (Array.isArray(node.value) ? node.value : [node.value]).map(v => {
-        return new Resource(node.path.slice(1).map(c => c.toString()), prototype.fromPlain(v))
-      })
+      if (node.value !== undefined) {
+        return (Array.isArray(node.value) ? node.value : [node.value]).map(v => {
+          return new Resource(node.path.slice(1).map(c => c.toString()), v)
+        })
+      } else {
+        return []
+      }
     })
+    /*
+    const matchingResources: Resource[] = []
+    YAML.visit(this.document, {
+      Map(_, value, pathComponents) {
+        const mapPath = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString())
+        if (pathsMatch(mapPath, path)) {
+          matchingResources.push(new Resource(mapPath, prototype.fromPlain(value.toJSON())))
+        }
+      },
+      Seq(_, {items}, pathComponents) {
+        const seqPath = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString())
+        if (pathsMatch(seqPath, path)) {
+          for (const item of items) {
+            matchingResources.push(new Resource(seqPath, prototype.fromPlain(item)))
+          }
+        }
+      }
+    })
+    return matchingResources
+    */
   }
 
   find(resource: Resource): Resource | undefined {
@@ -158,7 +184,7 @@ export class Config {
     core.info(`Adding ${JSON.stringify(resource)}`)
     // this turns strings into string Scalars which we need for YAML.Document.addIn to work as expected
     const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
-    const parsedValue = YAML.parseDocument(YAML.stringify(resource.value)).contents
+    const parsedValue = YAML.parseDocument(YAML.stringify(schema.instanceToPlain(resource.value))).contents
     if (YAML.isScalar(parsedValue)) {
       if (this.find(resource) === undefined) {
         if (! this.document.hasIn(parsedPath)) {
@@ -170,7 +196,7 @@ export class Config {
       if (! this.document.hasIn(parsedPath)) {
         this.document.addIn(parsedPath, parsedValue)
       }
-      const valueObject: any = {...resource.value}
+      const valueObject: any = schema.instanceToPlain(resource.value)
       for (const key of Object.keys(valueObject)) {
         if (valueObject[key] !== undefined) {
           const path = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]
@@ -198,8 +224,8 @@ export class Config {
       const parsedPath = resource.path.map(p => YAML.parseDocument(p).contents)
       let existingResource = this.find(resource)
       if (existingResource !== undefined) {
-        const updateValue: any = {...resource.value}
-        const existingValue: any = {...existingResource.value}
+        const updateValue: any = schema.instanceToPlain(resource.value)
+        const existingValue: any = schema.instanceToPlain(existingResource.value)
         for (const key of Object.keys(updateValue)) {
           if (updateValue[key] !== undefined && updateValue[key] !== existingValue[key]) {
             const updatePath = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]

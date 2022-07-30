@@ -20,6 +20,7 @@ test('finds all 22 resources', async () => {
 
   const cfg = config.parse(yaml)
   const resources = cfg.getAllResources()
+
   expect(resources.length).toEqual(22)
 
   for (const resource of resources) {

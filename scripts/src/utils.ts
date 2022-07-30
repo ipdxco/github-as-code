@@ -42,3 +42,15 @@ export function findFileByContent(
   }
   return undefined
 }
+
+export function pathsMatch(path: string[], pattern: string[]) {
+  if (path.length !== pattern.length) {
+    return false
+  }
+  for (let i = 0; i < path.length; i++) {
+    if (pattern[i] !== '*' && path[i] !== pattern[i]) {
+      return false
+    }
+  }
+  return true
+}
