@@ -40,7 +40,6 @@ test('e2e synchronization', async () => {
   env.GITHUB_ORG = 'default'
 
   const managedResourceTypes = terraform.getManagedResourceTypes()
-  const ignoredChanges = terraform.getIgnoredChanges()
 
   await terraform.refreshState()
 
@@ -48,9 +47,9 @@ test('e2e synchronization', async () => {
   const config = yaml.parse('{}')
 
   const syncedState = await state.sync(config, managedResourceTypes)
-  const syncedConfig = await config.sync(syncedState, ignoredChanges)
+  const syncedConfig = await config.sync(syncedState)
 
-  syncedConfig.sort()
+  syncedConfig.fmt()
 
   expect(syncedConfig.toString()).toEqual(yaml.getConfig().toString())
 })

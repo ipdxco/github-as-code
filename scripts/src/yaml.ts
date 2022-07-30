@@ -1,9 +1,9 @@
 import * as YAML from 'yaml'
 import * as core from '@actions/core'
 import * as fs from 'fs'
-import {State} from './terraform'
+import * as tf from './terraform'
 import * as schema from './schema'
-import {env} from './utils'
+import {camelCaseToSnakeCase, env} from './utils'
 import jsonpath from 'jsonpath'
 
 function isEmpty(a: unknown): boolean {
@@ -52,14 +52,38 @@ export class Config {
     return this.document.toJSON()
   }
 
-  sort(): void {
-    const compare = new YAML.Schema({sortMapEntries: true}).sortMapEntries as (
-      a: YAML.Pair<unknown, unknown>,
-      b: YAML.Pair<unknown, unknown>
-    ) => number
+  fmt(managedResourceTypes: string[] = tf.getManagedResourceTypes(), ignoredChanges: Record<string, string[]> = tf.getIgnoredChanges()): void {
+    const managedResources = managedResourceTypes.map(t => tf.ManagedResources.find(cls => camelCaseToSnakeCase(cls.name) == t)!)
+    const pathToIgnoredKeys: Record<string, string[]> = {}
+    for (const [key, value] of Object.entries(ignoredChanges)) {
+      const managedResource = managedResources.find(cls => camelCaseToSnakeCase(cls.name) == key)
+      if (managedResource !== undefined) {
+        pathToIgnoredKeys[managedResource.YAMLResourceClass.wildcardPath.join('\\.').replaceAll('*', '.+')] = value
+      }
+    }
+
     YAML.visit(this.document, {
       Map(_, {items}) {
-        items.sort(compare)
+        items.sort((a: YAML.Pair<unknown, unknown>, b: YAML.Pair<unknown, unknown>) => {
+          return JSON.stringify(a.key).localeCompare(JSON.stringify(b.key))
+        })
+      },
+      Seq(_, {items}) {
+        items.sort((a: unknown, b: unknown) => {
+          return JSON.stringify(a).localeCompare(JSON.stringify(b))
+        })
+      },
+      Pair(_, {key, value}, pathComponents) {
+        if (isEmpty(value)) {
+          return YAML.visit.REMOVE
+        }
+        const path = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString()).join('.')
+        const pathAndIgnoredKeys = Object.entries(pathToIgnoredKeys).find(([wildcardPath, _]) => {
+          return new RegExp(`^${wildcardPath}$`).test(path)
+        })
+        if (pathAndIgnoredKeys !== undefined && pathAndIgnoredKeys[1].includes(new String(key).toString())) {
+          return YAML.visit.REMOVE
+        }
       }
     })
   }
@@ -124,14 +148,8 @@ export class Config {
         const items = item.items.map(i => JSON.stringify((resource.value.constructor as schema.DefinitionClass).fromPlain(i)))
         const index = items.indexOf(JSON.stringify(resource.value))
         this.document.deleteIn([...resource.path, index])
-      } else if (YAML.isMap(item)) {
-        this.document.deleteIn(resource.path)
       } else {
-        throw new Error(
-          `Expected either a YAMLSeq or YAMLMap, got this instead: ${JSON.stringify(
-            item
-          )}`
-        )
+        this.document.deleteIn(resource.path)
       }
     }
   }
@@ -172,7 +190,7 @@ export class Config {
     }
   }
 
-  update(resource: Resource, ignore: string[] = []): void {
+  update(resource: Resource): void {
     core.info(`Updating ${JSON.stringify(resource)}`)
     if (resource.value instanceof String) {
       // do nothing, there's nothing to update in scalar values
@@ -183,29 +201,17 @@ export class Config {
         const updateValue: any = {...resource.value}
         const existingValue: any = {...existingResource.value}
         for (const key of Object.keys(updateValue)) {
-          if (! ignore.includes(key) && updateValue[key] !== undefined && updateValue[key] !== existingValue[key]) {
+          if (updateValue[key] !== undefined && updateValue[key] !== existingValue[key]) {
             const updatePath = [...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents]
             const update = YAML.parseDocument(YAML.stringify(updateValue[key])).contents
             this.document.setIn(updatePath, update)
           }
         }
       }
-      existingResource = this.find(resource)
-      if (existingResource !== undefined) {
-        const existingValue: any = {...existingResource.value}
-        for (const key of Object.keys(existingValue)) {
-          if (ignore.includes(key) || existingValue[key] === undefined || isEmpty(YAML.parseDocument(YAML.stringify(existingValue[key])).contents)) {
-            this.document.deleteIn([...parsedPath, YAML.parseDocument(YAML.stringify(key)).contents])
-          }
-        }
-      }
     }
   }
 
-  async sync(
-    state: State,
-    ignoredChanges: Record<string, string[]>
-  ): Promise<Config> {
+  async sync(state: tf.State): Promise<Config> {
     core.info('Syncing YAML config with TF state...')
     const resourcesInTFState = await state.getYAMLResources()
     const resourcesInConfig = this.getAllResources()
@@ -236,9 +242,10 @@ export class Config {
     return this
   }
 
-  save(sort = true): void {
-    if (sort) {
-      this.sort()
+  save(fmt = true): void {
+    if (fmt) {
+
+      this.fmt()
     }
     fs.writeFileSync(`${env.GITHUB_DIR}/${env.GITHUB_ORG}.yml`, this.toString())
   }

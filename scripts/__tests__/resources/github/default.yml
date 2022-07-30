@@ -40,8 +40,6 @@ repositories:
         required_linear_history: false
         required_pull_request_reviews:
           dismiss_stale_reviews: false
-          dismissal_restrictions: []
-          pull_request_bypassers: []
           require_code_owner_reviews: false
           required_approving_review_count: 1
           restrict_dismissals: false
@@ -105,7 +103,6 @@ repositories:
     has_wiki: true
     is_template: false
     pages:
-      cname: ""
       source:
         branch: main
         path: /docs

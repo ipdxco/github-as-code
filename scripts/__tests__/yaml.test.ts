@@ -211,7 +211,7 @@ test('does not upate properties when the values match', async () => {
   expect(allowAutoMerge.value!.comment).toEqual('I will survive')
 })
 
-test('removes properties from the ignore array on updates', async () => {
+test('removes properties from the ignore array on fmt', async () => {
   const yaml = fs
     .readFileSync('__tests__/resources/github/default.yml')
     .toString()
@@ -222,8 +222,9 @@ test('removes properties from the ignore array on updates', async () => {
 
   for (const team of teams) {
     expect((team.value as schema.Team).privacy).toBeDefined()
-    cfg.update(team, ['privacy'])
   }
+
+  cfg.fmt(['github_team'], {github_team: ['privacy']})
 
   const updatedTeams = cfg.matchIn(schema.Team, ['teams', '*'])
 

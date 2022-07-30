@@ -17,7 +17,7 @@ async function run(): Promise<void> {
   // imports/removes managed resources as needed
   const syncedState = await state.sync(config, managedResourceTypes)
   // adds/removes/updates yaml config as needed
-  const syncedConfig = await config.sync(syncedState, ignoredChanges)
+  const syncedConfig = await config.sync(syncedState)
 
   syncedConfig.save()
 }
