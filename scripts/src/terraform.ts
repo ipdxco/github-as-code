@@ -9,14 +9,10 @@ import {GitHub} from './github'
 import {Transform, Type} from 'class-transformer'
 import {camelCaseToSnakeCase, env, findFileByContent} from './utils'
 
-interface Identifiable {
-  id: string
-}
-
 abstract class Resource {
   address!: string
   type!: string
-  values!: Identifiable
+  id!: string
 
   equals(other: Resource): boolean {
     return this.address === other.address
@@ -28,7 +24,7 @@ abstract class Resource {
       await cli.exec(
         `terraform import -lock=${env.TF_LOCK} "${this.address
           .toString()
-          .replaceAll('"', '\\"')}" "${this.values.id
+          .replaceAll('"', '\\"')}" "${this.id
           .toString()
           .replaceAll('"', '\\"')}"`,
         undefined,
@@ -60,9 +56,7 @@ class DesiredResource extends Resource {
     super()
     this.address = address
     this.type = address.split('.')[0]
-    this.values = {
-      id
-    }
+    this.id = id
   }
 }
 
@@ -80,7 +74,7 @@ export class GithubMembership extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     role: 'admin' | 'member'
     username: string
   }
@@ -102,7 +96,7 @@ export class GithubRepository extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     name: string
     template: {}[] | {}
     pages:
@@ -135,7 +129,7 @@ export class GithubRepositoryCollaborator extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     username: string
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
@@ -164,7 +158,7 @@ export class GithubRepositoryFile extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     file: string
     repository: string
     content: string
@@ -195,7 +189,7 @@ export class GithubBranchProtection extends ManagedResource {
       }
     )
   }
-  override values!: Identifiable & {
+  values!: {
     repository: string
     pattern: string
     required_pull_request_reviews: {}[]
@@ -234,7 +228,7 @@ export class GithubTeam extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     name: string
     parent_team_id: string | null
   }
@@ -271,7 +265,7 @@ export class GithubTeamMembership extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     username: string
     role: 'maintainer' | 'member'
   }
@@ -293,7 +287,7 @@ export class GithubTeamRepository extends ManagedResource {
       )
     })
   }
-  override values!: Identifiable & {
+  values!: {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
@@ -314,24 +308,18 @@ export const ManagedResources = [
 ]
 
 class Module {
-  @Transform(({value, options}) => {
-    return (value as {mode: string, type: string}[]).map(v => {
+  @Transform(params => {
+    return params.value.filter((v: {mode: string}) => {
+      return v.mode === 'managed'
+    }).map((v: {type: string, values: {id: string | number}}) => {
       const cls = ManagedResources.find(
         c => camelCaseToSnakeCase(c.name) === v.type
+      )!
+      return transformer.plainToClass(
+        cls as transformer.ClassConstructor<ManagedResource>,
+        {id: v.values.id.toString(), ...v},
+        params.options
       )
-      if (v.mode === 'managed' && cls !== undefined) {
-        return transformer.plainToClass(
-          cls as transformer.ClassConstructor<ManagedResource>,
-          v,
-          options
-        )
-      } else {
-        return transformer.plainToClass(
-          Resource as transformer.ClassConstructor<Resource>,
-          v,
-          options
-        )
-      }
     })
   })
   resources!: Resource[]
