@@ -78,7 +78,7 @@ export class GithubMembership extends ManagedResource {
     role: 'admin' | 'member'
     username: string
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     return schema.plainToClass(GithubMembership.YAMLResourceClass, this.values)
   }
 }
@@ -105,7 +105,7 @@ export class GithubRepository extends ManagedResource {
         }[]
       | {source?: {}}
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     const values = {...this.values}
     values.pages = {...((values.pages as {}[])?.at(0) || {})}
     if (values.pages.source) {
@@ -134,7 +134,7 @@ export class GithubRepositoryCollaborator extends ManagedResource {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     return schema.plainToClass(GithubRepositoryCollaborator.YAMLResourceClass, this.values)
   }
 }
@@ -163,7 +163,7 @@ export class GithubRepositoryFile extends ManagedResource {
     repository: string
     content: string
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     const values = {...this.values}
     const file = findFileByContent(env.FILES_DIR, values.content)
     if (file) {
@@ -195,7 +195,7 @@ export class GithubBranchProtection extends ManagedResource {
     required_pull_request_reviews: {}[]
     required_status_checks: {}[]
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     const values: any = {...this.values} // eslint-disable-line @typescript-eslint/no-explicit-any
     if (
       values.required_pull_request_reviews &&
@@ -232,7 +232,7 @@ export class GithubTeam extends ManagedResource {
     name: string
     parent_team_id: string | null
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     const values = {...this.values}
     if (values.parent_team_id) {
       const github = await GitHub.getGitHub()
@@ -269,7 +269,7 @@ export class GithubTeamMembership extends ManagedResource {
     username: string
     role: 'maintainer' | 'member'
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     return schema.plainToClass(GithubTeamMembership.YAMLResourceClass, {team: this.index.split(':').slice(0, -1).join(':'), ...this.values})
   }
 }
@@ -291,7 +291,7 @@ export class GithubTeamRepository extends ManagedResource {
     repository: string
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
-  override async getYAMLResource(_context: State): Promise<schema.Definition> {
+  override async getYAMLResource(): Promise<schema.Definition> {
     return schema.plainToClass(GithubTeamRepository.YAMLResourceClass, { team: this.index.split(':')[0], ...this.values })
   }
 }
