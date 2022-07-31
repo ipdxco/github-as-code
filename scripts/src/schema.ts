@@ -88,9 +88,6 @@ export class File {
   static PlainToClassTransform(params: TransformFnParams): any {
     return transformer.plainToClass(File, {repository: params.parent?.obj?.name, file: params.key, ...params.value}, params.options)
   }
-  static fromPlain(plain: any): File {
-    return transformer.plainToClass(File, plain)
-  }
   static wildcardPath = ['repositories', '*', 'files', '*']
 
   @Expose({ name: 'repository', toClassOnly: true })
@@ -123,9 +120,6 @@ export class BranchProtection {
   static PlainToClassTransform(params: TransformFnParams): any {
     return transformer.plainToClass(BranchProtection, {repository: params.parent?.obj.name, pattern: params.key, ...params.value}, params.options)
   }
-  static fromPlain(plain: any): BranchProtection {
-    return transformer.plainToClass(BranchProtection, plain)
-  }
   static wildcardPath = ['repositories', '*', 'branch_protection', '*']
 
   @Expose({ name: 'repository', toClassOnly: true })
@@ -155,9 +149,6 @@ export class RepositoryCollaborator extends String {
   }
   static InstanceToPlainTransform(params: transformer.TransformFnParams): any {
     return params.value._username
-  }
-  static fromPlain(plain: any): RepositoryCollaborator {
-    return new RepositoryCollaborator(plain)
   }
   static wildcardPath = ['repositories', '*', 'collaborators', '*']
 
@@ -207,9 +198,6 @@ export class RepositoryTeam extends String {
   static InstanceToPlainTransform(params: transformer.TransformFnParams): any {
     return params.value._team
   }
-  static fromPlain(plain: any): RepositoryTeam {
-    return new RepositoryTeam(plain)
-  }
   static wildcardPath = ['repositories', '*', 'teams', '*']
 
   constructor(team: string) {
@@ -254,9 +242,6 @@ export class RepositoryTeams {
 export class Repository {
   static PlainToClassTransform(params: TransformFnParams): any {
     return transformer.plainToClass(Repository, {name: params.key, ...params.value}, params.options)
-  }
-  static fromPlain(plain: any): Repository {
-    return transformer.plainToClass(Repository, plain)
   }
   static wildcardPath = ['repositories', '*']
 
@@ -314,9 +299,6 @@ export class TeamMember extends String {
   static InstanceToPlainTransform(params: transformer.TransformFnParams): any {
     return params.value._username
   }
-  static fromPlain(plain: any): TeamMember {
-    return new TeamMember(plain)
-  }
   static wildcardPath = ['teams', '*', 'members', '*']
 
   constructor(username: string) {
@@ -351,9 +333,6 @@ export class Team {
   static PlainToClassTransform(params: TransformFnParams): any {
     return transformer.plainToClass(Team, {name: params.key, ...params.value}, params.options)
   }
-  static fromPlain(plain: any): Team {
-    return transformer.plainToClass(Team, plain)
-  }
   static wildcardPath = ['teams', '*']
 
   @Expose({ name: 'name', toClassOnly: true })
@@ -376,9 +355,6 @@ export class Member extends String {
   }
   static InstanceToPlainTransform(params: transformer.TransformFnParams): any {
     return params.value._username
-  }
-  static fromPlain(plain: any): Member {
-    return new Member(plain)
   }
   static wildcardPath = ['members', '*']
 

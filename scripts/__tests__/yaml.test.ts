@@ -90,12 +90,12 @@ test('adds 2 new members', async () => {
 
   const peter = new config.Resource(
     ['members', 'member'],
-    schema.Member.fromPlain('peter')
+    schema.plainToClass(schema.Member, 'peter')
   )
 
   const adam = new config.Resource(
     ['members', 'member'],
-    schema.Member.fromPlain('adam')
+    schema.plainToClass(schema.Member, 'adam')
   )
 
   cfg.add(peter)
@@ -116,7 +116,7 @@ test('adds 1 new file', async () => {
 
   const file = new config.Resource(
     ['repositories', 'github-mgmt', 'files', 'file'],
-    schema.File.fromPlain({})
+    schema.plainToClass(schema.File, {})
   )
 
   cfg.add(file)
@@ -142,7 +142,7 @@ test('updates all team privacy settings', async () => {
   const teams = cfg.matchIn(schema.Team, ['teams', '*'])
 
   const teamUpdates = teams.map(team => {
-    const teamUpdate = schema.Team.fromPlain({...team.value})
+    const teamUpdate = schema.plainToClass(schema.Team, {...team.value})
     teamUpdate.privacy = 'secret'
     const resource = new config.Resource(
       team.path,
@@ -175,7 +175,7 @@ test('removes a comment on property update', async () => {
 
   const resource = new config.Resource(
     ['repositories', 'github-mgmt'],
-    schema.Repository.fromPlain({ allow_auto_merge: true })
+    schema.plainToClass(schema.Repository, { allow_auto_merge: true })
   )
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
@@ -198,7 +198,7 @@ test('does not upate properties when the values match', async () => {
 
   const resource = new config.Resource(
     ['repositories', 'github-mgmt'],
-    schema.Repository.fromPlain({ allow_auto_merge: false })
+    schema.plainToClass(schema.Repository, { allow_auto_merge: false })
   )
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
@@ -239,11 +239,11 @@ test('add repository followed by a branch protection rule', async () => {
 
     const repository = new config.Resource(
       ["repositories", "github-mgmt"],
-      schema.Repository.fromPlain({archived: false})
+      schema.plainToClass(schema.Repository, {archived: false})
     )
 
     const branchProtection = new config.Resource(
       ["repositories", "github-mgmt", "branch_protection", "master"],
-      schema.BranchProtection.fromPlain({allows_deletions: false})
+      schema.plainToClass(schema.BranchProtection, {allows_deletions: false})
     )
 })

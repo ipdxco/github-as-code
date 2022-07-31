@@ -109,26 +109,6 @@ export class Config {
         return []
       }
     })
-    /*
-    const matchingResources: Resource[] = []
-    YAML.visit(this.document, {
-      Map(_, value, pathComponents) {
-        const mapPath = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString())
-        if (pathsMatch(mapPath, path)) {
-          matchingResources.push(new Resource(mapPath, prototype.fromPlain(value.toJSON())))
-        }
-      },
-      Seq(_, {items}, pathComponents) {
-        const seqPath = pathComponents.filter(YAML.isPair).map(p => new String(p.key).toString())
-        if (pathsMatch(seqPath, path)) {
-          for (const item of items) {
-            matchingResources.push(new Resource(seqPath, prototype.fromPlain(item)))
-          }
-        }
-      }
-    })
-    return matchingResources
-    */
   }
 
   find(resource: Resource): Resource | undefined {
@@ -171,7 +151,7 @@ export class Config {
     if (this.contains(resource)) {
       const item = this.document.getIn(resource.path)
       if (YAML.isSeq(item)) {
-        const items = item.items.map(i => JSON.stringify((resource.value.constructor as schema.DefinitionClass).fromPlain(i)))
+        const items = item.items.map(i => JSON.stringify(schema.plainToClass(Object.getPrototypeOf(resource.value).constructor, i)))
         const index = items.indexOf(JSON.stringify(resource.value))
         this.document.deleteIn([...resource.path, index])
       } else {

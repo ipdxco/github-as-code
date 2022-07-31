@@ -85,7 +85,7 @@ export class GithubMembership extends ManagedResource {
     username: string
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = GithubMembership.YAMLResourceClass.fromPlain(this.values.username)
+    const value = schema.plainToClass(GithubMembership.YAMLResourceClass, this.values.username)
     return new cfg.Resource(
       ['members', this.values.role],
       value
@@ -122,7 +122,7 @@ export class GithubRepository extends ManagedResource {
       values.pages.source = (values.pages.source as {}[])?.at(0) || {}
     }
     values.template = (values.template as {}[])?.at(0) || {}
-    const value = GithubRepository.YAMLResourceClass.fromPlain(values)
+    const value = schema.plainToClass(GithubRepository.YAMLResourceClass, values)
     return new cfg.Resource(
       ['repositories', this.values.name],
       value
@@ -149,7 +149,7 @@ export class GithubRepositoryCollaborator extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = GithubRepositoryCollaborator.YAMLResourceClass.fromPlain(this.values.username)
+    const value = schema.plainToClass(GithubRepositoryCollaborator.YAMLResourceClass, this.values.username)
     return new cfg.Resource(
       [
         'repositories',
@@ -194,7 +194,7 @@ export class GithubRepositoryFile extends ManagedResource {
     if (file) {
       values.content = file.substring(env.FILES_DIR.length + 1)
     }
-    const value = GithubRepositoryFile.YAMLResourceClass.fromPlain(values)
+    const value = schema.plainToClass(GithubRepositoryFile.YAMLResourceClass, values)
     return new cfg.Resource(
       ['repositories', this.values.repository, 'files', this.values.file],
       value
@@ -240,7 +240,7 @@ export class GithubBranchProtection extends ManagedResource {
     } else {
       delete values.required_status_checks
     }
-    const value = GithubBranchProtection.YAMLResourceClass.fromPlain(values)
+    const value = schema.plainToClass(GithubBranchProtection.YAMLResourceClass, values)
     return new cfg.Resource(
       ['repositories', this.index.split(':')[0], 'branch_protection', this.values.pattern],
       value
@@ -281,7 +281,7 @@ export class GithubTeam extends ManagedResource {
         )
       }
     }
-    const value = GithubTeam.YAMLResourceClass.fromPlain(values)
+    const value = schema.plainToClass(GithubTeam.YAMLResourceClass, values)
     return new cfg.Resource(
       ['teams', this.values.name],
       value
@@ -307,7 +307,7 @@ export class GithubTeamMembership extends ManagedResource {
     role: 'maintainer' | 'member'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = GithubTeamMembership.YAMLResourceClass.fromPlain(this.values.username)
+    const value = schema.plainToClass(GithubTeamMembership.YAMLResourceClass, this.values.username)
     return new cfg.Resource(
       // team names, unlike usernames or repository names, allow : in them
       [
@@ -339,7 +339,7 @@ export class GithubTeamRepository extends ManagedResource {
     permission: 'admin' | 'maintain' | 'push' | 'triage' | 'pull'
   }
   override async getYAMLResource(_context: State): Promise<cfg.Resource> {
-    const value = GithubTeamRepository.YAMLResourceClass.fromPlain(this.index.split(':')[0])
+    const value = schema.plainToClass(GithubTeamRepository.YAMLResourceClass, this.index.split(':')[0])
     return new cfg.Resource(
       ['repositories', this.values.repository, 'teams', this.values.permission],
       value
