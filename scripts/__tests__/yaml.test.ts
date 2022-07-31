@@ -112,8 +112,8 @@ test('adds 2 new members', async () => {
 
   const cfg = config.parse(yaml)
 
-  const peter = schema.plainToClass(schema.Member, { username: 'peter', role: 'member' })
-  const adam = schema.plainToClass(schema.Member, { username: 'adam', role: 'member' })
+  const peter = new schema.Member('peter', 'member')
+  const adam = new schema.Member('adam', 'member')
 
   cfg.add(peter)
   cfg.add(adam)
@@ -133,7 +133,7 @@ test('adds 1 new file', async () => {
 
   const cfg = config.parse(yaml)
 
-  const file = schema.plainToClass(schema.File, { repository: 'github-mgmt', file: 'file' })
+  const file = new schema.File('github-mgmt', 'file')
 
   cfg.add(file)
 
@@ -156,15 +156,14 @@ test('updates all team privacy settings', async () => {
 
   const teams = json.get(schema.Team)
 
-  const teamUpdates = teams.map(team => {
-    const teamUpdate = schema.plainToClass(schema.Team, {...team})
-    teamUpdate.privacy = 'secret'
-    return teamUpdate
-  })
-
   for (const team of teams) {
     expect(team.privacy).not.toEqual('secret')
   }
+
+  const teamUpdates = teams.map(team => {
+    team.privacy = 'secret'
+    return team
+  })
 
   for (const team of teamUpdates) {
     cfg.add(team)
@@ -186,7 +185,8 @@ test('removes a comment on property update', async () => {
 
   const cfg = config.parse(yaml)
 
-  const resource = schema.plainToClass(schema.Repository, { name: 'github-mgmt', allow_auto_merge: true })
+  const resource = new schema.Repository('github-mgmt')
+  resource.allow_auto_merge = true
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
   const allowAutoMerge = repository.items.find(item => item.key.value == 'allow_auto_merge') as YAML.Pair<YAML.Scalar<string>, YAML.Scalar<boolean>>
@@ -206,7 +206,8 @@ test('does not upate properties when the values match', async () => {
 
   const cfg = config.parse(yaml)
 
-  const resource = schema.plainToClass(schema.Repository, { name: 'github-mgmt', allow_auto_merge: false })
+  const resource = new schema.Repository('github-mgmt')
+  resource.allow_auto_merge = false
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
   const allowAutoMerge = repository.items.find(item => item.key.value == 'allow_auto_merge') as YAML.Pair<YAML.Scalar<string>, YAML.Scalar<boolean>>
