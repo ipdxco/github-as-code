@@ -4,6 +4,7 @@ import * as YAML from 'yaml'
 import * as config from '../src/yaml'
 import * as fs from 'fs'
 import * as schema from '../src/schema'
+import exp from 'constants'
 
 test('parses yaml config', async () => {
   const yaml = fs
@@ -19,12 +20,29 @@ test('finds all 22 resources', async () => {
     .toString()
 
   const cfg = config.parse(yaml)
-  const resources = cfg.getAllResources()
+  const json = cfg.getJSON()
+  const members = json.get(schema.Member)
+  const teams = json.get(schema.Team)
+  const teamMembers = json.get(schema.TeamMember)
+  const repositories = json.get(schema.Repository)
+  const repositoryCollaborators = json.get(schema.RepositoryCollaborator)
+  const repositoryTeams = json.get(schema.RepositoryTeam)
+  const branchProtections = json.get(schema.BranchProtection)
+  const files = json.get(schema.File)
+  const resources = json.getAll()
 
+  expect(members.length).toEqual(2)
+  expect(teams.length).toEqual(1)
+  expect(teamMembers.length).toEqual(2)
+  expect(repositories.length).toEqual(7)
+  expect(repositoryCollaborators.length).toEqual(1)
+  expect(repositoryTeams.length).toEqual(7)
+  expect(branchProtections.length).toEqual(1)
+  expect(files.length).toEqual(1)
   expect(resources.length).toEqual(22)
 
   for (const resource of resources) {
-    expect(cfg.contains(resource)).toBeTruthy()
+    expect(json.has(resource)).toBeTruthy()
   }
 })
 
@@ -34,12 +52,13 @@ test('removes all 2 admins', async () => {
     .toString()
 
   const cfg = config.parse(yaml)
+  let json = cfg.getJSON()
 
-  const adminsPrior = cfg
-    .getResources(schema.Member)
+  const adminsPrior = json
+    .get(schema.Member)
     .filter(
       resource =>
-        JSON.stringify(resource.path) === JSON.stringify(['members', 'admin'])
+        JSON.stringify(resource.getPath()) === JSON.stringify(['members', 'admin'])
     )
 
   expect(adminsPrior.length).toEqual(2)
@@ -48,10 +67,12 @@ test('removes all 2 admins', async () => {
     cfg.remove(admin)
   }
 
-  const resourcesPost = cfg.getAllResources()
-  const adminsPost = cfg.getResources(schema.Member).filter(
+  json = cfg.getJSON()
+
+  const resourcesPost = json.getAll()
+  const adminsPost = json.get(schema.Member).filter(
     resource =>
-      JSON.stringify(resource.path) === JSON.stringify(['members', 'admin'])
+      JSON.stringify(resource.getPath()) === JSON.stringify(['members', 'admin'])
   )
 
   expect(resourcesPost.length).toEqual(20)
@@ -64,9 +85,10 @@ test('removes 3 out of 7 repository', async () => {
     .toString()
 
   const cfg = config.parse(yaml)
+  let json = cfg.getJSON()
 
-  const repositoriesPrior = cfg
-    .getResources(schema.Repository)
+  const repositoriesPrior = json
+    .get(schema.Repository)
 
   expect(repositoriesPrior.length).toEqual(7)
 
@@ -74,8 +96,10 @@ test('removes 3 out of 7 repository', async () => {
     cfg.remove(repository)
   }
 
-  const resourcesPost = cfg.getAllResources()
-  const repositoriesPost = cfg.getResources(schema.Repository)
+  json = cfg.getJSON()
+
+  const resourcesPost = json.getAll()
+  const repositoriesPost = json.get(schema.Repository)
 
   expect(resourcesPost.length).toEqual(13)
   expect(repositoriesPost.length).toEqual(4)
@@ -88,23 +112,18 @@ test('adds 2 new members', async () => {
 
   const cfg = config.parse(yaml)
 
-  const peter = new config.Resource(
-    ['members', 'member'],
-    schema.plainToClass(schema.Member, 'peter')
-  )
-
-  const adam = new config.Resource(
-    ['members', 'member'],
-    schema.plainToClass(schema.Member, 'adam')
-  )
+  const peter = schema.plainToClass(schema.Member, { username: 'peter', role: 'member' })
+  const adam = schema.plainToClass(schema.Member, { username: 'adam', role: 'member' })
 
   cfg.add(peter)
   cfg.add(adam)
 
+  const json = cfg.getJSON()
+
   expect(
-    cfg.matchIn(schema.Member, ['members', 'member']).length
+    json.get(schema.Member).filter(m => m.role == 'member').length
   ).toEqual(2)
-  expect(cfg.getAllResources().length).toEqual(24)
+  expect(json.getAll().length).toEqual(24)
 })
 
 test('adds 1 new file', async () => {
@@ -114,22 +133,16 @@ test('adds 1 new file', async () => {
 
   const cfg = config.parse(yaml)
 
-  const file = new config.Resource(
-    ['repositories', 'github-mgmt', 'files', 'file'],
-    schema.plainToClass(schema.File, {})
-  )
+  const file = schema.plainToClass(schema.File, { repository: 'github-mgmt', file: 'file' })
 
   cfg.add(file)
 
+  const json = cfg.getJSON()
+
   expect(
-    cfg.matchIn(schema.File, [
-      'repositories',
-      'github-mgmt',
-      'files',
-      '*'
-    ]).length
+    json.get(schema.File).length
   ).toEqual(2)
-  expect(cfg.getAllResources().length).toEqual(23)
+  expect(json.getAll().length).toEqual(23)
 })
 
 test('updates all team privacy settings', async () => {
@@ -139,30 +152,30 @@ test('updates all team privacy settings', async () => {
 
   const cfg = config.parse(yaml)
 
-  const teams = cfg.matchIn(schema.Team, ['teams', '*'])
+  let json = cfg.getJSON()
+
+  const teams = json.get(schema.Team)
 
   const teamUpdates = teams.map(team => {
-    const teamUpdate = schema.plainToClass(schema.Team, {...team.value})
+    const teamUpdate = schema.plainToClass(schema.Team, {...team})
     teamUpdate.privacy = 'secret'
-    const resource = new config.Resource(
-      team.path,
-      teamUpdate
-    );
-    return resource
+    return teamUpdate
   })
 
   for (const team of teams) {
-    expect((team.value as schema.Team).privacy).not.toEqual('secret')
+    expect(team.privacy).not.toEqual('secret')
   }
 
   for (const team of teamUpdates) {
-    cfg.update(team)
+    cfg.add(team)
   }
 
-  const updatedTeams = cfg.getResources(schema.Team)
+  json = cfg.getJSON()
+
+  const updatedTeams = json.get(schema.Team)
 
   for (const team of updatedTeams) {
-    expect((team.value as schema.Team).privacy).toEqual('secret')
+    expect(team.privacy).toEqual('secret')
   }
 })
 
@@ -173,17 +186,14 @@ test('removes a comment on property update', async () => {
 
   const cfg = config.parse(yaml)
 
-  const resource = new config.Resource(
-    ['repositories', 'github-mgmt'],
-    schema.plainToClass(schema.Repository, { allow_auto_merge: true })
-  )
+  const resource = schema.plainToClass(schema.Repository, { name: 'github-mgmt', allow_auto_merge: true })
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
   const allowAutoMerge = repository.items.find(item => item.key.value == 'allow_auto_merge') as YAML.Pair<YAML.Scalar<string>, YAML.Scalar<boolean>>
   allowAutoMerge.value!.comment = 'I will survive... NOT!'
   expect(allowAutoMerge.value!.value).toBeFalsy()
 
-  cfg.update(resource)
+  cfg.add(resource)
 
   expect(allowAutoMerge.value!.value).toBeTruthy()
   expect(allowAutoMerge.value!.comment).toBeUndefined()
@@ -196,17 +206,14 @@ test('does not upate properties when the values match', async () => {
 
   const cfg = config.parse(yaml)
 
-  const resource = new config.Resource(
-    ['repositories', 'github-mgmt'],
-    schema.plainToClass(schema.Repository, { allow_auto_merge: false })
-  )
+  const resource = schema.plainToClass(schema.Repository, { name: 'github-mgmt', allow_auto_merge: false })
 
   const repository = cfg.document.getIn(['repositories', 'github-mgmt']) as YAML.YAMLMap<YAML.Scalar<string>, unknown>
   const allowAutoMerge = repository.items.find(item => item.key.value == 'allow_auto_merge') as YAML.Pair<YAML.Scalar<string>, YAML.Scalar<boolean>>
   allowAutoMerge.value!.comment = 'I will survive'
   expect(allowAutoMerge.value!.value).toBeFalsy()
 
-  cfg.update(resource)
+  cfg.add(resource)
 
   expect(allowAutoMerge.value!.value).toBeFalsy()
   expect(allowAutoMerge.value!.comment).toEqual('I will survive')
@@ -218,32 +225,21 @@ test('removes properties from the ignore array on fmt', async () => {
     .toString()
 
   const cfg = config.parse(yaml)
+  let json = cfg.getJSON()
 
-  const teams = cfg.matchIn(schema.Team, ['teams', '*'])
+  const teams = json.get(schema.Team)
 
   for (const team of teams) {
-    expect((team.value as schema.Team).privacy).toBeDefined()
+    expect(team.privacy).toBeDefined()
   }
 
   cfg.fmt(['github_team'], {github_team: ['privacy']})
 
-  const updatedTeams = cfg.matchIn(schema.Team, ['teams', '*'])
+  json = cfg.getJSON()
+
+  const updatedTeams = json.get(schema.Team)
 
   for (const team of updatedTeams) {
-    expect((team.value as schema.Team).privacy).toBeUndefined()
+    expect(team.privacy).toBeUndefined()
   }
-})
-
-test('add repository followed by a branch protection rule', async () => {
-    const cfg = config.parse("{}")
-
-    const repository = new config.Resource(
-      ["repositories", "github-mgmt"],
-      schema.plainToClass(schema.Repository, {archived: false})
-    )
-
-    const branchProtection = new config.Resource(
-      ["repositories", "github-mgmt", "branch_protection", "master"],
-      schema.plainToClass(schema.BranchProtection, {allows_deletions: false})
-    )
 })

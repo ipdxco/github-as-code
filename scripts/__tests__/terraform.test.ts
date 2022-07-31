@@ -100,12 +100,6 @@ test('finds no id fields on YAML resources', async () => {
   const yamlResources = await state.getYAMLResources()
 
   for (const resource of yamlResources) {
-    if (YAML.isPair(resource.value)) {
-      const value = resource.value.value as YAML.YAMLMap
-      const keys = value.items
-        .map(item => item.key as YAML.Scalar)
-        .map(key => key.value)
-      expect(keys).not.toContain('id')
-    }
+    expect(Object.keys(resource)).not.toContain('id')
   }
 })
