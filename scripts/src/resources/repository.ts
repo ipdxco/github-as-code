@@ -1,0 +1,105 @@
+import { Exclude, Expose, plainToClassFromExist, Type } from "class-transformer"
+import { GitHub } from "../github"
+import { Id, StateSchema } from "../terraform/schema"
+import { Path, ConfigSchema } from "../yaml/schema"
+import { Resource } from "./resource"
+
+@Exclude()
+class PageSource {
+  @Expose() branch?: string
+  @Expose() path?: string
+}
+
+@Exclude()
+class Pages {
+  @Expose() source?: PageSource
+  @Expose() cname?: string
+}
+
+@Exclude()
+class Template {
+  @Expose() owner?: string
+  @Expose() repository?: string
+}
+
+@Exclude()
+export class Repository implements Resource {
+  static StateType: string = 'github_repository'
+  static async FromGitHub(_repositories: Repository[]): Promise<[Id, Repository][]> {
+    const github = await GitHub.getGitHub()
+    const repositories = await github.listRepositories()
+    const result: [Id, Repository][] = []
+    for (const repository of repositories) {
+      result.push([repository.name, new Repository(repository.name)])
+    }
+    return result
+  }
+  static FromState(state: StateSchema): Repository[] {
+    const repositories: Repository[] = []
+    if (state.values?.root_module?.resources !== undefined) {
+      for (const resource of state.values.root_module.resources) {
+        if (resource.type === Repository.StateType && resource.mode === 'managed') {
+          const pages = {...resource.values.pages[0], source: {...resource.values.pages[0]?.source?.[0]}}
+          const template = resource.values.template[0]
+          repositories.push(plainToClassFromExist(new Repository(resource.values.name), {...resource.values, pages, template}))
+        }
+      }
+    }
+    return repositories
+  }
+  static FromConfig(config: ConfigSchema): Repository[] {
+    const repositories: Repository[] = []
+    if (config.repositories !== undefined) {
+      for (const [name, repository] of Object.entries(config.repositories)) {
+        repositories.push(plainToClassFromExist(new Repository(name), repository))
+      }
+    }
+    return repositories
+  }
+
+  constructor(name: string) {
+    this._name = name
+  }
+
+  private _name: string
+  get name(): string {
+    return this._name
+  }
+
+  @Expose() allow_auto_merge?: boolean
+  @Expose() allow_merge_commit?: boolean
+  @Expose() allow_rebase_merge?: boolean
+  @Expose() allow_squash_merge?: boolean
+  @Expose() archive_on_destroy?: boolean
+  @Expose() archived?: boolean
+  @Expose() auto_init?: boolean
+  @Expose() default_branch?: string
+  @Expose() delete_branch_on_merge?: boolean
+  @Expose() description?: string
+  @Expose() gitignore_template?: string
+  @Expose() has_downloads?: boolean
+  @Expose() has_issues?: boolean
+  @Expose() has_projects?: boolean
+  @Expose() has_wiki?: boolean
+  @Expose() homepage_url?: string
+  @Expose() ignore_vulnerability_alerts_during_read?: boolean
+  @Expose() is_template?: boolean
+  @Expose() license_template?: string
+  @Expose()
+  @Type(() => Pages)
+  pages?: Pages
+  @Expose()
+  @Type(() => Template)
+  template?: Template
+  @Expose() topics?: string[]
+  @Expose() visibility?: string
+  @Expose() vulnerability_alerts?: boolean
+
+  getSchemaPath(_schema: ConfigSchema): Path {
+    return ['repositories', this.name]
+  }
+
+  getStateAddress(): string {
+    return `${Repository.StateType}.this["${this.name}"]`
+  }
+}

@@ -1,32 +1,35 @@
 {
+  "$ref": "#/definitions/ConfigSchema",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$ref": "#/definitions/Schema",
   "definitions": {
-    "Schema": {
-      "type": "object",
+    "ConfigSchema": {
+      "additionalProperties": false,
       "properties": {
         "members": {
-          "type": "object",
+          "additionalProperties": false,
           "properties": {
             "admin": {
-              "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "type": "array"
             },
             "member": {
-              "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "type": "array"
             }
           },
-          "additionalProperties": false
+          "required": [
+            "admin",
+            "member"
+          ],
+          "type": "object"
         },
         "repositories": {
-          "type": "object",
           "additionalProperties": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
               "allow_auto_merge": {
                 "type": "boolean"
@@ -49,6 +52,55 @@
               "auto_init": {
                 "type": "boolean"
               },
+              "branch_protection": {
+                "additionalProperties": {
+                  "$ref": "#/definitions/RepositoryBranchProtectionRule"
+                },
+                "type": "object"
+              },
+              "collaborators": {
+                "additionalProperties": false,
+                "properties": {
+                  "admin": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "maintain": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "pull": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "push": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "triage": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "admin",
+                  "maintain",
+                  "push",
+                  "triage",
+                  "pull"
+                ],
+                "type": "object"
+              },
               "default_branch": {
                 "type": "string"
               },
@@ -57,6 +109,12 @@
               },
               "description": {
                 "type": "string"
+              },
+              "files": {
+                "additionalProperties": {
+                  "$ref": "#/definitions/RepositoryFile"
+                },
+                "type": "object"
               },
               "gitignore_template": {
                 "type": "string"
@@ -86,115 +144,101 @@
                 "type": "string"
               },
               "pages": {
-                "$ref": "#/definitions/RepositoryPages"
+                "additionalProperties": false,
+                "properties": {
+                  "cname": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "branch": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "teams": {
+                "additionalProperties": false,
+                "properties": {
+                  "admin": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "maintain": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "pull": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "push": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "triage": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "admin",
+                  "maintain",
+                  "push",
+                  "triage",
+                  "pull"
+                ],
+                "type": "object"
               },
               "template": {
-                "$ref": "#/definitions/RepositoryTemplate"
+                "additionalProperties": false,
+                "properties": {
+                  "owner": {
+                    "type": "string"
+                  },
+                  "repository": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               },
               "topics": {
-                "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "type": "array"
               },
               "visibility": {
                 "type": "string"
               },
               "vulnerability_alerts": {
                 "type": "boolean"
-              },
-              "collaborators": {
-                "type": "object",
-                "properties": {
-                  "admin": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "maintain": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "push": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "triage": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "pull": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "additionalProperties": false
-              },
-              "teams": {
-                "type": "object",
-                "properties": {
-                  "admin": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "maintain": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "push": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "triage": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "pull": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "additionalProperties": false
-              },
-              "files": {
-                "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/definitions/File"
-                }
-              },
-              "branch_protection": {
-                "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/definitions/BranchProtection"
-                }
               }
             },
-            "additionalProperties": false
-          }
+            "type": "object"
+          },
+          "type": "object"
         },
         "teams": {
-          "type": "object",
           "additionalProperties": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
               "create_default_maintainer": {
                 "type": "boolean"
@@ -202,91 +246,51 @@
               "description": {
                 "type": "string"
               },
+              "members": {
+                "additionalProperties": false,
+                "properties": {
+                  "maintainer": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "member": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "maintainer",
+                  "member"
+                ],
+                "type": "object"
+              },
               "parent_team_id": {
                 "type": "string"
               },
               "privacy": {
-                "type": "string",
-                "enum": [
-                  "closed",
-                  "secret"
-                ]
-              },
-              "members": {
-                "type": "object",
-                "properties": {
-                  "maintainer": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "member": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "additionalProperties": false
+                "$ref": "#/definitions/Privacy"
               }
             },
-            "additionalProperties": false
-          }
+            "type": "object"
+          },
+          "type": "object"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
-    "RepositoryPages": {
-      "type": "object",
-      "properties": {
-        "source": {
-          "$ref": "#/definitions/RepositoryPagesSource"
-        },
-        "cname": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+    "Privacy": {
+      "enum": [
+        "closed",
+        "secret"
+      ],
+      "type": "string"
     },
-    "RepositoryPagesSource": {
-      "type": "object",
-      "properties": {
-        "branch": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "RepositoryTemplate": {
-      "type": "object",
-      "properties": {
-        "owner": {
-          "type": "string"
-        },
-        "repository": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "File": {
-      "type": "object",
-      "properties": {
-        "content": {
-          "type": "string"
-        },
-        "overwrite_on_create": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "BranchProtection": {
-      "type": "object",
+    "RepositoryBranchProtectionRule": {
+      "additionalProperties": false,
       "properties": {
         "allows_deletions": {
           "type": "boolean"
@@ -298,10 +302,10 @@
           "type": "boolean"
         },
         "push_restrictions": {
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "require_conversation_resolution": {
           "type": "boolean"
@@ -313,58 +317,64 @@
           "type": "boolean"
         },
         "required_pull_request_reviews": {
-          "$ref": "#/definitions/BranchProtectionRequiredPullRequestReviews"
+          "additionalProperties": false,
+          "properties": {
+            "dismiss_stale_reviews": {
+              "type": "boolean"
+            },
+            "dismissal_restrictions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "pull_request_bypassers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "require_code_owner_reviews": {
+              "type": "boolean"
+            },
+            "required_approving_review_count": {
+              "type": "number"
+            },
+            "restrict_dismissals": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
         },
         "required_status_checks": {
-          "$ref": "#/definitions/BranchProtectionRequiredStatusChecks"
+          "additionalProperties": false,
+          "properties": {
+            "contexts": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "strict": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
-    "BranchProtectionRequiredPullRequestReviews": {
-      "type": "object",
+    "RepositoryFile": {
+      "additionalProperties": false,
       "properties": {
-        "dismiss_stale_reviews": {
-          "type": "boolean"
+        "content": {
+          "type": "string"
         },
-        "dismissal_restrictions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "pull_request_bypassers": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "require_code_owner_reviews": {
-          "type": "boolean"
-        },
-        "required_approving_review_count": {
-          "type": "number"
-        },
-        "restrict_dismissals": {
+        "overwrite_on_create": {
           "type": "boolean"
         }
       },
-      "additionalProperties": false
-    },
-    "BranchProtectionRequiredStatusChecks": {
-      "type": "object",
-      "properties": {
-        "contexts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "strict": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
+      "type": "object"
     }
   }
 }
