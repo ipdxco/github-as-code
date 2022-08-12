@@ -1,13 +1,17 @@
 import 'reflect-metadata'
 
-import { Config } from '../../src/yaml/config'
-import { Resource, ResourceConstructors, resourceToPlain } from '../../src/resources/resource'
-import { Member, Role as MemberRole, Role } from '../../src/resources/member'
-import { Repository } from '../../src/resources/repository'
-import { RepositoryFile } from '../../src/resources/repository-file'
-import { randomUUID } from 'crypto'
-import { Team, Privacy as TeamPrivacy } from '../../src/resources/team'
-import { RepositoryBranchProtectionRule } from '../../src/resources/repository-branch-protection-rule'
+import {Config} from '../../src/yaml/config'
+import {
+  Resource,
+  ResourceConstructors,
+  resourceToPlain
+} from '../../src/resources/resource'
+import {Member, Role as MemberRole, Role} from '../../src/resources/member'
+import {Repository} from '../../src/resources/repository'
+import {RepositoryFile} from '../../src/resources/repository-file'
+import {randomUUID} from 'crypto'
+import {Team, Privacy as TeamPrivacy} from '../../src/resources/team'
+import {RepositoryBranchProtectionRule} from '../../src/resources/repository-branch-protection-rule'
 
 test('can retrieve resources from YAML schema', async () => {
   const config = Config.FromPath()
@@ -16,11 +20,18 @@ test('can retrieve resources from YAML schema', async () => {
 
   for (const resourceClass of ResourceConstructors) {
     const classResources = config.getResources(resourceClass)
-    expect(classResources).toHaveLength(global.ResourceCounts[resourceClass.name])
+    expect(classResources).toHaveLength(
+      global.ResourceCounts[resourceClass.name]
+    )
     resources.push(...classResources)
   }
 
-  expect(resources).toHaveLength(Object.values(global.ResourceCounts).reduce((a: number, b: number) => a + b, 0))
+  expect(resources).toHaveLength(
+    Object.values(global.ResourceCounts).reduce(
+      (a: number, b: number) => a + b,
+      0
+    )
+  )
 })
 
 test('can check if YAML schema contains a resource', async () => {
@@ -44,7 +55,9 @@ test('can remove members', async () => {
     expect(config.getResources(Member)).toHaveLength(members.length - index - 1)
   }
 
-  expect(config.getAllResources()).toHaveLength(global.ResourcesCount - global.ResourceCounts[Member.name])
+  expect(config.getAllResources()).toHaveLength(
+    global.ResourcesCount - global.ResourceCounts[Member.name]
+  )
 })
 
 test('can remove repositories, including their sub-resources', async () => {
@@ -55,10 +68,18 @@ test('can remove repositories, including their sub-resources', async () => {
   for (const [index, repository] of repositories.entries()) {
     config.removeResource(repository)
     expect(config.someResource(repository)).toBeFalsy()
-    expect(config.getResources(Repository)).toHaveLength(repositories.length - index - 1)
+    expect(config.getResources(Repository)).toHaveLength(
+      repositories.length - index - 1
+    )
   }
 
-  const count = global.ResourcesCount - Object.entries(global.ResourceCounts).reduce((a: number, [key, value]) => key.startsWith(Repository.name) ? a + value : a, 0)
+  const count =
+    global.ResourcesCount -
+    Object.entries(global.ResourceCounts).reduce(
+      (a: number, [key, value]) =>
+        key.startsWith(Repository.name) ? a + value : a,
+      0
+    )
 
   expect(config.getAllResources()).toHaveLength(count)
 })
@@ -68,16 +89,20 @@ test('can add members', async () => {
 
   const members = [
     new Member('peter', MemberRole.Admin),
-    new Member('adam', MemberRole.Member),
+    new Member('adam', MemberRole.Member)
   ]
 
   for (const [index, member] of members.entries()) {
     config.addResource(member)
     expect(config.someResource(member)).toBeTruthy()
-    expect(config.getResources(Member)).toHaveLength(global.ResourceCounts[Member.name] + index + 1)
+    expect(config.getResources(Member)).toHaveLength(
+      global.ResourceCounts[Member.name] + index + 1
+    )
   }
 
-  expect(config.getAllResources()).toHaveLength(global.ResourcesCount + members.length)
+  expect(config.getAllResources()).toHaveLength(
+    global.ResourcesCount + members.length
+  )
 })
 
 test('can add files, including their parent resources', async () => {
@@ -87,7 +112,7 @@ test('can add files, including their parent resources', async () => {
 
   const repositories = [
     new Repository(randomName),
-    config.getResources(Repository)[0],
+    config.getResources(Repository)[0]
   ]
 
   const files: RepositoryFile[] = []
@@ -96,12 +121,17 @@ test('can add files, including their parent resources', async () => {
     files.push(new RepositoryFile(repository.name, randomName))
   }
 
-  const count = global.ResourcesCount + files.filter(f => ! config.someResource(f)).length + repositories.filter(r => ! config.someResource(r)).length
+  const count =
+    global.ResourcesCount +
+    files.filter(f => !config.someResource(f)).length +
+    repositories.filter(r => !config.someResource(r)).length
 
   for (const [index, file] of files.entries()) {
     config.addResource(file)
     expect(config.someResource(file)).toBeTruthy()
-    expect(config.getResources(RepositoryFile)).toHaveLength(global.ResourceCounts[RepositoryFile.name] + index + 1)
+    expect(config.getResources(RepositoryFile)).toHaveLength(
+      global.ResourceCounts[RepositoryFile.name] + index + 1
+    )
   }
 
   expect(config.getAllResources()).toHaveLength(count)
@@ -110,7 +140,9 @@ test('can add files, including their parent resources', async () => {
 test('can update teams', async () => {
   const config = Config.FromPath()
 
-  const teams = config.getResources(Team).filter(t => t.privacy !== TeamPrivacy.PRIVATE)
+  const teams = config
+    .getResources(Team)
+    .filter(t => t.privacy !== TeamPrivacy.PRIVATE)
 
   expect(teams).not.toHaveLength(0)
 
@@ -131,9 +163,10 @@ test('clears comments on member removal', async () => {
 
   const comment = 'This is a comment'
 
-  const member = config.getResources(Member)[0];
+  const member = config.getResources(Member)[0]
 
-  (config.document.getIn(['members', member.role]) as any).items[0].comment = comment
+  ;(config.document.getIn(['members', member.role]) as any).items[0].comment =
+    comment
 
   config.removeResource(member)
 
@@ -150,22 +183,32 @@ test('clears comments on repository property updates', async () => {
   const property = 'description'
   const description = 'This is a description'
 
-  const repository = config.getResources(Repository)[0];
+  const repository = config.getResources(Repository)[0]
 
-  expect(repository[property]).toBeDefined();
-  expect(repository[property]).not.toEqual(description);
+  expect(repository[property]).toBeDefined()
+  expect(repository[property]).not.toEqual(description)
 
-  const repositories = config.document.getIn(['repositories', repository.name]) as any
+  const repositories = config.document.getIn([
+    'repositories',
+    repository.name
+  ]) as any
 
-  repositories.items.find((i: any) => i.key.value === property)!.value.comment = comment
+  repositories.items.find((i: any) => i.key.value === property)!.value.comment =
+    comment
 
   repository[property] = description
 
-  config.addResource(repository);
+  config.addResource(repository)
 
-  const updatedRepositories = config.document.getIn(['repositories', repository.name]) as any
-  expect(updatedRepositories.items.find((i: any) => i.key.value === property)!.value.comment).toBeUndefined();
-  expect(config.getResources(Repository)[0][property]).toEqual(description);
+  const updatedRepositories = config.document.getIn([
+    'repositories',
+    repository.name
+  ]) as any
+  expect(
+    updatedRepositories.items.find((i: any) => i.key.value === property)!.value
+      .comment
+  ).toBeUndefined()
+  expect(config.getResources(Repository)[0][property]).toEqual(description)
 })
 
 test('does not clear comments on same member addition', async () => {
@@ -173,7 +216,7 @@ test('does not clear comments on same member addition', async () => {
 
   const comment = 'This is a comment'
 
-  const member = config.getResources(Member)[0];
+  const member = config.getResources(Member)[0]
 
   const members = config.document.getIn(['members', member.role]) as any
   members.items[0].comment = comment
@@ -182,7 +225,9 @@ test('does not clear comments on same member addition', async () => {
 
   const updatedMembers = config.document.getIn(['members', member.role]) as any
 
-  expect(updatedMembers.items.some((i: any) => i.comment === comment)).toBeTruthy()
+  expect(
+    updatedMembers.items.some((i: any) => i.comment === comment)
+  ).toBeTruthy()
 })
 
 test('does not clear comments on repository property updates to the same value', async () => {
@@ -191,17 +236,27 @@ test('does not clear comments on repository property updates to the same value',
   const comment = 'This is a comment'
   const property = 'description'
 
-  const repository = config.getResources(Repository)[0];
+  const repository = config.getResources(Repository)[0]
 
-  expect(repository[property]).toBeDefined();
+  expect(repository[property]).toBeDefined()
 
-  const repositories = config.document.getIn(['repositories', repository.name]) as any
-  repositories.items.find((i: any) => i.key.value === property)!.value.comment = comment
+  const repositories = config.document.getIn([
+    'repositories',
+    repository.name
+  ]) as any
+  repositories.items.find((i: any) => i.key.value === property)!.value.comment =
+    comment
 
-  config.addResource(repository);
+  config.addResource(repository)
 
-  const updatedRepositories = config.document.getIn(['repositories', repository.name]) as any
-  expect(updatedRepositories.items.find((i: any) => i.key.value === property)!.value.comment).toEqual(comment);
+  const updatedRepositories = config.document.getIn([
+    'repositories',
+    repository.name
+  ]) as any
+  expect(
+    updatedRepositories.items.find((i: any) => i.key.value === property)!.value
+      .comment
+  ).toEqual(comment)
 })
 
 test('can add a repository followed by a repository branch protection rule', async () => {
@@ -224,29 +279,37 @@ test('can add a repository branch protection rule followed by a repository', asy
   expect(config.getResources(Repository)).toHaveLength(1)
 })
 
-test('does not remove properties when adding a team', async() => {
+test('does not remove properties when adding a team', async () => {
   const config = Config.FromPath()
 
   const team = config.getResources(Team)[0]
-  const definedValues = Object.values(resourceToPlain(team) as any).filter(v => v !== undefined)
+  const definedValues = Object.values(resourceToPlain(team) as any).filter(
+    v => v !== undefined
+  )
   expect(definedValues).not.toHaveLength(0)
   config.addResource(new Team(team.name), false)
 
   const updatedTeam = config.getResources(Team)[0]
-  const updatedDefinedValues = Object.values(resourceToPlain(updatedTeam) as any).filter(v => v !== undefined)
+  const updatedDefinedValues = Object.values(
+    resourceToPlain(updatedTeam) as any
+  ).filter(v => v !== undefined)
   expect(updatedDefinedValues).not.toHaveLength(0)
 })
 
-test('does remove undefined properties when adding a team with delete flag set', async() => {
+test('does remove undefined properties when adding a team with delete flag set', async () => {
   const config = Config.FromPath()
 
   const team = config.getResources(Team)[0]
-  const definedValues = Object.values(resourceToPlain(team) as any).filter(v => v !== undefined)
+  const definedValues = Object.values(resourceToPlain(team) as any).filter(
+    v => v !== undefined
+  )
   expect(definedValues).not.toHaveLength(0)
   config.addResource(new Team(team.name), true)
 
   const updatedTeam = config.getResources(Team)[0]
-  const updatedDefinedValues = Object.values(resourceToPlain(updatedTeam) as any).filter(v => v !== undefined)
+  const updatedDefinedValues = Object.values(
+    resourceToPlain(updatedTeam) as any
+  ).filter(v => v !== undefined)
   expect(updatedDefinedValues).toHaveLength(0)
 })
 
@@ -271,7 +334,9 @@ members:
     - adam
   `)
 
-  const undefinedMember = config.getResources(Member).find(m => m.username === 'undefined')!
+  const undefinedMember = config
+    .getResources(Member)
+    .find(m => m.username === 'undefined')!
   config.removeResource(undefinedMember)
   config.format()
   const formatted = config.toString().trim()

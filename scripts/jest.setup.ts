@@ -1,13 +1,13 @@
 import 'reflect-metadata'
-import { Member } from "./src/resources/member"
-import { Repository } from "./src/resources/repository"
-import { Team } from "./src/resources/team"
-import { RepositoryCollaborator } from "./src/resources/repository-collaborator"
-import { RepositoryBranchProtectionRule } from "./src/resources/repository-branch-protection-rule"
-import { RepositoryTeam } from "./src/resources/repository-team"
-import { TeamMember } from "./src/resources/team-member"
-import { RepositoryFile } from "./src/resources/repository-file"
-import { GitHub } from './src/github'
+import {Member} from './src/resources/member'
+import {Repository} from './src/resources/repository'
+import {Team} from './src/resources/team'
+import {RepositoryCollaborator} from './src/resources/repository-collaborator'
+import {RepositoryBranchProtectionRule} from './src/resources/repository-branch-protection-rule'
+import {RepositoryTeam} from './src/resources/repository-team'
+import {TeamMember} from './src/resources/team-member'
+import {RepositoryFile} from './src/resources/repository-file'
+import {GitHub} from './src/github'
 
 jest.mock('./src/env', () => ({
   TF_EXEC: 'false',
@@ -15,8 +15,8 @@ jest.mock('./src/env', () => ({
   TF_WORKING_DIR: '__tests__/__resources__/terraform',
   GITHUB_DIR: '__tests__/__resources__/github',
   FILES_DIR: '__tests__/__resources__/files',
-  GITHUB_ORG: 'default',
-}));
+  GITHUB_ORG: 'default'
+}))
 
 GitHub.github = {
   listMembers: async () => {
@@ -53,6 +53,9 @@ global.ResourceCounts = {
   [RepositoryBranchProtectionRule.name]: 1,
   [RepositoryTeam.name]: 7,
   [TeamMember.name]: 2,
-  [RepositoryFile.name]: 1,
+  [RepositoryFile.name]: 1
 }
-global.ResourcesCount = Object.values(global.ResourceCounts).reduce((a, b) => a + b, 0)
+global.ResourcesCount = Object.values(global.ResourceCounts).reduce(
+  (a, b) => a + b,
+  0
+)

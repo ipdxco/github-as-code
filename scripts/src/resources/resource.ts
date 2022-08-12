@@ -1,14 +1,14 @@
-import { instanceToPlain } from 'class-transformer'
-import { Id, StateSchema } from '../terraform/schema'
-import { Path, ConfigSchema } from '../yaml/schema'
-import { Member } from './member'
-import { Repository } from './repository'
-import { RepositoryBranchProtectionRule } from './repository-branch-protection-rule'
-import { RepositoryCollaborator } from './repository-collaborator'
-import { RepositoryFile } from './repository-file'
-import { RepositoryTeam } from './repository-team'
-import { Team } from './team'
-import { TeamMember } from './team-member'
+import {instanceToPlain} from 'class-transformer'
+import {Id, StateSchema} from '../terraform/schema'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Member} from './member'
+import {Repository} from './repository'
+import {RepositoryBranchProtectionRule} from './repository-branch-protection-rule'
+import {RepositoryCollaborator} from './repository-collaborator'
+import {RepositoryFile} from './repository-file'
+import {RepositoryTeam} from './repository-team'
+import {Team} from './team'
+import {TeamMember} from './team-member'
 
 export interface Resource {
   getSchemaPath(schema: ConfigSchema): Path
@@ -34,7 +34,9 @@ export const ResourceConstructors: ResourceConstructor<Resource>[] = [
   Team
 ]
 
-export function resourceToPlain<T extends Resource>(resource: T | undefined): string | Record<string, any> | undefined {
+export function resourceToPlain<T extends Resource>(
+  resource: T | undefined
+): string | Record<string, any> | undefined {
   if (resource !== undefined) {
     if (resource instanceof String) {
       return resource.toString()

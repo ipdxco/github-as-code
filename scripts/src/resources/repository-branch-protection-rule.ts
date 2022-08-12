@@ -1,8 +1,14 @@
-import { Exclude, Expose, instanceToPlain, plainToClassFromExist, Type } from "class-transformer"
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
+import {
+  Exclude,
+  Expose,
+  instanceToPlain,
+  plainToClassFromExist,
+  Type
+} from 'class-transformer'
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
 
 @Exclude()
 class RequiredPullRequestReviews {
@@ -23,12 +29,20 @@ class RequiredStatusChecks {
 @Exclude()
 export class RepositoryBranchProtectionRule implements Resource {
   static StateType = 'github_branch_protection'
-  static async FromGitHub(_rules: RepositoryBranchProtectionRule[]): Promise<[Id, RepositoryBranchProtectionRule][]> {
+  static async FromGitHub(
+    _rules: RepositoryBranchProtectionRule[]
+  ): Promise<[Id, RepositoryBranchProtectionRule][]> {
     const github = await GitHub.getGitHub()
     const rules = await github.listRepositoryBranchProtectionRules()
     const result: [Id, RepositoryBranchProtectionRule][] = []
     for (const rule of rules) {
-      result.push([`${rule.repository.name}:${rule.branchProtectionRule.pattern}`, new RepositoryBranchProtectionRule(rule.repository.name, rule.branchProtectionRule.pattern)])
+      result.push([
+        `${rule.repository.name}:${rule.branchProtectionRule.pattern}`,
+        new RepositoryBranchProtectionRule(
+          rule.repository.name,
+          rule.branchProtectionRule.pattern
+        )
+      ])
     }
     return result
   }
@@ -36,11 +50,30 @@ export class RepositoryBranchProtectionRule implements Resource {
     const rules: RepositoryBranchProtectionRule[] = []
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
-        if (resource.type === RepositoryBranchProtectionRule.StateType && resource.mode === 'managed') {
-          const repository = resource.index.split(`:${resource.values.pattern}`)[0]
-          const required_pull_request_reviews = resource.values.required_pull_request_reviews[0]
-          const required_status_checks = resource.values.required_status_checks[0]
-          rules.push(plainToClassFromExist(new RepositoryBranchProtectionRule(repository, resource.values.pattern), {...resource.values, required_pull_request_reviews, required_status_checks}))
+        if (
+          resource.type === RepositoryBranchProtectionRule.StateType &&
+          resource.mode === 'managed'
+        ) {
+          const repository = resource.index.split(
+            `:${resource.values.pattern}`
+          )[0]
+          const required_pull_request_reviews =
+            resource.values.required_pull_request_reviews[0]
+          const required_status_checks =
+            resource.values.required_status_checks[0]
+          rules.push(
+            plainToClassFromExist(
+              new RepositoryBranchProtectionRule(
+                repository,
+                resource.values.pattern
+              ),
+              {
+                ...resource.values,
+                required_pull_request_reviews,
+                required_status_checks
+              }
+            )
+          )
         }
       }
     }
@@ -49,10 +82,19 @@ export class RepositoryBranchProtectionRule implements Resource {
   static FromConfig(config: ConfigSchema): RepositoryBranchProtectionRule[] {
     const rules: RepositoryBranchProtectionRule[] = []
     if (config.repositories !== undefined) {
-      for (const [repository_name, repository] of Object.entries(config.repositories)) {
+      for (const [repository_name, repository] of Object.entries(
+        config.repositories
+      )) {
         if (repository.branch_protection !== undefined) {
-          for (const [pattern, rule] of Object.entries(repository.branch_protection)) {
-            rules.push(plainToClassFromExist(new RepositoryBranchProtectionRule(repository_name, pattern), rule))
+          for (const [pattern, rule] of Object.entries(
+            repository.branch_protection
+          )) {
+            rules.push(
+              plainToClassFromExist(
+                new RepositoryBranchProtectionRule(repository_name, pattern),
+                rule
+              )
+            )
           }
         }
       }

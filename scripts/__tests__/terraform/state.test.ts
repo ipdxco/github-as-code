@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 
-import { State } from '../../src/terraform/state'
-import { Resource, ResourceConstructors } from '../../src/resources/resource'
-import { Repository } from '../../src/resources/repository'
-import { Id } from '../../src/terraform/schema'
+import {State} from '../../src/terraform/state'
+import {Resource, ResourceConstructors} from '../../src/resources/resource'
+import {Repository} from '../../src/resources/repository'
+import {Id} from '../../src/terraform/schema'
 
 test('can retrieve resources from tf state', async () => {
   const config = await State.New()
@@ -11,7 +11,9 @@ test('can retrieve resources from tf state', async () => {
   const resources = []
   for (const resourceClass of ResourceConstructors) {
     const classResources = config.getResources(resourceClass)
-    expect(classResources).toHaveLength(global.ResourceCounts[resourceClass.name])
+    expect(classResources).toHaveLength(
+      global.ResourceCounts[resourceClass.name]
+    )
     resources.push(...classResources)
   }
 
@@ -37,7 +39,7 @@ test('can ignore resource properties', async () => {
   const resource = config.getResources(Repository)[0]
   expect(resource.description).toBeDefined()
 
-  config['_ignoredProperties'] = { 'github_repository': ['description'] }
+  config['_ignoredProperties'] = {github_repository: ['description']}
   await config.refresh()
 
   const refreshedResource = config.getResources(Repository)[0]
@@ -76,6 +78,8 @@ test('can add and remove resources through sync', async () => {
   desiredResources.push(['id', new Repository('test4')])
 
   await config.sync(desiredResources)
-  expect(addResourceSpy).toHaveBeenCalledTimes(desiredResources.length - resources.length)
+  expect(addResourceSpy).toHaveBeenCalledTimes(
+    desiredResources.length - resources.length
+  )
   expect(removeResourceSpy).not.toHaveBeenCalled()
 })

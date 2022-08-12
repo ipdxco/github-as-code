@@ -1,11 +1,11 @@
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
 
 export enum Role {
   Maintainer = 'maintainer',
-  Member = 'member',
+  Member = 'member'
 }
 
 export class TeamMember extends String implements Resource {
@@ -15,7 +15,14 @@ export class TeamMember extends String implements Resource {
     const members = await github.listTeamMembers()
     const result: [Id, TeamMember][] = []
     for (const member of members) {
-      result.push([`${member.team.id}:${member.member.login}`, new TeamMember(member.team.name, member.member.login, member.membership.role as Role)])
+      result.push([
+        `${member.team.id}:${member.member.login}`,
+        new TeamMember(
+          member.team.name,
+          member.member.login,
+          member.membership.role as Role
+        )
+      ])
     }
     return result
   }
@@ -23,9 +30,14 @@ export class TeamMember extends String implements Resource {
     const members: TeamMember[] = []
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
-        if (resource.type === TeamMember.StateType && resource.mode === 'managed') {
+        if (
+          resource.type === TeamMember.StateType &&
+          resource.mode === 'managed'
+        ) {
           const team = resource.index.split(`:${resource.values.username}`)[0]
-          members.push(new TeamMember(team, resource.values.username, resource.values.role))
+          members.push(
+            new TeamMember(team, resource.values.username, resource.values.role)
+          )
         }
       }
     }
@@ -70,7 +82,13 @@ export class TeamMember extends String implements Resource {
   getSchemaPath(schema: ConfigSchema): Path {
     const members = schema.teams?.[this.team]?.members?.[this.role] || []
     const index = members.indexOf(this.username)
-    return ['teams', this.team, 'members', this.role, index === -1 ? members.length : index]
+    return [
+      'teams',
+      this.team,
+      'members',
+      this.role,
+      index === -1 ? members.length : index
+    ]
   }
 
   getStateAddress(): string {

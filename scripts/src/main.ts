@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { sync } from './sync'
+import {sync} from './sync'
 import {State} from './terraform/state'
 import {Config} from './yaml/config'
 

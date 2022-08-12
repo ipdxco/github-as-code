@@ -1,12 +1,12 @@
-import { Resource, ResourceConstructors } from "./resources/resource";
-import { State } from "./terraform/state";
-import { Id } from "./terraform/schema";
-import { Config } from "./yaml/config";
+import {Resource, ResourceConstructors} from './resources/resource'
+import {State} from './terraform/state'
+import {Id} from './terraform/schema'
+import {Config} from './yaml/config'
 
-export async function sync(state: State, config: Config) {
+export async function sync(state: State, config: Config): Promise<void> {
   await state.refresh()
 
-  let resources: [Id, Resource][] = [];
+  const resources: [Id, Resource][] = []
   for (const resourceClass of ResourceConstructors) {
     const oldResources = state.getResources(resourceClass)
     const newResources = await resourceClass.FromGitHub(oldResources)

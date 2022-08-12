@@ -1,24 +1,33 @@
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
 
 export enum Permission {
   Admin = 'admin',
   Maintain = 'maintain',
   Push = 'push',
   Triage = 'triage',
-  Pull = 'pull',
+  Pull = 'pull'
 }
 
 export class RepositoryTeam extends String implements Resource {
   static StateType: string = 'github_team_repository'
-  static async FromGitHub(_teams: RepositoryTeam[]): Promise<[Id, RepositoryTeam][]> {
+  static async FromGitHub(
+    _teams: RepositoryTeam[]
+  ): Promise<[Id, RepositoryTeam][]> {
     const github = await GitHub.getGitHub()
     const teams = await github.listTeamRepositories()
     const result: [Id, RepositoryTeam][] = []
     for (const team of teams) {
-      result.push([`${team.team.id}:${team.repository.name}`, new RepositoryTeam(team.repository.name, team.team.name, team.team.permission as Permission)])
+      result.push([
+        `${team.team.id}:${team.repository.name}`,
+        new RepositoryTeam(
+          team.repository.name,
+          team.team.name,
+          team.team.permission as Permission
+        )
+      ])
     }
     return result
   }
@@ -26,9 +35,18 @@ export class RepositoryTeam extends String implements Resource {
     const teams: RepositoryTeam[] = []
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
-        if (resource.type === RepositoryTeam.StateType && resource.mode === 'managed') {
+        if (
+          resource.type === RepositoryTeam.StateType &&
+          resource.mode === 'managed'
+        ) {
           const team = resource.index.split(`:${resource.values.repository}`)[0]
-          teams.push(new RepositoryTeam(resource.values.repository, team, resource.values.permission))
+          teams.push(
+            new RepositoryTeam(
+              resource.values.repository,
+              team,
+              resource.values.permission
+            )
+          )
         }
       }
     }
@@ -37,11 +55,21 @@ export class RepositoryTeam extends String implements Resource {
   static FromConfig(config: ConfigSchema): RepositoryTeam[] {
     const teams: RepositoryTeam[] = []
     if (config.repositories !== undefined) {
-      for (const [repository_name, repository] of Object.entries(config.repositories)) {
+      for (const [repository_name, repository] of Object.entries(
+        config.repositories
+      )) {
         if (repository.teams !== undefined) {
-          for (const [permission, team_names] of Object.entries(repository.teams)) {
+          for (const [permission, team_names] of Object.entries(
+            repository.teams
+          )) {
             for (const team_name of team_names ?? []) {
-              teams.push(new RepositoryTeam(repository_name, team_name, permission as Permission))
+              teams.push(
+                new RepositoryTeam(
+                  repository_name,
+                  team_name,
+                  permission as Permission
+                )
+              )
             }
           }
         }
@@ -70,9 +98,16 @@ export class RepositoryTeam extends String implements Resource {
   }
 
   getSchemaPath(schema: ConfigSchema): Path {
-    const teams = schema.repositories?.[this.repository]?.teams?.[this.permission] || []
+    const teams =
+      schema.repositories?.[this.repository]?.teams?.[this.permission] || []
     const index = teams.indexOf(this.team)
-    return ['repositories', this.repository, 'teams', this.permission, index === -1 ? teams.length : index]
+    return [
+      'repositories',
+      this.repository,
+      'teams',
+      this.permission,
+      index === -1 ? teams.length : index
+    ]
   }
 
   getStateAddress(): string {

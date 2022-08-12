@@ -1,12 +1,12 @@
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import env from "../env"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import env from '../env'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
 
 export enum Role {
   Admin = 'admin',
-  Member = 'member',
+  Member = 'member'
 }
 
 export class Member extends String implements Resource {
@@ -19,7 +19,10 @@ export class Member extends String implements Resource {
       if (member.role === 'billing_manager') {
         throw new Error(`Member role 'billing_manager' is not supported.`)
       }
-      result.push([`${env.GITHUB_ORG}:${member.user!.login}`, new Member(member.user!.login, member.role as Role)])
+      result.push([
+        `${env.GITHUB_ORG}:${member.user!.login}`,
+        new Member(member.user!.login, member.role as Role)
+      ])
     }
     return result
   }
@@ -28,7 +31,9 @@ export class Member extends String implements Resource {
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
         if (resource.type === Member.StateType && resource.mode === 'managed') {
-          members.push(new Member(resource.values.username, resource.values.role))
+          members.push(
+            new Member(resource.values.username, resource.values.role)
+          )
         }
       }
     }

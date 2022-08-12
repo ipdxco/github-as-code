@@ -1,11 +1,11 @@
-import { Exclude, Expose, plainToClassFromExist } from "class-transformer"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import env from "../env"
-import * as fs from "fs"
-import * as path from "path"
+import {Exclude, Expose, plainToClassFromExist} from 'class-transformer'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import env from '../env'
+import * as fs from 'fs'
+import * as path from 'path'
 
 export function findFileByContent(
   dirPath: string,
@@ -33,11 +33,16 @@ export function findFileByContent(
 @Exclude()
 export class RepositoryFile implements Resource {
   static StateType: string = 'github_repository_file'
-  static async FromGitHub(files: RepositoryFile[]): Promise<[Id, RepositoryFile][]> {
+  static async FromGitHub(
+    files: RepositoryFile[]
+  ): Promise<[Id, RepositoryFile][]> {
     const github = await GitHub.getGitHub()
     const result: [Id, RepositoryFile][] = []
     for (const file of files) {
-      if (await github.getRepositoryFile(file.repository, file.file) !== undefined) {
+      if (
+        (await github.getRepositoryFile(file.repository, file.file)) !==
+        undefined
+      ) {
         result.push([`${file.repository}/${file.file}`, file])
       }
     }
@@ -47,9 +52,23 @@ export class RepositoryFile implements Resource {
     const files: RepositoryFile[] = []
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
-        if (resource.type === RepositoryFile.StateType && resource.mode === 'managed') {
-          const content = findFileByContent(env.FILES_DIR, resource.values.content)?.slice(env.FILES_DIR.length + 1) || resource.values.content
-          files.push(plainToClassFromExist(new RepositoryFile(resource.values.repository, resource.values.file), {...resource.values, content}))
+        if (
+          resource.type === RepositoryFile.StateType &&
+          resource.mode === 'managed'
+        ) {
+          const content =
+            findFileByContent(env.FILES_DIR, resource.values.content)?.slice(
+              env.FILES_DIR.length + 1
+            ) || resource.values.content
+          files.push(
+            plainToClassFromExist(
+              new RepositoryFile(
+                resource.values.repository,
+                resource.values.file
+              ),
+              {...resource.values, content}
+            )
+          )
         }
       }
     }
@@ -58,10 +77,17 @@ export class RepositoryFile implements Resource {
   static FromConfig(config: ConfigSchema): RepositoryFile[] {
     const files: RepositoryFile[] = []
     if (config.repositories !== undefined) {
-      for (const [repository_name, repository] of Object.entries(config.repositories)) {
+      for (const [repository_name, repository] of Object.entries(
+        config.repositories
+      )) {
         if (repository.files !== undefined) {
           for (const [file_name, file] of Object.entries(repository.files)) {
-            files.push(plainToClassFromExist(new RepositoryFile(repository_name, file_name), file))
+            files.push(
+              plainToClassFromExist(
+                new RepositoryFile(repository_name, file_name),
+                file
+              )
+            )
           }
         }
       }

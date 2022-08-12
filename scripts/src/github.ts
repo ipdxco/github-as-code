@@ -12,7 +12,9 @@ import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types' // eslint-d
 
 const Client = Octokit.plugin(retry, throttling)
 const Endpoints = new Octokit()
-type Members = GetResponseDataTypeFromEndpointMethod<typeof Endpoints.orgs.getMembershipForUser>[]
+type Members = GetResponseDataTypeFromEndpointMethod<
+  typeof Endpoints.orgs.getMembershipForUser
+>[]
 type Repositories = GetResponseDataTypeFromEndpointMethod<
   typeof Endpoints.repos.listForOrg
 >
@@ -86,10 +88,15 @@ export class GitHub {
       const members = await this.client.paginate(this.client.orgs.listMembers, {
         org: env.GITHUB_ORG
       })
-      const memberships = await Promise.all(members.map(async member => await this.client.orgs.getMembershipForUser({
-        org: env.GITHUB_ORG,
-        username: member.login
-      })))
+      const memberships = await Promise.all(
+        members.map(
+          async member =>
+            await this.client.orgs.getMembershipForUser({
+              org: env.GITHUB_ORG,
+              username: member.login
+            })
+        )
+      )
       this.members = memberships.map(m => m.data)
     }
     return this.members
@@ -176,15 +183,25 @@ export class GitHub {
         this.client.teams.listMembersInOrg,
         {org: env.GITHUB_ORG, team_slug: team.slug}
       )
-      const memberships = await Promise.all(members.map(async member => {
-        const membership = (await this.client.teams.getMembershipForUserInOrg({
-          org: env.GITHUB_ORG,
-          team_slug: team.slug,
-          username: member.login
-        })).data
-        return {member, membership}
-      }))
-      teamMembers.push(...memberships.map(({member, membership}) => ({team, member, membership})))
+      const memberships = await Promise.all(
+        members.map(async member => {
+          const membership = (
+            await this.client.teams.getMembershipForUserInOrg({
+              org: env.GITHUB_ORG,
+              team_slug: team.slug,
+              username: member.login
+            })
+          ).data
+          return {member, membership}
+        })
+      )
+      teamMembers.push(
+        ...memberships.map(({member, membership}) => ({
+          team,
+          member,
+          membership
+        }))
+      )
     }
     return teamMembers
   }

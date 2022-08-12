@@ -1,8 +1,8 @@
-import { Exclude, Expose, plainToClassFromExist, Type } from "class-transformer"
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Resource } from "./resource"
+import {Exclude, Expose, plainToClassFromExist, Type} from 'class-transformer'
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource'
 
 @Exclude()
 class PageSource {
@@ -25,7 +25,9 @@ class Template {
 @Exclude()
 export class Repository implements Resource {
   static StateType: string = 'github_repository'
-  static async FromGitHub(_repositories: Repository[]): Promise<[Id, Repository][]> {
+  static async FromGitHub(
+    _repositories: Repository[]
+  ): Promise<[Id, Repository][]> {
     const github = await GitHub.getGitHub()
     const repositories = await github.listRepositories()
     const result: [Id, Repository][] = []
@@ -38,10 +40,22 @@ export class Repository implements Resource {
     const repositories: Repository[] = []
     if (state.values?.root_module?.resources !== undefined) {
       for (const resource of state.values.root_module.resources) {
-        if (resource.type === Repository.StateType && resource.mode === 'managed') {
-          const pages = {...resource.values.pages[0], source: {...resource.values.pages[0]?.source?.[0]}}
+        if (
+          resource.type === Repository.StateType &&
+          resource.mode === 'managed'
+        ) {
+          const pages = {
+            ...resource.values.pages[0],
+            source: {...resource.values.pages[0]?.source?.[0]}
+          }
           const template = resource.values.template[0]
-          repositories.push(plainToClassFromExist(new Repository(resource.values.name), {...resource.values, pages, template}))
+          repositories.push(
+            plainToClassFromExist(new Repository(resource.values.name), {
+              ...resource.values,
+              pages,
+              template
+            })
+          )
         }
       }
     }
@@ -51,7 +65,9 @@ export class Repository implements Resource {
     const repositories: Repository[] = []
     if (config.repositories !== undefined) {
       for (const [name, repository] of Object.entries(config.repositories)) {
-        repositories.push(plainToClassFromExist(new Repository(name), repository))
+        repositories.push(
+          plainToClassFromExist(new Repository(name), repository)
+        )
       }
     }
     return repositories

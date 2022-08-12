@@ -1,12 +1,12 @@
-import { Resource } from "./resource"
-import { Path, ConfigSchema } from "../yaml/schema"
-import { Exclude, Expose, plainToClassFromExist } from "class-transformer"
-import { GitHub } from "../github"
-import { Id, StateSchema } from "../terraform/schema"
+import {Resource} from './resource'
+import {Path, ConfigSchema} from '../yaml/schema'
+import {Exclude, Expose, plainToClassFromExist} from 'class-transformer'
+import {GitHub} from '../github'
+import {Id, StateSchema} from '../terraform/schema'
 
 export enum Privacy {
   PUBLIC = 'closed',
-  PRIVATE = 'secret',
+  PRIVATE = 'secret'
 }
 
 @Exclude()
@@ -28,9 +28,19 @@ export class Team implements Resource {
         if (resource.type === Team.StateType && resource.mode === 'managed') {
           let parent_team_id = resource.values.parent_team_id
           if (parent_team_id !== undefined) {
-            parent_team_id = state.values.root_module.resources.find((r: any) => r.type === 'github_team' && r.mode === 'managed' && r.values.id === parent_team_id)?.values?.name
+            parent_team_id = state.values.root_module.resources.find(
+              (r: any) =>
+                r.type === 'github_team' &&
+                r.mode === 'managed' &&
+                r.values.id === parent_team_id
+            )?.values?.name
           }
-          teams.push(plainToClassFromExist(new Team(resource.values.name), {...resource.values, parent_team_id}))
+          teams.push(
+            plainToClassFromExist(new Team(resource.values.name), {
+              ...resource.values,
+              parent_team_id
+            })
+          )
         }
       }
     }
