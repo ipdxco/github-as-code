@@ -44,7 +44,7 @@ jobs:
           token: ${{ steps.token.outputs.token }}
       - name: Copy files from the template
         run: |
-          for file in $(git ls-files ':!:github/*.yml' ':!:scripts/__tests__/*' ':!:terraform/*_override.tf' ':!:.github/workflows/*_reusable.yml' ':!:README.md'); do
+          for file in $(git ls-files ':!:github/*.yml' ':!:terraform/*_override.tf' ':!:.github/workflows/*_reusable.yml' ':!:README.md'); do
             mkdir -p "../github-mgmt/$(dirname "$file")"
             cp -f "$file" "../github-mgmt/$file"
           done
