@@ -16,10 +16,11 @@ const AUDIT_LOG_IGNORED_EVENT_CATEGORIES = [
 const AUDIT_LOG_LENGTH_IN_MONTHS = 12
 
 function stripOrgPrefix(repoOrTeam: string): string {
-  return repoOrTeam.split('/').slice(1).join('/')
+  return repoOrTeam.split('/').slice(1).join('/') // org/repo => repo
 }
 
 function getRepositories(event: any): string[] {
+  // event.repo is either an array of org/repo strings, a single org/repo string, or null
   return (Array.isArray(event.repo ?? []) ? event.repo ?? [] : [event.repo]).map(stripOrgPrefix)
 }
 
@@ -31,13 +32,33 @@ function getResources<T extends Resource>(config: Config, resourceClass: Resourc
   })
 }
 
+/* This function is used to remove inactive members from the config.
+ *
+ * 1. It ensures that a team called 'Alumni' exists.
+ * 2. It removes all 'Alumni' team from all the repositories.
+ * 3. It populates 'Alumni' team with organization members who:
+ *  a. do not have 'KEEP:' in their inline comment AND
+ *  b. have not been added to the organization in the past 12 months AND
+ *  c. have not performed any audit log activity in the past 12 months.
+ * 4. It removes repository collaborators who:
+ *  a. do not have 'KEEP:' in their inline comment AND
+ *  b. have not been added to the repository in the past 12 months AND
+ *  c. have not performed any audit log activity on the repository they're a collaborator of in the past 12 months.
+ * 5. It removes team members who:
+ *  a. do not have 'KEEP:' in their inline comment AND
+ *  b. have not been added to the team in the past 12 months AND
+ *  c. have not performed any audit log activity on any repository the team they're a member of has access to in the past 12 months.
+ * 6. It removes teams which:
+ *  a. do not have 'KEEP:' in their inline comment AND
+ *  b. do not have members anymore.
+ */
 async function run(): Promise<void> {
   if (! process.env.LOG_PATH) {
-    throw new Error('LOG_PATH environment variable is not set')
+    throw new Error('LOG_PATH environment variable is not set. It should point to the path of the JSON audit log. You can download it by following these instructions: https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization')
   }
 
-
   const github = await GitHub.getGitHub()
+
   const archivedRepositories = (await github.listRepositories()).filter(repository => repository.archived).map(repository => repository.name)
   const teamSlugsByName = (await github.listTeams()).reduce((map: Record<string, string>, team) => {
     map[team.name] = team.slug
@@ -73,6 +94,7 @@ async function run(): Promise<void> {
     if (! isNew) {
       const isActive = log.some((event: any) => event.actor === member.username)
       if (! isActive) {
+        console.log(`Adding ${member.username} to the ${alumniTeam.name} team`)
         const teamMember = new TeamMember(alumniTeam.name, member.username, Role.Member)
         config.addResource(teamMember)
       }
@@ -87,6 +109,7 @@ async function run(): Promise<void> {
       const isCollaboratorActive = log.some((event: any) => event.actor === repositoryCollaborator.username && getRepositories(event).includes(repositoryCollaborator.repository))
       const isRepositoryArchived = archivedRepositories.includes(repositoryCollaborator.repository)
       if (! isCollaboratorActive && ! isRepositoryArchived) {
+        console.log(`Removing ${repositoryCollaborator.username} from ${repositoryCollaborator.repository} repository`)
         config.removeResource(repositoryCollaborator)
       }
     }
@@ -100,6 +123,7 @@ async function run(): Promise<void> {
       const repositories = repositoryTeams.filter(repositoryTeam => repositoryTeam.team === teamMember.team).map(repositoryTeam => repositoryTeam.repository)
       const isActive = log.some((event: any) => event.actor === teamMember.username && getRepositories(event).some(repository => repositories.includes(repository)))
       if (! isActive) {
+        console.log(`Removing ${teamMember.username} from ${teamMember.team} team`)
         config.removeResource(teamMember)
       }
     }
@@ -111,6 +135,7 @@ async function run(): Promise<void> {
   for (const team of teams) {
     const hasMembers = teamMembersAfterRemoval.some(teamMember => teamMember.team === team.name)
     if (! hasMembers) {
+      console.log(`Removing ${team.name} team`)
       config.removeResource(team)
     }
   }
