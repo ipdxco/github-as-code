@@ -21,10 +21,6 @@
               "type": "array"
             }
           },
-          "required": [
-            "admin",
-            "member"
-          ],
           "type": "object"
         },
         "repositories": {
@@ -92,13 +88,6 @@
                     "type": "array"
                   }
                 },
-                "required": [
-                  "admin",
-                  "maintain",
-                  "push",
-                  "triage",
-                  "pull"
-                ],
                 "type": "object"
               },
               "default_branch": {
@@ -198,13 +187,6 @@
                     "type": "array"
                   }
                 },
-                "required": [
-                  "admin",
-                  "maintain",
-                  "push",
-                  "triage",
-                  "pull"
-                ],
                 "type": "object"
               },
               "template": {
@@ -262,10 +244,6 @@
                     "type": "array"
                   }
                 },
-                "required": [
-                  "maintainer",
-                  "member"
-                ],
                 "type": "object"
               },
               "parent_team_id": {

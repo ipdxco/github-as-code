@@ -16,22 +16,27 @@ type Member = string
 
 interface RepositoryExtension {
   files?: Record<string, RepositoryFile>
-  collaborators?: Record<
-    RepositoryCollaboratorPermission,
-    RepositoryCollaborator[]
-  >
-  teams?: Record<RepositoryTeamPermission, RepositoryTeam[]>
+  collaborators?: {
+    [permission in RepositoryCollaboratorPermission]?: RepositoryCollaborator[]
+  }
+  teams?: {
+    [permission in RepositoryTeamPermission]?: RepositoryTeam[]
+  }
   branch_protection?: Record<string, RepositoryBranchProtectionRule>
 }
 
 interface TeamExtension {
-  members?: Record<TeamRole, TeamMember[]>
+  members?: {
+    [role in TeamRole]?: TeamMember[]
+  }
 }
 
 export type Path = (string | number)[]
 
 export class ConfigSchema {
-  members?: Record<MemberRole, Member[]>
+  members?: {
+    [role in MemberRole]?: Member[]
+  }
   repositories?: Record<string, Repository & RepositoryExtension>
   teams?: Record<string, Team & TeamExtension>
 }
