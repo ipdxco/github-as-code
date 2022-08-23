@@ -27,13 +27,15 @@ jobs:
         uses: actions/checkout@v2
       - name: Discover workspaces
         id: workspaces
+        env:
+          WORKSPACES: ${{ github.event.inputs.workspaces }}
         run: |
-          if [[ -z '${{ github.event.inputs.workspaces }}' ]]; then
+          if [[ -z "${WORKSPACES}" ]]; then
             workspaces="$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
           else
-            workspaces="$(echo '${{ github.event.inputs.workspaces }}' | jq --raw-input 'split(" ")')"
+            workspaces="$(echo "${WORKSPACES}" | jq --raw-input 'split(" ")')"
           fi
-          echo "::set-output name=this::$workspaces"
+          echo "::set-output name=this::${workspaces}"
   sync:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
@@ -49,6 +51,7 @@ jobs:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_LOCK: ${{ github.event.inputs.lock }}
+      TF_WORKSPACE_OPT: ${{ matrix.workspace }}
       AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
@@ -71,8 +74,8 @@ jobs:
         working-directory: terraform
       - name: Select terraform workspace
         run: |
-          terraform workspace select '${{ matrix.workspace }}' || terraform workspace new '${{ matrix.workspace }}'
-          echo 'TF_WORKSPACE=${{ matrix.workspace }}' >> $GITHUB_ENV
+          terraform workspace select "${TF_WORKSPACE_OPT}" || terraform workspace new "${TF_WORKSPACE_OPT}"
+          echo "TF_WORKSPACE=${TF_WORKSPACE_OPT}" >> $GITHUB_ENV
         working-directory: terraform
       - name: Sync
         run: |
@@ -84,11 +87,11 @@ jobs:
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git_branch='${{ github.ref_name }}-sync-${{ env.TF_WORKSPACE }}'
-          git checkout -B "$git_branch"
+          git_branch="${GITHUB_REF_NAME}-sync-${TF_WORKSPACE }"
+          git checkout -B "${git_branch}"
           git add --all
-          git diff-index --quiet HEAD || git commit --message='chore: sync ${{ env.TF_WORKSPACE }} (#${{ github.run_number }})'
-          git push origin "$git_branch" --force
+          git diff-index --quiet HEAD || git commit --message="chore: sync ${TF_WORKSPACE} (#${GITHUB_RUN_NUMBER})'
+          git push origin "${git_branch}" --force
   pull_request:
     needs: [prepare, sync]
     if: needs.prepare.outputs.workspaces != ''
@@ -110,13 +113,15 @@ jobs:
         with:
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/git-config-user
-      - run: |
+      - env:
+          WORKSPACES: ${{ needs.prepare.outputs.workspaces }}
+        run: |
           while read workspace; do
-            workspace_branch="${{ github.ref_name }}-sync-$workspace"
-            git fetch origin "$workspace_branch"
-            git merge --strategy-option=theirs "origin/$workspace_branch"
-            git push origin --delete "$workspace_branch"
-          done <<< "$(jq -r '.[]' <<< '${{ needs.prepare.outputs.workspaces }}')"
+            workspace_branch="${GITHUB_REF_NAME}-sync-${workspace}"
+            git fetch origin "${workspace_branch}"
+            git merge --strategy-option=theirs "origin/${workspace_branch}"
+            git push origin --delete "${workspace_branch}"
+          done <<< "$(jq -r '.[]' <<< "${WORKSPACES}")"
       - uses: ./.github/actions/git-push
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
