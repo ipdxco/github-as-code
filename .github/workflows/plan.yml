@@ -26,12 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - if: github.event_name == 'pull_request_target'
-        run: |
-          git fetch origin pull/${{ github.event.pull_request.number }}/head
-          # we delete github directory first to ensure we only get YAMLs from the PR
-          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
         env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          # we delete github directory first to ensure we only get YAMLs from the PR
+          rm -rf github && git checkout "${SHA}" -- github
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
@@ -73,7 +75,7 @@ jobs:
         run: terraform init
         working-directory: terraform
       - name: Plan terraform
-        run: terraform plan -refresh=false -lock=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
+        run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
         uses: actions/upload-artifact@v2
@@ -97,11 +99,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - if: github.event_name == 'pull_request_target'
-        run: |
-          git fetch origin pull/${{ github.event.pull_request.number }}/head
-          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
         env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
@@ -117,10 +121,10 @@ jobs:
       - name: Show terraform plans
         run: |
           for plan in $(find . -type f -name '*.tfplan'); do
-            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> TERRAFORM_PLANS.md
+            echo "<details><summary>$(basename "${plan}" '.tfplan')</summary>" >> TERRAFORM_PLANS.md
             echo '' >> TERRAFORM_PLANS.md
             echo '```' >> TERRAFORM_PLANS.md
-            echo "$(terraform show -no-color "$plan" 2>&1)" >> TERRAFORM_PLANS.md
+            echo "$(terraform show -no-color "${plan}" 2>&1)" >> TERRAFORM_PLANS.md
             echo '```' >> TERRAFORM_PLANS.md
             echo '' >> TERRAFORM_PLANS.md
             echo '</details>' >> TERRAFORM_PLANS.md
@@ -131,7 +135,7 @@ jobs:
         run: |
           echo 'COMMENT<<EOF' >> $GITHUB_ENV
           if [[ $(wc -c TERRAFORM_PLANS.md | cut -d' ' -f1) -ge 65000 ]]; then
-            echo 'Terraform plans are too long to post as a comment. Please inspect [Plan > Comment > Show terraform plans](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) instead.' >> $GITHUB_ENV
+            echo "Terraform plans are too long to post as a comment. Please inspect [Plan > Comment > Show terraform plans](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) instead." >> $GITHUB_ENV
           else
             cat TERRAFORM_PLANS.md >> $GITHUB_ENV
           fi

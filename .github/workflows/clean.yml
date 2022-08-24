@@ -33,13 +33,15 @@ jobs:
         uses: actions/checkout@v2
       - name: Discover workspaces
         id: workspaces
+        env:
+          WORKSPACES: ${{ github.event.inputs.workspaces }}
         run: |
-          if [[ -z '${{ github.event.inputs.workspaces }}' ]]; then
+          if [[ -z "${WORKSPACES}" ]]; then
             workspaces="$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
           else
-            workspaces="$(echo '${{ github.event.inputs.workspaces }}' | jq --raw-input 'split(" ")')"
+            workspaces="$(echo "${WORKSPACES}" | jq --raw-input 'split(" ")')"
           fi
-          echo "::set-output name=this::$workspaces"
+          echo "::set-output name=this::${workspaces}"
   clean:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
@@ -55,6 +57,7 @@ jobs:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
       TF_LOCK: ${{ github.event.inputs.lock }}
+      TF_WORKSPACE_OPT: ${{ matrix.workspace }}
       AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
@@ -77,14 +80,17 @@ jobs:
         working-directory: terraform
       - name: Select terraform workspace
         run: |
-          terraform workspace select '${{ matrix.workspace }}' || terraform workspace new '${{ matrix.workspace }}'
-          echo 'TF_WORKSPACE=${{ matrix.workspace }}' >> $GITHUB_ENV
+          terraform workspace select "${TF_WORKSPACE_OPT}" || terraform workspace new "${TF_WORKSPACE_OPT}"
+          echo "TF_WORKSPACE=${TF_WORKSPACE_OPT}" >> $GITHUB_ENV
         working-directory: terraform
       - name: Clean
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry-run }}
+          REGEX: ^${{ github.event.inputs.regex }}$
         run: |
           dryRunFlag=''
-          if [[ '${{ github.event.inputs.dry-run }}' == 'true' ]]; then
+          if [[ "${DRY_RUN}" == 'true' ]]; then
             dryRunFlag='-dry-run'
           fi
-          terraform state list | grep -E '^${{ github.event.inputs.regex }}$' | sed 's/"/\\"/g' | xargs -I {} terraform state rm -lock=${{ env.TF_LOCK }} $dryRunFlag {}
+          terraform state list | grep -E "${REGEX}" | sed 's/"/\\"/g' | xargs -I {} terraform state rm -lock="${TF_LOCK}" "${dryRunFlag}" {}
         working-directory: terraform

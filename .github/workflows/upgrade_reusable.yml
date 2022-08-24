@@ -45,14 +45,14 @@ jobs:
       - name: Copy files from the template
         run: |
           for file in $(git ls-files ':!:github/*.yml' ':!:scripts/__tests__/*' ':!:terraform/*_override.tf' ':!:.github/workflows/*_reusable.yml' ':!:README.md'); do
-            mkdir -p "../github-mgmt/$(dirname "$file")"
-            cp -f "$file" "../github-mgmt/$file"
+            mkdir -p "../github-mgmt/$(dirname "${file}")"
+            cp -f "${file}" "../github-mgmt/${file}"
           done
         working-directory: github-mgmt-template
       - uses: ./github-mgmt-template/.github/actions/git-config-user
       - run: |
           git add --all
-          git diff-index --quiet HEAD || git commit --message='upgrade (#${{ github.run_number }})'
+          git diff-index --quiet HEAD || git commit --message="upgrade (#${GITHUB_RUN_NUMBER})"
         working-directory: github-mgmt
       - uses: ./github-mgmt-template/.github/actions/git-push
         env:
