@@ -190,13 +190,26 @@ export class GitHub {
   async getRepositoryFile(repository: string, path: string) {
     core.info(`Checking if ${repository}/${path} exists...`)
     try {
-      return (
-        await this.client.repos.getContent({
+      const repo = (
+        await this.client.repos.get({
           owner: env.GITHUB_ORG,
-          repo: repository,
-          path
+          repo: repository
         })
-      ).data as {path: string; url: string}
+      ).data
+      if (repo.owner.login === env.GITHUB_ORG && repo.name === repository) {
+        return (
+          await this.client.repos.getContent({
+            owner: env.GITHUB_ORG,
+            repo: repository,
+            path
+          })
+        ).data as {path: string; url: string}
+      } else {
+        core.debug(
+          `${env.GITHUB_ORG}/${repository} has moved to ${repo.owner.login}/${repo.name}`
+        )
+        return undefined
+      }
     } catch (e) {
       core.debug(JSON.stringify(e))
       return undefined
