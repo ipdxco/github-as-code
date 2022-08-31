@@ -87,7 +87,7 @@ jobs:
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git_branch="${GITHUB_REF_NAME}-sync-${TF_WORKSPACE }"
+          git_branch="${GITHUB_REF_NAME}-sync-${TF_WORKSPACE}"
           git checkout -B "${git_branch}"
           git add --all
           git diff-index --quiet HEAD || git commit --message="chore: sync ${TF_WORKSPACE} (#${GITHUB_RUN_NUMBER})'
