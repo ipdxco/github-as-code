@@ -31,10 +31,15 @@ async function updatePullRequests() {
       continue
     }
 
-    github.client.pulls.updateBranch({
-      ...context.repo,
-      pull_number: pull.number
-    })
+    try {
+      await github.client.pulls.updateBranch({
+        ...context.repo,
+        pull_number: pull.number
+      })
+    } catch (error) {
+      // we might be unable to update the pull request if it there is a conflict
+      console.error(error)
+    }
   }
 }
 
