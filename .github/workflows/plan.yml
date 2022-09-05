@@ -62,11 +62,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - if: github.event_name == 'pull_request_target'
-        run: |
-          git fetch origin pull/${{ github.event.pull_request.number }}/head
-          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
         env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
