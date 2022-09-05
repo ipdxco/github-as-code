@@ -90,7 +90,7 @@ jobs:
           git_branch="${GITHUB_REF_NAME}-sync-${TF_WORKSPACE}"
           git checkout -B "${git_branch}"
           git add --all
-          git diff-index --quiet HEAD || git commit --message="chore: sync ${TF_WORKSPACE} (#${GITHUB_RUN_NUMBER})'
+          git diff-index --quiet HEAD || git commit --message="chore: sync ${TF_WORKSPACE} (#${GITHUB_RUN_NUMBER})"
           git push origin "${git_branch}" --force
   pull_request:
     needs: [prepare, sync]
