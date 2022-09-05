@@ -124,6 +124,7 @@ export class Config {
     return this.findResource(resource) !== undefined
   }
 
+  // updates the resource if it already exists, otherwise adds it
   addResource<T extends Resource>(
     resource: T,
     canDeleteProperties: boolean = false
