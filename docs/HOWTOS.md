@@ -110,16 +110,16 @@ I push my changes to a new branch and create a PR. An admin reviews the PR, sync
 
 ### ...add a new config fix rule?
 
-- Create a new _.ts_ file in `scripts/src/actions/fix-yaml-config` directory
+- Create or modify `scripts/src/actions/fix-yaml-config.ts` file
 
 *Example*
 
 I want to ensure that all the public repositories in my organization have their default branches protected.
 
-To do that, I create `scripts/src/actions/fix-yaml-config/public-default-branches-are-protected.ts` file with the following content:
+To do that, I ensure the following content is present in `scripts/src/actions/fix-yaml-config.ts`:
 ```ts
 import 'reflect-metadata'
-import { protectDefaultBranches } from '../shared/protect-default-branches'
+import { protectDefaultBranches } from './shared/protect-default-branches'
 
 protectDefaultBranches()
 ```
