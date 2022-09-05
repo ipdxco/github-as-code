@@ -1,73 +1,51 @@
 name: Plan
 
 on:
-  workflow_run:
-    workflows:
-      - "Plan (pre)"
-    types:
-      - completed
+  pull_request_target:
+    branches: [master] # no need to create plans on other PRs because they can be only used after a merge to the default branch
   workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: plan-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true # we only care about the most recent plan for any given PR/ref
 
 jobs:
   prepare:
-    if: (github.event_name == 'workflow_dispatch' &&
-        github.ref_name == github.event.repository.default_branch) ||
-        (github.event_name == 'workflow_run' &&
-        github.event.workflow_run.conclusion == 'success')
     permissions:
-      actions: read
       contents: read
-      statuses: write
+      pull-requests: read
     name: Prepare
     runs-on: ubuntu-latest
     outputs:
       workspaces: ${{ steps.workspaces.outputs.this }}
-      sha: ${{ steps.github.outputs.sha }}
-      ref: ${{ steps.github.outputs.ref }}
-      number: ${{ steps.github.outputs.number }}
-    defaults:
-      run:
-        shell: bash
     steps:
-      - name: Find repository and sha to checkout
-        id: github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
-            sha='${{ github.sha }}'
-            ref='${{ github.sha }}'
-          elif [[ '${{ github.event_name }}' == 'workflow_run' ]]; then
-            sha='${{ github.event.workflow_run.head_commit.id }}'
-            ref="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs' --jq '.jobs[] | .steps[] | .name | select(startswith("Run ref="))')"
-            ref="${ref#Run ref=}"
-            number="$(gh api '/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs' --jq '.jobs[] | .steps[] | .name | select(startswith("Run number="))')"
-            number="${number#Run number=}"
-          fi
-          echo "::set-output name=sha::$sha"
-          echo "::set-output name=ref::$ref"
-          echo "::set-output name=number::$number"
-      - run: sha=${{ steps.github.outputs.sha }}
-      - env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh api 'repos/${{ github.repository }}/statuses/${{ steps.github.outputs.sha }}' -f context='Plan' -f state='pending' -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ steps.github.outputs.ref }}
+      - if: github.event_name == 'pull_request_target'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          # we delete github directory first to ensure we only get YAMLs from the PR
+          rm -rf github && git checkout "${SHA}" -- github
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
   plan:
     needs: [prepare]
-    if: needs.prepare.outputs.workspaces != ''
     permissions:
       contents: read
+      pull-requests: read
     strategy:
       fail-fast: false
       matrix:
-        workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
+        workspace: ${{ fromJson(needs.prepare.outputs.workspaces || '[]') }}
     name: Plan
     runs-on: ubuntu-latest
     env:
@@ -80,41 +58,35 @@ jobs:
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
       GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
       TF_VAR_write_delay_ms: 300
-    defaults:
-      run:
-        shell: bash
-        working-directory: terraform
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ needs.prepare.outputs.ref }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - if: github.event_name == 'pull_request_target'
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head
+          rm -rf github && git checkout ${{ github.event.pull_request.head.sha }} -- github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
           terraform_version: 1.1.4
       - name: Initialize terraform
         run: terraform init
-      - name: Check terraform lock
-        if: github.event_name == 'workflow_run'
-        run: git diff --exit-code .terraform.lock.hcl
-      - name: Format terraform
-        run: terraform fmt -check
-      - name: Validate terraform
-        run: terraform validate -no-color
+        working-directory: terraform
       - name: Plan terraform
-        id: plan
-        run: terraform plan -refresh=false -lock=false -out=${{ env.TF_WORKSPACE }}.tfplan -no-color
+        run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
+        working-directory: terraform
       - name: Upload terraform plan
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan
+          name: ${{ env.TF_WORKSPACE }}_${{ github.event.pull_request.head.sha || github.sha }}.tfplan
           path: terraform/${{ env.TF_WORKSPACE }}.tfplan
           if-no-files-found: error
           retention-days: 90
   comment:
     needs: [prepare, plan]
-    if: github.event_name == 'workflow_run'
+    if: github.event_name == 'pull_request_target'
     permissions:
       contents: read
       pull-requests: write
@@ -123,15 +95,17 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.RO_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: terraform
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ needs.prepare.outputs.ref }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - if: github.event_name == 'pull_request_target'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
         uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
         with:
@@ -139,6 +113,7 @@ jobs:
           terraform_wrapper: false
       - name: Initialize terraform
         run: terraform init
+        working-directory: terraform
       - name: Download terraform plans
         uses: actions/download-artifact@v2
         with:
@@ -146,28 +121,30 @@ jobs:
       - name: Show terraform plans
         run: |
           for plan in $(find . -type f -name '*.tfplan'); do
-            echo "<details><summary>$(basename "$plan" '.tfplan')</summary>" >> TERRAFORM_PLANS.md
+            echo "<details><summary>$(basename "${plan}" '.tfplan')</summary>" >> TERRAFORM_PLANS.md
             echo '' >> TERRAFORM_PLANS.md
             echo '```' >> TERRAFORM_PLANS.md
-            echo "$(terraform show -no-color "$plan" 2>&1)" >> TERRAFORM_PLANS.md
+            echo "$(terraform show -no-color "${plan}" 2>&1)" >> TERRAFORM_PLANS.md
             echo '```' >> TERRAFORM_PLANS.md
             echo '' >> TERRAFORM_PLANS.md
             echo '</details>' >> TERRAFORM_PLANS.md
           done
           cat TERRAFORM_PLANS.md
+        working-directory: terraform
       - name: Prepare comment
         run: |
           echo 'COMMENT<<EOF' >> $GITHUB_ENV
           if [[ $(wc -c TERRAFORM_PLANS.md | cut -d' ' -f1) -ge 65000 ]]; then
-            echo 'Terraform plans are too long to post as a comment. Please inspect [Plan > Comment > Show terraform plans](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) instead.' >> $GITHUB_ENV
+            echo "Terraform plans are too long to post as a comment. Please inspect [Plan > Comment > Show terraform plans](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) instead." >> $GITHUB_ENV
           else
             cat TERRAFORM_PLANS.md >> $GITHUB_ENV
           fi
           echo 'EOF' >> $GITHUB_ENV
+        working-directory: terraform
       - name: Comment on pull request
         uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
         with:
-          number: ${{ needs.prepare.outputs.number }}
+          number: ${{ github.event.pull_request.number }}
           message: |
             Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
 

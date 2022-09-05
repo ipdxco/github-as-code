@@ -42,7 +42,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
           restrict_dismissals: false
         required_status_checks:
           contexts:
-            - Plan
+            - Comment
           strict: true
     collaborators: # This group defines repository collaborators (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_collaborator)
       admin: # This array defines repository collaborators with permission=admin

@@ -39,16 +39,17 @@ jobs:
         id: sha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULLS: ${{ steps.pull_request.outputs.issues-or-pull-requests }}
         run: |
-          if [[ '${{ github.event_name }}' == 'push' ]]; then
-            number="$(jq -r '.[0].number // ""' <<< '${{ steps.pull_request.outputs.issues-or-pull-requests }}')"
-            if [[ ! -z "$number" ]]; then
-              sha="$(gh pr view "$number" --json commits --jq '.commits[-1].oid')"
+          if [[ "${GITHUB_EVENT_NAME}" == 'push' ]]; then
+            number="$(jq -r '.[0].number // ""' <<< "${PULLS}")"
+            if [[ ! -z "${number}" ]]; then
+              sha="$(gh pr view "${number}" --json commits --jq '.commits[-1].oid')"
             fi
           else
-            sha='${{ github.sha }}'
+            sha="${GITHUB_SHA}"
           fi
-          echo "::set-output name=this::$sha"
+          echo "::set-output name=this::${sha}"
   apply:
     needs: [prepare]
     if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''
@@ -87,6 +88,7 @@ jobs:
       - name: Terraform Plan Download
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh run download -n ${{ env.TF_WORKSPACE }}_${{ needs.prepare.outputs.sha }}.tfplan --repo ${{ github.repository }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: gh run download -n "${TF_WORKSPACE}_${SHA}.tfplan" --repo "${GITHUB_REPOSITORY}"
       - name: Terraform Apply
-        run: terraform apply -lock-timeout=0s -no-color ${{ env.TF_WORKSPACE }}.tfplan
+        run: terraform apply -lock-timeout=0s -no-color "${TF_WORKSPACE}.tfplan"
