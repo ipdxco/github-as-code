@@ -22,6 +22,11 @@ class Template {
   @Expose() repository?: string
 }
 
+export enum Visibility {
+  Private = 'private',
+  Public = 'public'
+}
+
 @Exclude()
 export class Repository implements Resource {
   static StateType: string = 'github_repository'
@@ -108,7 +113,7 @@ export class Repository implements Resource {
   @Type(() => Template)
   template?: Template
   @Expose() topics?: string[]
-  @Expose() visibility?: string
+  @Expose() visibility?: Visibility
   @Expose() vulnerability_alerts?: boolean
 
   getSchemaPath(_schema: ConfigSchema): Path {
