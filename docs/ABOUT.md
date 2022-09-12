@@ -48,3 +48,10 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 - [github_team_membership](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership)
 - [github_repository_file](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file)
 
+# Config Fix Rules
+
+With GitHub Management, you can write config fix rules in TypeScript. Your code will get executed by the `Fix` workflow on each PR (if the repository isn't private) and after each `Apply` workflow run. If your code execution results in any changes to the YAML configuration files, they will be either pushed directly in case of PRs or proposed through PRs otherwise.
+
+Config fix rules have to be put inside `scripts/src/actions/fix-yaml-config.ts` file. Look around `scripts/src` to find useful abstractions for YAML manipulation. You can also browse through a catalog of ready-made rules in `scripts/src/actions/shared`.
+
+You can instruct GitHub Management to skip `Fix` workflow execution on your commit by adding a `[skip fix]` suffix to the first line of your commit message.

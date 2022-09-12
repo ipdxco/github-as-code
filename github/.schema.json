@@ -208,7 +208,7 @@
                 "type": "array"
               },
               "visibility": {
-                "type": "string"
+                "$ref": "#/definitions/Visibility"
               },
               "vulnerability_alerts": {
                 "type": "boolean"
@@ -353,6 +353,13 @@
         }
       },
       "type": "object"
+    },
+    "Visibility": {
+      "enum": [
+        "private",
+        "public"
+      ],
+      "type": "string"
     }
   }
 }
