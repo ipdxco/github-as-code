@@ -22,7 +22,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
       README.md:
         content: README.md # This field accepts either a relative path to a file from ./files directory...
       docs/HELLO.md:
-        content: > # ... or a content string
+        content: | # ... or a content string
           Hi!
     branch_protection: # This group defines branch protection rules (https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection)
       master: # This key accepts only EXACT branch names, unlike the terraform resource which accepts any pattern

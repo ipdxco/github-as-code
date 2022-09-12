@@ -1,8 +1,8 @@
 {
-  "$ref": "#/definitions/Schema",
+  "$ref": "#/definitions/ConfigSchema",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "Schema": {
+    "ConfigSchema": {
       "additionalProperties": false,
       "properties": {
         "members": {
@@ -50,79 +50,7 @@
               },
               "branch_protection": {
                 "additionalProperties": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "allows_deletions": {
-                      "type": "boolean"
-                    },
-                    "allows_force_pushes": {
-                      "type": "boolean"
-                    },
-                    "enforce_admins": {
-                      "type": "boolean"
-                    },
-                    "push_restrictions": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array"
-                    },
-                    "require_conversation_resolution": {
-                      "type": "boolean"
-                    },
-                    "require_signed_commits": {
-                      "type": "boolean"
-                    },
-                    "required_linear_history": {
-                      "type": "boolean"
-                    },
-                    "required_pull_request_reviews": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "dismiss_stale_reviews": {
-                          "type": "boolean"
-                        },
-                        "dismissal_restrictions": {
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": "array"
-                        },
-                        "pull_request_bypassers": {
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": "array"
-                        },
-                        "require_code_owner_reviews": {
-                          "type": "boolean"
-                        },
-                        "required_approving_review_count": {
-                          "type": "number"
-                        },
-                        "restrict_dismissals": {
-                          "type": "boolean"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "required_status_checks": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "contexts": {
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": "array"
-                        },
-                        "strict": {
-                          "type": "boolean"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/definitions/RepositoryBranchProtectionRule"
                 },
                 "type": "object"
               },
@@ -173,16 +101,7 @@
               },
               "files": {
                 "additionalProperties": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "content": {
-                      "type": "string"
-                    },
-                    "overwrite_on_create": {
-                      "type": "boolean"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/definitions/RepositoryFile"
                 },
                 "type": "object"
               },
@@ -331,16 +250,106 @@
                 "type": "string"
               },
               "privacy": {
-                "enum": [
-                  "closed",
-                  "secret"
-                ],
-                "type": "string"
+                "$ref": "#/definitions/Privacy"
               }
             },
             "type": "object"
           },
           "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "Privacy": {
+      "enum": [
+        "closed",
+        "secret"
+      ],
+      "type": "string"
+    },
+    "RepositoryBranchProtectionRule": {
+      "additionalProperties": false,
+      "properties": {
+        "allows_deletions": {
+          "type": "boolean"
+        },
+        "allows_force_pushes": {
+          "type": "boolean"
+        },
+        "enforce_admins": {
+          "type": "boolean"
+        },
+        "push_restrictions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "require_conversation_resolution": {
+          "type": "boolean"
+        },
+        "require_signed_commits": {
+          "type": "boolean"
+        },
+        "required_linear_history": {
+          "type": "boolean"
+        },
+        "required_pull_request_reviews": {
+          "additionalProperties": false,
+          "properties": {
+            "dismiss_stale_reviews": {
+              "type": "boolean"
+            },
+            "dismissal_restrictions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "pull_request_bypassers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "require_code_owner_reviews": {
+              "type": "boolean"
+            },
+            "required_approving_review_count": {
+              "type": "number"
+            },
+            "restrict_dismissals": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "required_status_checks": {
+          "additionalProperties": false,
+          "properties": {
+            "contexts": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "strict": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "RepositoryFile": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "overwrite_on_create": {
+          "type": "boolean"
         }
       },
       "type": "object"
