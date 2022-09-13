@@ -7,7 +7,7 @@ export async function protectDefaultBranches(
 ): Promise<void> {
   const config = Config.FromPath()
 
-  const repositories = config.getResources(Repository)
+  const repositories = config.getResources(Repository).filter(r => !r.archived)
 
   for (const repository of repositories) {
     if (includePrivate || repository.visibility !== Visibility.Private) {
