@@ -178,3 +178,5 @@ teams:
         - galargh
         - laurentsenta
     privacy: closed
+  w3dt-stewards:
+    privacy: closed

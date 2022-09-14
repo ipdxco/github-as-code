@@ -48,7 +48,7 @@ GitHub.github = {
 global.ResourceCounts = {
   [Member.name]: 2,
   [Repository.name]: 7,
-  [Team.name]: 1,
+  [Team.name]: 2,
   [RepositoryCollaborator.name]: 1,
   [RepositoryBranchProtectionRule.name]: 1,
   [RepositoryTeam.name]: 7,
