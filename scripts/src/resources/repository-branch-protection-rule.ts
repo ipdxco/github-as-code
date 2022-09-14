@@ -58,9 +58,9 @@ export class RepositoryBranchProtectionRule implements Resource {
             `:${resource.values.pattern}`
           )[0]
           const required_pull_request_reviews =
-            resource.values.required_pull_request_reviews[0]
+            resource.values.required_pull_request_reviews?.at(0)
           const required_status_checks =
-            resource.values.required_status_checks[0]
+            resource.values.required_status_checks?.at(0)
           rules.push(
             plainToClassFromExist(
               new RepositoryBranchProtectionRule(

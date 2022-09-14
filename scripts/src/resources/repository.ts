@@ -50,10 +50,10 @@ export class Repository implements Resource {
           resource.mode === 'managed'
         ) {
           const pages = {
-            ...resource.values.pages[0],
-            source: {...resource.values.pages[0]?.source?.[0]}
+            ...resource.values.pages?.at(0),
+            source: {...resource.values.pages?.at(0)?.source?.at(0)}
           }
-          const template = resource.values.template[0]
+          const template = resource.values.template?.at(0)
           repositories.push(
             plainToClassFromExist(new Repository(resource.values.name), {
               ...resource.values,

@@ -42,12 +42,14 @@ export class State {
 
   private updateIgnoredPropertiesFrom(path: string) {
     if (fs.existsSync(path)) {
-      const hcl = HCL.parseToObject(fs.readFileSync(path))?.[0]
+      const hcl = HCL.parseToObject(fs.readFileSync(path))?.at(0)
       for (const [name, resource] of Object.entries(hcl?.resource ?? {}) as [
         string,
         any
       ][]) {
-        const properties = resource?.this?.[0]?.lifecycle?.[0]?.ignore_changes
+        const properties = resource?.this
+          ?.at(0)
+          ?.lifecycle?.at(0)?.ignore_changes
         if (properties !== undefined) {
           this._ignoredProperties[name] = properties.map((v: string) =>
             v.substring(2, v.length - 1)
@@ -59,8 +61,8 @@ export class State {
 
   private updateIgnoredTypesFrom(path: string) {
     if (fs.existsSync(path)) {
-      const hcl = HCL.parseToObject(fs.readFileSync(path))?.[0]
-      const types = hcl?.locals?.[0]?.resource_types
+      const hcl = HCL.parseToObject(fs.readFileSync(path))?.at(0)
+      const types = hcl?.locals?.at(0)?.resource_types
       if (types !== undefined) {
         this._ignoredTypes = ResourceConstructors.map(c => c.StateType).filter(
           t => !types.includes(t)
