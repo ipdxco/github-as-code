@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - scripts: to export tf resource definitions and always sort before save
 - plan: to be triggered on pull_request_target
 - plan: to only check out github directory from the PR
+- plan: to wait for Apply workflow runs to finish
 
 ### Fixed
 - links to supported resources in HOWTOs
