@@ -7,7 +7,7 @@ async function run(): Promise<void> {
   const state = await State.New()
   const config = Config.FromPath()
 
-  sync(state, config)
+  await sync(state, config)
 
   config.save()
 }
