@@ -177,6 +177,7 @@ teams:
       maintainer:
         - galargh
         - laurentsenta
+    parent_team_id: w3dt-stewards
     privacy: closed
   w3dt-stewards:
     privacy: closed
