@@ -32,7 +32,7 @@ export class Team implements Resource {
               (r: any) =>
                 r.type === 'github_team' &&
                 r.mode === 'managed' &&
-                r.values.id === parent_team_id
+                `${r.values.id}` === `${parent_team_id}`
             )?.values?.name
           }
           teams.push(

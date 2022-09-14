@@ -38,3 +38,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PR parsing in the update workflow
 - array head retrieval in scripts
 - team imports
+- parent_team_id retrieval from state
