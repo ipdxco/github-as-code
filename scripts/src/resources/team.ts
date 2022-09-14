@@ -17,7 +17,7 @@ export class Team implements Resource {
     const teams = await github.listTeams()
     const result: [Id, Team][] = []
     for (const team of teams) {
-      result.push([team.name, new Team(team.name)])
+      result.push([`${team.id}`, new Team(team.name)])
     }
     return result
   }
