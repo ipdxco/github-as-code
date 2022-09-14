@@ -16,6 +16,7 @@ concurrency:
 jobs:
   prepare:
     permissions:
+      actions: read
       contents: read
       pull-requests: read
     name: Prepare
@@ -37,6 +38,15 @@ jobs:
       - name: Discover workspaces
         id: workspaces
         run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+      - name: Wait for Apply to finish
+        run: |
+          while [[ "$(gh api /repos/${{ github.repository }}/actions/workflows/apply.yml/runs --jq '.workflow_runs | map(.status) | map(select(. != "completed")) | length')" != '0' ]]; do
+            echo "Waiting for all Apply workflow runs to finish..."
+            sleep 10
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        timeout-minutes: 10
   plan:
     needs: [prepare]
     permissions:
