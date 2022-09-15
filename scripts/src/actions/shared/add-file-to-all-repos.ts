@@ -5,14 +5,14 @@ import {RepositoryFile} from '../../resources/repository-file'
 export async function addFileToAllRepos(
   name: string,
   content: string,
-  exclude: string[] = []
+  repositoryFilter: (repository: Repository) => boolean = () => true
 ): Promise<void> {
   const config = Config.FromPath()
 
   const repositories = config
     .getResources(Repository)
     .filter(r => !r.archived)
-    .filter(r => !exclude.includes(r.name))
+    .filter(repositoryFilter)
 
   for (const repository of repositories) {
     const file = new RepositoryFile(repository.name, name)
