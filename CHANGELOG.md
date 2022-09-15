@@ -42,3 +42,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - team imports
 - parent_team_id retrieval from state
 - saving config sync result
+- how dry run flag is passed in the clean workflow

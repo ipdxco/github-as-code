@@ -92,5 +92,5 @@ jobs:
           if [[ "${DRY_RUN}" == 'true' ]]; then
             dryRunFlag='-dry-run'
           fi
-          terraform state list | grep -E "${REGEX}" | sed 's/"/\\"/g' | xargs -I {} terraform state rm -lock="${TF_LOCK}" "${dryRunFlag}" {}
+          terraform state list | grep -E "${REGEX}" | sed 's/"/\\"/g' | xargs -I {} terraform state rm -lock="${TF_LOCK}" ${dryRunFlag} {}
         working-directory: terraform
