@@ -161,7 +161,7 @@ jobs:
       - if: steps.github-modified.outputs.this == 'true'
         run: |
           git add --all -- github
-          git commit -m "chore: fix [skip fix]"
+          git commit -m "fix@${GITHUB_RUN_ID} [skip fix]"
         working-directory: head
       - if: steps.github-modified.outputs.this == 'true' && github.event_name == 'pull_request_target'
         env:
