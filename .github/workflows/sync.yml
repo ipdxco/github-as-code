@@ -90,7 +90,7 @@ jobs:
           git_branch="${GITHUB_REF_NAME}-sync-${TF_WORKSPACE}"
           git checkout -B "${git_branch}"
           git add --all
-          git diff-index --quiet HEAD || git commit --message="chore: sync ${TF_WORKSPACE} (#${GITHUB_RUN_NUMBER})"
+          git diff-index --quiet HEAD || git commit --message="sync@${GITHUB_RUN_ID} ${TF_WORKSPACE}"
           git push origin "${git_branch}" --force
   pull_request:
     needs: [prepare, sync]
@@ -118,7 +118,7 @@ jobs:
         run: |
           echo "${GITHUB_RUN_ID}" > .sync
           git add .sync
-          git commit --message="chore: sync@${GITHUB_RUN_ID}"
+          git commit --message="sync@${GITHUB_RUN_ID}"
           while read workspace; do
             workspace_branch="${GITHUB_REF_NAME}-sync-${workspace}"
             git fetch origin "${workspace_branch}"

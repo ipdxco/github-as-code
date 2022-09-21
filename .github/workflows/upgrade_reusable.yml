@@ -52,7 +52,7 @@ jobs:
       - uses: ./github-mgmt-template/.github/actions/git-config-user
       - run: |
           git add --all
-          git diff-index --quiet HEAD || git commit --message="upgrade (#${GITHUB_RUN_NUMBER})"
+          git diff-index --quiet HEAD || git commit --message="upgrade@${GITHUB_RUN_ID}"
         working-directory: github-mgmt
       - uses: ./github-mgmt-template/.github/actions/git-push
         env:
