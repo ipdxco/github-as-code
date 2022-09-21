@@ -49,39 +49,39 @@ I push my changes to a new branch and create a PR. An admin reviews the PR and m
 ### ...start managing new resource type with GitHub Management?
 
 - Add one of the [supported resources](ABOUT.md#supported-resources) names to the `resource_types` array in [terraform/locals_override.tf](../terraform/locals_override.tf)
-- Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github) while using the `branch` with your changes as a target to import all the resources you want to manage for the organization
+- Follow [How to apply GitHub Management changes to GitHub?](#apply-github-management-changes-to-github) - *the plan should not contain any changes*
+- Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github) to import all the resources you want to manage for the organization
 
 *Example*
 
 I want to be able to configure who the member of the `protocol` organization is through GitHub Management.
 
-I add `github_membership` to `resource_types` array in [terraform/locals_override.tf](../terraform/locals_override.tf). I push my changes to a new branch and create a PR. An admin reviews the PR, synchronizes my branch with GitHub configuration and merges the PR if everything looks OK.
+I add `github_membership` to `resource_types` array in [terraform/locals_override.tf](../terraform/locals_override.tf). I push my changes to a new branch and create a PR. An admin reviews the PR and merges the PR if everything looks OK. Then, they synchronize GitHub Management with GitHub configuration.
 
-### ...start managing new resource attribute through GitHub Management?
+### ...stop managing a resource attribute through GitHub Management?
 
 - If it doesn't exist yet, create an entry for the resource in [terraform/resources_override.tf](../terraform/resources_override.tf) and copy the `lifecycle.ignore_changes` block from the corresponding resource in [terraform/resources.tf](../terraform/resources.tf)
-- Comment out the attribute you want to start managing through GitHub Management in [terraform/resources_override.tf](../terraform/resources_override.tf)
-- Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github) while using the `branch` with your changes as a target to import all the resources you want to manage for the organization
+- Add the attribute name to the `lifecycle.ignore_changes` block of the resource
+- Follow [How to apply GitHub Management changes to GitHub?](#apply-github-management-changes-to-github) - *the plan should not contain any changes*
+- Follow [How to synchronize GitHub Management with GitHub?](#synchronize-github-management-with-github) to remove all the resource attributes you do not want to manage for the organization anymore
 
 *Example*
 
-I want to be able to configure the roles of `protocol` organization members through GitHub Management.
+I do not want to configure the roles of `protocol` organization members through GitHub Management anymore.
 
-I ensure that `terraform/resources_override.tf` contains the following entry (notice the commented out `role` in `ignore_changes` list):
+I ensure that `terraform/resources_override.tf` contains the following entry:
 ```tf
 resource "github_membership" "this" {
   lifecycle {
     # @resources.membership.ignore_changes
     ignore_changes = [
-      etag,
-      id,
-      # role
+      role
     ]
   }
 }
 ```
 
-I push my changes to a new branch and create a PR. An admin reviews the PR, synchronizes my branch with GitHub configuration and merges the PR if everything looks OK.
+I push my changes to a new branch and create a PR. An admin reviews the PR and merges the PR if everything looks OK. Then, they synchronize GitHub Management with GitHub configuration.
 
 ### ...apply GitHub Management changes to GitHub?
 
