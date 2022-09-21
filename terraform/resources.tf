@@ -124,6 +124,7 @@ resource "github_branch_protection" "this" {
     content {
       dismiss_stale_reviews           = try(required_pull_request_reviews.value["dismiss_stale_reviews"], null)
       dismissal_restrictions          = try(required_pull_request_reviews.value["dismissal_restrictions"], null)
+      pull_request_bypassers          = try(required_pull_request_reviews.value["pull_request_bypassers"], null)
       require_code_owner_reviews      = try(required_pull_request_reviews.value["require_code_owner_reviews"], null)
       required_approving_review_count = try(required_pull_request_reviews.value["required_approving_review_count"], null)
       restrict_dismissals             = try(required_pull_request_reviews.value["restrict_dismissals"], null)
