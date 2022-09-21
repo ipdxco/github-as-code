@@ -93,10 +93,9 @@ I push my changes to a new branch and create a PR. An admin reviews the PR and m
 
 *NOTE*: Remember that the `Sync` operation modifes terraform state. Even if you run it from a branch, it modifies the global state that is shared with other branches. There is only one terraform state per organization.
 
-*NOTE*: If you run the `Sync` from an unprotected branch, then the workflow will commit changes to it directly.
+*NOTE*: `Sync` will force push changes directly to the branch you run it from.
 
 - Run `Sync` GitHub Action workflow from your desired `branch` - *this will import all the resources from the actual GitHub configuration state into GitHub Management*
-- Merge the pull request that the workflow created once the `Comment` check passes and you verify the plan posted as a comment - *the plan should not contain any changes*
 
 ### ...upgrade GitHub Management?
 

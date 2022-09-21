@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - plan: to wait for Apply workflow runs to finish
 - defaults: not to ignore any properties by default
 - add-file-to-all-repos: to accept a repo filter instead of an repo exclude list
+- sync: to push changes directly to the branch
 
 ### Fixed
 - links to supported resources in HOWTOs

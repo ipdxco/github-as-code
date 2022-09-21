@@ -122,8 +122,4 @@ jobs:
             git merge --strategy-option=theirs "origin/${workspace_branch}"
             git push origin --delete "${workspace_branch}"
           done <<< "$(jq -r '.[]' <<< "${WORKSPACES}")"
-      - uses: ./.github/actions/git-push
-        env:
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
-        with:
-          suffix: sync
+      - run: git push origin "${GITHUB_REF_NAME}" --force
