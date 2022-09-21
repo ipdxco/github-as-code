@@ -92,10 +92,10 @@ jobs:
           git add --all
           git diff-index --quiet HEAD || git commit --message="sync@${GITHUB_RUN_ID} ${TF_WORKSPACE}"
           git push origin "${git_branch}" --force
-  pull_request:
+  push:
     needs: [prepare, sync]
     if: needs.prepare.outputs.workspaces != ''
-    name: Pull request
+    name: Push
     runs-on: ubuntu-latest
     defaults:
       run:
