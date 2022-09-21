@@ -116,6 +116,9 @@ jobs:
       - env:
           WORKSPACES: ${{ needs.prepare.outputs.workspaces }}
         run: |
+          echo "${GITHUB_RUN_ID}" > .sync
+          git add .sync
+          git commit --message="chore: sync@${GITHUB_RUN_ID}"
           while read workspace; do
             workspace_branch="${GITHUB_REF_NAME}-sync-${workspace}"
             git fetch origin "${workspace_branch}"
