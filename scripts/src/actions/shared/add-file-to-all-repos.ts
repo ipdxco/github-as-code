@@ -1,6 +1,7 @@
 import {Config} from '../../yaml/config'
 import {Repository} from '../../resources/repository'
 import {RepositoryFile} from '../../resources/repository-file'
+import * as core from '@actions/core'
 
 export async function addFileToAllRepos(
   name: string,
@@ -18,7 +19,7 @@ export async function addFileToAllRepos(
     const file = new RepositoryFile(repository.name, name)
     file.content = content
     if (!config.someResource(file)) {
-      console.log(`Adding ${file.file} file to ${file.repository} repository`)
+      core.info(`Adding ${file.file} file to ${file.repository} repository`)
       config.addResource(file)
     }
   }
