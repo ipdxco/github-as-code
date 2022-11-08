@@ -46,9 +46,9 @@ jobs:
                   owner: process.env.GITHUB_REPOSITORY_OWNER,
                   repo: process.env.GITHUB_REPOSITORY.slice(process.env.GITHUB_REPOSITORY_OWNER.length + 1),
                   pull_number: search.items[0].number,
-                  per_page: 1
+                  per_page: 100
                 });
-                return pulls[0].sha;
+                return pulls.at(-1).sha;
               } else {
                 return '';
               }
