@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - automated commit messages: to include github run id information
 - apply: not to use deprecated GitHub API anymore
 - workflows: not to use deprecated GitHub Actions runners anymore
+- workflows: not to use deprecated GitHub Actions expressions anymore
 
 ### Fixed
 - links to supported resources in HOWTOs

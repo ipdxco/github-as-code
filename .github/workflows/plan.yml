@@ -37,7 +37,7 @@ jobs:
           rm -rf github && git checkout "${SHA}" -- github
       - name: Discover workspaces
         id: workspaces
-        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+        run: echo "this=$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)" >> $GITHUB_OUTPUT
       - name: Wait for Apply to finish
         run: |
           while [[ "$(gh api /repos/${{ github.repository }}/actions/workflows/apply.yml/runs --jq '.workflow_runs | map(.status) | map(select(. != "completed")) | length')" != '0' ]]; do

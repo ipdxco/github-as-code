@@ -35,7 +35,7 @@ jobs:
           else
             workspaces="$(echo "${WORKSPACES}" | jq --raw-input 'split(" ")')"
           fi
-          echo "::set-output name=this::${workspaces}"
+          echo "this=${workspaces}" >> $GITHUB_OUTPUT
   sync:
     needs: [prepare]
     if: needs.prepare.outputs.workspaces != ''
