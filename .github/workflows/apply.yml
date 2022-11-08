@@ -49,6 +49,8 @@ jobs:
                   per_page: 1
                 });
                 return pulls[0].sha;
+              } else {
+                return '';
               }
             } else {
               return process.env.GITHUB_SHA;
