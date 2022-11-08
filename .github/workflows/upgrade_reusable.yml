@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Generate app token
         id: token
-        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
         with:
           app_id: ${{ secrets.GITHUB_APP_ID }}
           installation_id: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}

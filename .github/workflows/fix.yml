@@ -94,7 +94,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.1.4
       - name: Initialize terraform
@@ -107,7 +107,7 @@ jobs:
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
       - name: Upload YAML config
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TF_WORKSPACE }}.yml
           path: github/${{ env.TF_WORKSPACE }}.yml
@@ -125,7 +125,7 @@ jobs:
     steps:
       - name: Generate app token
         id: token
-        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
         with:
           app_id: ${{ secrets.RW_GITHUB_APP_ID }}
           installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
@@ -142,7 +142,7 @@ jobs:
         with:
           path: base
       - name: Download YAML configs
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
       - name: Copy YAML configs
