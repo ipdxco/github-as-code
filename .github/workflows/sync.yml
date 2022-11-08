@@ -24,7 +24,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Discover workspaces
         id: workspaces
         env:
@@ -63,7 +63,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v1
         with:
@@ -109,7 +109,7 @@ jobs:
           installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/git-config-user
