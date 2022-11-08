@@ -25,7 +25,7 @@ jobs:
       workspaces: ${{ steps.workspaces.outputs.this }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -37,7 +37,7 @@ jobs:
           rm -rf github && git checkout "${SHA}" -- github
       - name: Discover workspaces
         id: workspaces
-        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+        run: echo "this=$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)" >> $GITHUB_OUTPUT
       - name: Wait for Apply to finish
         run: |
           while [[ "$(gh api /repos/${{ github.repository }}/actions/workflows/apply.yml/runs --jq '.workflow_runs | map(.status) | map(select(. != "completed")) | length')" != '0' ]]; do
@@ -70,7 +70,7 @@ jobs:
       TF_VAR_write_delay_ms: 300
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -80,7 +80,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.1.4
       - name: Initialize terraform
@@ -90,7 +90,7 @@ jobs:
         run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TF_WORKSPACE }}_${{ github.event.pull_request.head.sha || github.sha }}.tfplan
           path: terraform/${{ env.TF_WORKSPACE }}.tfplan
@@ -109,7 +109,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -119,7 +119,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.1.4
           terraform_wrapper: false
@@ -127,7 +127,7 @@ jobs:
         run: terraform init
         working-directory: terraform
       - name: Download terraform plans
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: terraform
       - name: Show terraform plans
@@ -154,7 +154,7 @@ jobs:
           echo 'EOF' >> $GITHUB_ENV
         working-directory: terraform
       - name: Comment on pull request
-        uses: marocchino/sticky-pull-request-comment@39c5b5dc7717447d0cba270cd115037d32d28443 # v2.2.0
+        uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56 # v2.3.0
         with:
           number: ${{ github.event.pull_request.number }}
           message: |

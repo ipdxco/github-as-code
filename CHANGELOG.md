@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add-file-to-all-repos: to accept a repo filter instead of an repo exclude list
 - sync: to push changes directly to the branch
 - automated commit messages: to include github run id information
+- apply: not to use deprecated GitHub API anymore
+- workflows: not to use deprecated GitHub Actions runners anymore
+- workflows: not to use deprecated GitHub Actions expressions anymore
 
 ### Fixed
 - links to supported resources in HOWTOs

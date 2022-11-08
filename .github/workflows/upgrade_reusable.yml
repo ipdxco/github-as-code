@@ -26,19 +26,19 @@ jobs:
     steps:
       - name: Generate app token
         id: token
-        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
         with:
           app_id: ${{ secrets.GITHUB_APP_ID }}
           installation_id: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GITHUB_APP_PEM_FILE }}
       - name: Checkout GitHub Management template
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: protocol/github-mgmt-template
           path: github-mgmt-template
           ref: ${{ github.event.inputs.ref }}
       - name: Checkout GitHub Management
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: github-mgmt
           token: ${{ steps.token.outputs.token }}

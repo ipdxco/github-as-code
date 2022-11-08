@@ -36,7 +36,7 @@ jobs:
       skip-fix: ${{ steps.skip-fix.outputs.this }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -47,7 +47,7 @@ jobs:
           rm -rf github && git checkout "${SHA}" -- github
       - name: Discover workspaces
         id: workspaces
-        run: echo "::set-output name=this::$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)"
+        run: echo "this=$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)" >> $GITHUB_OUTPUT
       - name: Check last commit
         id: skip-fix
         env:
@@ -55,9 +55,9 @@ jobs:
         run: |
           # this workflow doesn't continue if the last commit has [skip fix] suffix or there are no user defined fix rules
           if [[ "$(git log --format=%B -n 1 "${SHA}" | head -n 1)" == *"[skip fix]" ]] || ! test -f scripts/src/actions/fix-yaml-config.ts 2> /dev/null; then
-            echo "::set-output name=this::true"
+            echo "this=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=this::false"
+            echo "this=false" >> $GITHUB_OUTPUT
           fi
   fix:
     needs: [prepare]
@@ -83,7 +83,7 @@ jobs:
       TF_VAR_write_delay_ms: 300
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -94,7 +94,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # v1.3.2
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.1.4
       - name: Initialize terraform
@@ -107,7 +107,7 @@ jobs:
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
       - name: Upload YAML config
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TF_WORKSPACE }}.yml
           path: github/${{ env.TF_WORKSPACE }}.yml
@@ -125,24 +125,24 @@ jobs:
     steps:
       - name: Generate app token
         id: token
-        uses: tibdex/github-app-token@7ce9ffdcdeb2ba82b01b51d6584a6a85872336d4 # v1.5.1
+        uses: tibdex/github-app-token@021a2405c7f990db57f5eae5397423dcc554159c # v1.7.0
         with:
           app_id: ${{ secrets.RW_GITHUB_APP_ID }}
           installation_id: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           token: ${{ steps.token.outputs.token }}
           path: head
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: base
       - name: Download YAML configs
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
       - name: Copy YAML configs
@@ -151,9 +151,9 @@ jobs:
         id: github-modified
         run: |
           if [ -z "$(git status --porcelain -- github)" ]; then
-            echo "::set-output name=this::false"
+            echo "this=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=this::true"
+            echo "this=true" >> $GITHUB_OUTPUT
           fi
         working-directory: head
       - uses: ./base/.github/actions/git-config-user
