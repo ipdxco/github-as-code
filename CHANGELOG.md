@@ -52,3 +52,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - how sync invalidates PR plans
 - support for pull_request_bypassers in branch protection rules
 - how repository files are imported
+- how sync handles ignored types

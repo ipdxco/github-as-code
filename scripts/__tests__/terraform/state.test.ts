@@ -23,14 +23,12 @@ test('can retrieve resources from tf state', async () => {
 test('can ignore resource types', async () => {
   const config = await State.New()
 
-  const resources = config.getResources(Repository)
-  expect(resources).not.toHaveLength(0)
+  expect(config.isIgnored(Repository)).toBe(false)
 
   config['_ignoredTypes'] = ['github_repository']
   await config.refresh()
 
-  const refreshedResources = config.getResources(Repository)
-  expect(refreshedResources).toHaveLength(0)
+  expect(config.isIgnored(Repository)).toBe(true)
 })
 
 test('can ignore resource properties', async () => {
