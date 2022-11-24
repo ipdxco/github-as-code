@@ -77,7 +77,7 @@ export class State {
     if (state.values?.root_module?.resources !== undefined) {
       state.values.root_module.resources = state.values.root_module.resources
         .filter((r: any) => r.mode === 'managed')
-        .filter((r: any) => !this._ignoredTypes.includes(r.type))
+        // .filter((r: any) => !this._ignoredTypes.includes(r.type))
         .map((r: any) => {
           // TODO: remove nested values
           r.values = Object.fromEntries(
@@ -125,6 +125,12 @@ export class State {
     } else {
       throw new Error(`${resourceClass.name} is not supported`)
     }
+  }
+
+  isIgnored<T extends Resource>(
+    resourceClass: ResourceConstructor<T>
+  ): boolean {
+    return this._ignoredTypes.includes(resourceClass.StateType)
   }
 
   async addResource(id: Id, resource: Resource) {
