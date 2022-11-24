@@ -51,3 +51,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - how dry run flag is passed in the clean workflow
 - how sync invalidates PR plans
 - support for pull_request_bypassers in branch protection rules
+- how repository files are imported
