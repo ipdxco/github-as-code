@@ -224,13 +224,18 @@ export class GitHub {
         })
       ).data
       if (repo.owner.login === env.GITHUB_ORG && repo.name === repository) {
-        return (
+        const file = (
           await this.client.repos.getContent({
             owner: env.GITHUB_ORG,
             repo: repository,
-            path
+            path,
+            ref: repo.default_branch
           })
         ).data as {path: string; url: string}
+        return {
+          ...file,
+          ref: repo.default_branch
+        }
       } else {
         core.debug(
           `${env.GITHUB_ORG}/${repository} has moved to ${repo.owner.login}/${repo.name}`
