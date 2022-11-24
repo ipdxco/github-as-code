@@ -9,8 +9,9 @@ import * as cli from '@actions/exec'
 import * as fs from 'fs'
 import * as core from '@actions/core'
 import * as HCL from 'hcl2-parser'
+import * as thisModule from './state'
 
-async function loadState() {
+export async function loadState() {
   let source = ''
   if (env.TF_EXEC === 'true') {
     core.info('Loading state from Terraform state file')
@@ -33,7 +34,7 @@ async function loadState() {
 
 export class State {
   static async New() {
-    return new State(await loadState())
+    return new State(await thisModule.loadState())
   }
 
   private _ignoredProperties: Record<string, string[]> = {}
@@ -106,7 +107,7 @@ export class State {
         cwd: env.TF_WORKING_DIR
       })
     }
-    this.setState(await loadState())
+    this.setState(await thisModule.loadState())
   }
 
   getAllResources(): Resource[] {
