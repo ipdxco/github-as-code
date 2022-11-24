@@ -39,11 +39,12 @@ export class RepositoryFile implements Resource {
     const github = await GitHub.getGitHub()
     const result: [Id, RepositoryFile][] = []
     for (const file of files) {
-      if (
-        (await github.getRepositoryFile(file.repository, file.file)) !==
-        undefined
-      ) {
-        result.push([`${file.repository}/${file.file}`, file])
+      const remoteFile = await github.getRepositoryFile(
+        file.repository,
+        file.file
+      )
+      if (remoteFile !== undefined) {
+        result.push([`${file.repository}/${file.file}:${remoteFile.ref}`, file])
       }
     }
     return result

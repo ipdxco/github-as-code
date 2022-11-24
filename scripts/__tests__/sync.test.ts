@@ -50,7 +50,8 @@ test('sync new repository file', async () => {
   getRepositoryFileMock.mockImplementation(
     async (repository: string, path: string) => ({
       path,
-      url: `https://github.com/${env.GITHUB_ORG}/${repository}/blob/main/${path}`
+      url: `https://github.com/${env.GITHUB_ORG}/${repository}/blob/main/${path}`,
+      ref: 'main'
     })
   )
 
