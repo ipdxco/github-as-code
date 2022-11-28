@@ -42,6 +42,15 @@ GitHub.github = {
   },
   getRepositoryFile: async (_repository: string, _path: string) => {
     return undefined
+  },
+  listInvitations: async () => {
+    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+  },
+  listRepositoryInvitations: async () => {
+    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+  },
+  listTeamInvitations: async () => {
+    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 } as GitHub
 

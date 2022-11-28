@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - apply: not to use deprecated GitHub API anymore
 - workflows: not to use deprecated GitHub Actions runners anymore
 - workflows: not to use deprecated GitHub Actions expressions anymore
+- tf: to prevent destroy of membership and repository resources
 
 ### Fixed
 - links to supported resources in HOWTOs
@@ -53,3 +54,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for pull_request_bypassers in branch protection rules
 - how repository files are imported
 - how sync handles ignored types
+- how indices are represented in the state (always lowercase)
+- how sync handles pending invitations (now it does not ignore them)

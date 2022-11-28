@@ -247,4 +247,60 @@ export class GitHub {
       return undefined
     }
   }
+
+  async listInvitations() {
+    core.info('Listing invitations...')
+    const invitations = await this.client.paginate(
+      this.client.orgs.listPendingInvitations,
+      {
+        org: env.GITHUB_ORG
+      }
+    )
+    return invitations.filter(
+      i => i.failed_at === null || i.failed_at === undefined
+    )
+  }
+
+  async listRepositoryInvitations() {
+    const repositoryInvitations = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} invitations...`)
+      const invitations = await this.client.paginate(
+        this.client.repos.listInvitations,
+        {
+          owner: env.GITHUB_ORG,
+          repo: repository.name
+        }
+      )
+      repositoryInvitations.push(
+        ...invitations.filter(
+          i => i.expired === false || i.expired === undefined
+        )
+      )
+    }
+    return repositoryInvitations
+  }
+
+  async listTeamInvitations() {
+    this.client.orgs.listInvitationTeams
+    const teamInvitations = []
+    const teams = await this.listTeams()
+    for (const team of teams) {
+      core.info(`Listing ${team.name} invitations...`)
+      const invitations = await this.client.paginate(
+        this.client.teams.listPendingInvitationsInOrg,
+        {
+          org: env.GITHUB_ORG,
+          team_slug: team.slug
+        }
+      )
+      teamInvitations.push(
+        ...invitations
+          .filter(i => i.failed_at === null || i.failed_at === undefined)
+          .map(invitation => ({team, invitation}))
+      )
+    }
+    return teamInvitations
+  }
 }

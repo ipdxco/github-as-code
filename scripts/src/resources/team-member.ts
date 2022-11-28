@@ -2,6 +2,7 @@ import {GitHub} from '../github'
 import {Id, StateSchema} from '../terraform/schema'
 import {Path, ConfigSchema} from '../yaml/schema'
 import {Resource} from './resource'
+import {Team} from './team'
 
 export enum Role {
   Maintainer = 'maintainer',
@@ -12,8 +13,24 @@ export class TeamMember extends String implements Resource {
   static StateType: string = 'github_team_membership'
   static async FromGitHub(_members: TeamMember[]): Promise<[Id, TeamMember][]> {
     const github = await GitHub.getGitHub()
+    const invitations = await github.listTeamInvitations()
     const members = await github.listTeamMembers()
     const result: [Id, TeamMember][] = []
+    for (const invitation of invitations) {
+      const member = _members.find(
+        m =>
+          m.team === invitation.team.name &&
+          m.username === invitation.invitation.login!
+      )
+      result.push([
+        `${invitation.team.id}:${invitation.invitation.login}`,
+        new TeamMember(
+          invitation.team.name,
+          invitation.invitation.login!,
+          member?.role || Role.Member
+        )
+      ])
+    }
     for (const member of members) {
       result.push([
         `${member.team.id}:${member.member.login}`,
@@ -34,9 +51,19 @@ export class TeamMember extends String implements Resource {
           resource.type === TeamMember.StateType &&
           resource.mode === 'managed'
         ) {
-          const team = resource.index.split(`:${resource.values.username}`)[0]
+          const teamIndex = resource.index.split(`:`).slice(0, -1).join(`:`)
+          const team = state.values.root_module.resources.find(
+            (r: any) =>
+              r.type === Team.StateType &&
+              resource.mode === 'managed' &&
+              r.index === teamIndex
+          )
           members.push(
-            new TeamMember(team, resource.values.username, resource.values.role)
+            new TeamMember(
+              team.values.name || teamIndex,
+              resource.values.username,
+              resource.values.role
+            )
           )
         }
       }
