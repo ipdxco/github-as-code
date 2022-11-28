@@ -101,13 +101,17 @@ export class State {
     this.setState(source)
   }
 
+  async reset() {
+    this.setState(await thisModule.loadState())
+  }
+
   async refresh() {
     if (env.TF_EXEC === 'true') {
       await cli.exec(`terraform refresh -lock=${env.TF_LOCK}`, undefined, {
         cwd: env.TF_WORKING_DIR
       })
     }
-    this.setState(await thisModule.loadState())
+    await this.reset()
   }
 
   getAllResources(): Resource[] {
@@ -135,7 +139,7 @@ export class State {
 
   async addResource(id: Id, resource: Resource) {
     if (env.TF_EXEC === 'true') {
-      const address = resource.getStateAddress().replaceAll('"', '\\"')
+      const address = resource.getStateAddress().toLowerCase().replaceAll('"', '\\"')
       await cli.exec(
         `terraform import -lock=${env.TF_LOCK} "${address}" "${id}"`,
         undefined,
@@ -146,9 +150,13 @@ export class State {
 
   async removeResource(resource: Resource) {
     if (env.TF_EXEC === 'true') {
-      const address = resource.getStateAddress().replaceAll('"', '\\"')
+      const lowercaseAddress = resource.getStateAddress().toLowerCase()
+      const address = this._state?.values?.root_module?.resources?.find((r: any) => r.address.toLowerCase() === lowercaseAddress)?.address
+      if (address !== undefined) {
+        throw new Error(`Resource ${lowercaseAddress} not found in state`)
+      }
       await cli.exec(
-        `terraform state rm -lock=${env.TF_LOCK} "${address}"`,
+        `terraform state rm -lock=${env.TF_LOCK} "${address.replaceAll('"', '\\"')}"`,
         undefined,
         {cwd: env.TF_WORKING_DIR}
       )
@@ -160,7 +168,7 @@ export class State {
     for (const resource of oldResources) {
       if (
         !resources.some(
-          ([_i, r]) => r.getStateAddress() === resource.getStateAddress()
+          ([_i, r]) => r.getStateAddress().toLowerCase() === resource.getStateAddress().toLowerCase()
         )
       ) {
         await this.removeResource(resource)
@@ -169,7 +177,7 @@ export class State {
     for (const [id, resource] of resources) {
       if (
         !oldResources.some(
-          r => r.getStateAddress() === resource.getStateAddress()
+          r => r.getStateAddress().toLowerCase() === resource.getStateAddress().toLowerCase()
         )
       ) {
         await this.addResource(id, resource)

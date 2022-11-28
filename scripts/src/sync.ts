@@ -16,10 +16,6 @@ export async function sync(state: State, config: Config): Promise<void> {
   await state.sync(resources)
   await state.refresh()
 
-  const syncedResources = []
-  for (const resourceClass of ResourceConstructors) {
-    syncedResources.push(...state.getResources(resourceClass))
-  }
-
+  const syncedResources = state.getAllResources()
   config.sync(syncedResources)
 }
