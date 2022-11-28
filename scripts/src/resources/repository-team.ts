@@ -39,7 +39,7 @@ export class RepositoryTeam extends String implements Resource {
           resource.type === RepositoryTeam.StateType &&
           resource.mode === 'managed'
         ) {
-          const team = resource.index.split(`:${resource.values.repository}`)[0]
+          const team = resource.index.split(`:`).slice(0, -1).join(`:`)
           teams.push(
             new RepositoryTeam(
               resource.values.repository,

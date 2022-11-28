@@ -49,7 +49,7 @@ export class RepositoryBranchProtectionRule implements Resource {
           resource.mode === 'managed'
         ) {
           const repository = resource.index.split(
-            `:${resource.values.pattern}`
+            `:`
           )[0]
           const required_pull_request_reviews =
             resource.values.required_pull_request_reviews?.at(0)

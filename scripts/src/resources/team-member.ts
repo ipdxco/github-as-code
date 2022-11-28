@@ -34,7 +34,7 @@ export class TeamMember extends String implements Resource {
           resource.type === TeamMember.StateType &&
           resource.mode === 'managed'
         ) {
-          const team = resource.index.split(`:${resource.values.username}`)[0]
+          const team = resource.index.split(`:`).slice(0, -1).join(`:`)
           members.push(
             new TeamMember(team, resource.values.username, resource.values.role)
           )
