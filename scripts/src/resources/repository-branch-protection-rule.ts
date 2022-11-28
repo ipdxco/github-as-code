@@ -2,7 +2,7 @@ import {Exclude, Expose, plainToClassFromExist, Type} from 'class-transformer'
 import {GitHub} from '../github'
 import {Id, StateSchema} from '../terraform/schema'
 import {Path, ConfigSchema} from '../yaml/schema'
-import { Repository } from './repository'
+import {Repository} from './repository'
 import {Resource} from './resource'
 
 @Exclude()
@@ -50,10 +50,11 @@ export class RepositoryBranchProtectionRule implements Resource {
           resource.mode === 'managed'
         ) {
           const repositoryIndex = resource.index.split(':')[0]
-          const repository = state.values.root_module.resources.find((r: any) =>
-            r.type === Repository.StateType &&
-            resource.mode === 'managed' &&
-            r.index === repositoryIndex
+          const repository = state.values.root_module.resources.find(
+            (r: any) =>
+              r.type === Repository.StateType &&
+              resource.mode === 'managed' &&
+              r.index === repositoryIndex
           )
           const required_pull_request_reviews =
             resource.values.required_pull_request_reviews?.at(0)

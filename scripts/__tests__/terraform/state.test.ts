@@ -48,7 +48,7 @@ test('can add and remove resources through sync', async () => {
   const config = await State.New()
 
   let addResourceSpy = jest.spyOn(config, 'addResource')
-  let removeResourceSpy = jest.spyOn(config, 'removeResource')
+  let removeResourceAtSpy = jest.spyOn(config, 'removeResourceAt')
 
   let desiredResources: [Id, Resource][] = []
   let resources = config.getAllResources()
@@ -56,19 +56,19 @@ test('can add and remove resources through sync', async () => {
   await config.sync(desiredResources)
 
   expect(addResourceSpy).not.toHaveBeenCalled()
-  expect(removeResourceSpy).toHaveBeenCalledTimes(resources.length)
+  expect(removeResourceAtSpy).toHaveBeenCalledTimes(resources.length)
   addResourceSpy.mockReset()
-  removeResourceSpy.mockReset()
+  removeResourceAtSpy.mockReset()
 
   for (const resource of resources) {
     desiredResources.push(['id', resource])
   }
 
   await config.sync(desiredResources)
-  expect(addResourceSpy).not.toHaveBeenCalled()
-  expect(removeResourceSpy).not.toHaveBeenCalled()
+  expect(addResourceSpy).toHaveBeenCalledTimes(1) // adding github-mgmt/readme.md
+  expect(removeResourceAtSpy).toHaveBeenCalledTimes(1) // removing github-mgmt/README.md
   addResourceSpy.mockReset()
-  removeResourceSpy.mockReset()
+  removeResourceAtSpy.mockReset()
 
   desiredResources.push(['id', new Repository('test')])
   desiredResources.push(['id', new Repository('test2')])
@@ -77,7 +77,7 @@ test('can add and remove resources through sync', async () => {
 
   await config.sync(desiredResources)
   expect(addResourceSpy).toHaveBeenCalledTimes(
-    desiredResources.length - resources.length
+    1 + desiredResources.length - resources.length
   )
-  expect(removeResourceSpy).not.toHaveBeenCalled()
+  expect(removeResourceAtSpy).toHaveBeenCalledTimes(1)
 })

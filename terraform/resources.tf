@@ -1,7 +1,7 @@
 resource "github_membership" "this" {
   for_each = merge([
     for role, members in lookup(local.config, "members", {}) : {
-      for member in members : "${member}" => {
+      for member in members : lower("${member}") => {
         username = member
         role     = role
       }
@@ -18,7 +18,7 @@ resource "github_membership" "this" {
 
 resource "github_repository" "this" {
   for_each = {
-    for repository, config in lookup(local.config, "repositories", {}) : repository => merge(config, {
+    for repository, config in lookup(local.config, "repositories", {}) : lower(repository) => merge(config, {
       name = repository
     })
   }
@@ -78,7 +78,7 @@ resource "github_repository_collaborator" "this" {
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
       for permission, members in lookup(repository_config, "collaborators", {}) : {
-        for member in members : "${repository}:${member}" => {
+        for member in members : lower("${repository}:${member}") => {
           repository = repository
           username   = member
           permission = permission
@@ -102,7 +102,7 @@ resource "github_branch_protection" "this" {
   for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
-      for pattern, config in lookup(repository_config, "branch_protection", {}) : "${repository}:${pattern}" => merge(config, {
+      for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(config, {
         pattern       = pattern
         repository_id = github_repository.this[repository].node_id
       })
@@ -145,7 +145,7 @@ resource "github_branch_protection" "this" {
 
 resource "github_team" "this" {
   for_each = {
-    for team, config in lookup(local.config, "teams", {}) : team => merge(config, {
+    for team, config in lookup(local.config, "teams", {}) : lower(team) => merge(config, {
       name           = team
       parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, config.parent_team_id)).id, config.parent_team_id), null)
     })
@@ -166,7 +166,7 @@ resource "github_team_repository" "this" {
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     [
       for permission, teams in lookup(repository_config, "teams", {}) : {
-        for team in teams : "${team}:${repository}" => {
+        for team in teams : lower("${team}:${repository}") => {
           repository = repository
           team_id    = github_team.this[team].id
           permission = permission
@@ -194,7 +194,7 @@ resource "github_team_membership" "this" {
     for team, team_config in lookup(local.config, "teams", {}) :
     [
       for role, members in lookup(team_config, "members", {}) : {
-        for member in members : "${team}:${member}" => {
+        for member in members : lower("${team}:${member}") => {
           team_id  = github_team.this[team].id
           username = member
           role     = role
@@ -223,7 +223,7 @@ resource "github_repository_file" "this" {
           branch     = github_repository.this[repository].default_branch
           content    = try(file("${path.module}/../files/${config.content}"), config.content)
         }) if contains(keys(config), "content")
-      ] : "${config.repository}/${config.file}" => config
+      ] : lower("${config.repository}/${config.file}") => config
     }
   ]...)
 

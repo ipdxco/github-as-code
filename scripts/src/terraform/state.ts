@@ -114,6 +114,29 @@ export class State {
     await this.reset()
   }
 
+  getAllAddresses(): string[] {
+    const addresses = []
+    for (const resourceClass of ResourceConstructors) {
+      const classAddresses = this.getAddresses(resourceClass)
+      addresses.push(...classAddresses)
+    }
+    return addresses
+  }
+
+  getAddresses<T extends Resource>(
+    resourceClass: ResourceConstructor<T>
+  ): string[] {
+    if (ResourceConstructors.includes(resourceClass)) {
+      return (
+        this._state?.values?.root_module?.resources
+          .filter((r: any) => r.type === resourceClass.StateType)
+          .map((r: any) => r.address) || []
+      )
+    } else {
+      throw new Error(`${resourceClass.name} is not supported`)
+    }
+  }
+
   getAllResources(): Resource[] {
     const resources = []
     for (const resourceClass of ResourceConstructors) {
@@ -138,10 +161,16 @@ export class State {
   }
 
   async addResource(id: Id, resource: Resource) {
+    await this.addResourceAt(id, resource.getStateAddress().toLowerCase())
+  }
+
+  async addResourceAt(id: Id, address: string) {
     if (env.TF_EXEC === 'true') {
-      const address = resource.getStateAddress().toLowerCase().replaceAll('"', '\\"')
       await cli.exec(
-        `terraform import -lock=${env.TF_LOCK} "${address}" "${id}"`,
+        `terraform import -lock=${env.TF_LOCK} "${address.replaceAll(
+          '"',
+          '\\"'
+        )}" "${id}"`,
         undefined,
         {cwd: env.TF_WORKING_DIR}
       )
@@ -149,14 +178,16 @@ export class State {
   }
 
   async removeResource(resource: Resource) {
+    await this.removeResourceAt(resource.getStateAddress().toLowerCase())
+  }
+
+  async removeResourceAt(address: string) {
     if (env.TF_EXEC === 'true') {
-      const lowercaseAddress = resource.getStateAddress().toLowerCase()
-      const address = this._state?.values?.root_module?.resources?.find((r: any) => r.address.toLowerCase() === lowercaseAddress)?.address
-      if (address !== undefined) {
-        throw new Error(`Resource ${lowercaseAddress} not found in state`)
-      }
       await cli.exec(
-        `terraform state rm -lock=${env.TF_LOCK} "${address.replaceAll('"', '\\"')}"`,
+        `terraform state rm -lock=${env.TF_LOCK} "${address.replaceAll(
+          '"',
+          '\\"'
+        )}"`,
         undefined,
         {cwd: env.TF_WORKING_DIR}
       )
@@ -164,21 +195,19 @@ export class State {
   }
 
   async sync(resources: [Id, Resource][]) {
-    const oldResources = this.getAllResources()
-    for (const resource of oldResources) {
+    const addresses = this.getAllAddresses()
+    for (const address of addresses) {
       if (
         !resources.some(
-          ([_i, r]) => r.getStateAddress().toLowerCase() === resource.getStateAddress().toLowerCase()
+          ([_, r]) => r.getStateAddress().toLowerCase() === address
         )
       ) {
-        await this.removeResource(resource)
+        await this.removeResourceAt(address)
       }
     }
     for (const [id, resource] of resources) {
       if (
-        !oldResources.some(
-          r => r.getStateAddress().toLowerCase() === resource.getStateAddress().toLowerCase()
-        )
+        !addresses.some(a => a === resource.getStateAddress().toLowerCase())
       ) {
         await this.addResource(id, resource)
       }
