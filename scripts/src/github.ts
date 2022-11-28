@@ -292,7 +292,7 @@ export class GitHub {
         this.client.teams.listPendingInvitationsInOrg,
         {
           org: env.GITHUB_ORG,
-          team_slug: team.name
+          team_slug: team.slug
         }
       )
       teamInvitations.push(
