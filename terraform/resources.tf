@@ -104,7 +104,7 @@ resource "github_branch_protection" "this" {
     {
       for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(config, {
         pattern       = pattern
-        repository_id = github_repository.this[repository].node_id
+        repository_id = github_repository.this[lower(repository)].node_id
       })
     }
   ]...)
@@ -168,7 +168,7 @@ resource "github_team_repository" "this" {
       for permission, teams in lookup(repository_config, "teams", {}) : {
         for team in teams : lower("${team}:${repository}") => {
           repository = repository
-          team_id    = github_team.this[team].id
+          team_id    = github_team.this[lower(team)].id
           permission = permission
         }
       }
@@ -195,7 +195,7 @@ resource "github_team_membership" "this" {
     [
       for role, members in lookup(team_config, "members", {}) : {
         for member in members : lower("${team}:${member}") => {
-          team_id  = github_team.this[team].id
+          team_id  = github_team.this[lower(team)].id
           username = member
           role     = role
         }
@@ -220,7 +220,7 @@ resource "github_repository_file" "this" {
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
           repository = repository
           file       = file
-          branch     = github_repository.this[repository].default_branch
+          branch     = github_repository.this[lower(repository)].default_branch
           content    = try(file("${path.module}/../files/${config.content}"), config.content)
         }) if contains(keys(config), "content")
       ] : lower("${config.repository}/${config.file}") => config
