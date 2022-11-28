@@ -2,6 +2,7 @@ import {GitHub} from '../github'
 import {Id, StateSchema} from '../terraform/schema'
 import {Path, ConfigSchema} from '../yaml/schema'
 import {Resource} from './resource'
+import { Team } from './team'
 
 export enum Permission {
   Admin = 'admin',
@@ -39,11 +40,16 @@ export class RepositoryTeam extends String implements Resource {
           resource.type === RepositoryTeam.StateType &&
           resource.mode === 'managed'
         ) {
-          const team = resource.index.split(`:`).slice(0, -1).join(`:`)
+          const teamIndex = resource.index.split(`:`).slice(0, -1).join(`:`)
+          const team = state.values.root_module.resources.find((r: any) =>
+            r.type === Team.StateType &&
+            resource.mode === 'managed' &&
+            r.index === teamIndex
+          )
           teams.push(
             new RepositoryTeam(
               resource.values.repository,
-              team,
+              team.values.name || teamIndex,
               resource.values.permission
             )
           )
