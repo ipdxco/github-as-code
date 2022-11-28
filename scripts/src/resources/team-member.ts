@@ -13,8 +13,24 @@ export class TeamMember extends String implements Resource {
   static StateType: string = 'github_team_membership'
   static async FromGitHub(_members: TeamMember[]): Promise<[Id, TeamMember][]> {
     const github = await GitHub.getGitHub()
+    const invitations = await github.listTeamInvitations()
     const members = await github.listTeamMembers()
     const result: [Id, TeamMember][] = []
+    for (const invitation of invitations) {
+      const member = _members.find(
+        m =>
+          m.team === invitation.team.name &&
+          m.username === invitation.invitation.login!
+      )
+      result.push([
+        `${invitation.team.id}:${invitation.invitation.login}`,
+        new TeamMember(
+          invitation.team.name,
+          invitation.invitation.login!,
+          member?.role || Role.Member
+        )
+      ])
+    }
     for (const member of members) {
       result.push([
         `${member.team.id}:${member.member.login}`,

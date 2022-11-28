@@ -13,8 +13,19 @@ export class Member extends String implements Resource {
   static StateType: string = 'github_membership'
   static async FromGitHub(_members: Member[]): Promise<[Id, Member][]> {
     const github = await GitHub.getGitHub()
+    const invitations = await github.listInvitations()
     const members = await github.listMembers()
     const result: [Id, Member][] = []
+    for (const invitation of invitations) {
+      if (invitation.role === 'billing_manager') {
+        throw new Error(`Member role 'billing_manager' is not supported.`)
+      }
+      const role = invitation.role === 'admin' ? Role.Admin : Role.Member
+      result.push([
+        `${env.GITHUB_ORG}:${invitation.login}`,
+        new Member(invitation.login!, role)
+      ])
+    }
     for (const member of members) {
       if (member.role === 'billing_manager') {
         throw new Error(`Member role 'billing_manager' is not supported.`)

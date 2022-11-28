@@ -17,8 +17,19 @@ export class RepositoryCollaborator extends String implements Resource {
     _collaborators: RepositoryCollaborator[]
   ): Promise<[Id, RepositoryCollaborator][]> {
     const github = await GitHub.getGitHub()
+    const invitations = await github.listRepositoryInvitations()
     const collaborators = await github.listRepositoryCollaborators()
     const result: [Id, RepositoryCollaborator][] = []
+    for (const invitation of invitations) {
+      result.push([
+        `${invitation.repository.name}:${invitation.invitee!.login}`,
+        new RepositoryCollaborator(
+          invitation.repository.name,
+          invitation.invitee!.login,
+          invitation.permissions as Permission
+        )
+      ])
+    }
     for (const collaborator of collaborators) {
       let permission: Permission | undefined
       if (collaborator.collaborator.permissions?.admin) {
