@@ -13,6 +13,7 @@ resource "github_membership" "this" {
 
   lifecycle {
     ignore_changes = []
+    prevent_destroy = true
   }
 }
 
@@ -70,6 +71,7 @@ resource "github_repository" "this" {
 
   lifecycle {
     ignore_changes = []
+    prevent_destroy = true
   }
 }
 
