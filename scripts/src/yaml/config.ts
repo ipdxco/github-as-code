@@ -36,6 +36,37 @@ export class Config {
     const schema = this.get()
     const resources = this.getAllResources()
     const resourcePaths = resources.map(r => r.getSchemaPath(schema).join('.'))
+    let again = true
+    while (again) {
+      again = false
+      YAML.visit(this._document, {
+        Scalar(_, node) {
+          if (node.value === undefined || node.value === null) {
+            again = true
+            return YAML.visit.REMOVE
+          }
+        },
+        Pair(_, node, path) {
+          const resourcePath = [...path, node]
+            .filter((p: any) => YAML.isPair(p))
+            .map((p: any) => p.key.toString())
+            .join('.')
+          if (!resourcePaths.includes(resourcePath)) {
+            const isEmpty = node.value === null || node.value === undefined
+            const isEmptyScalar = YAML.isScalar(node.value) &&
+              (node.value.value === undefined ||
+                node.value.value === null ||
+                node.value.value === '')
+            const isEmptyCollection = YAML.isCollection(node.value) &&
+              node.value.items.length === 0
+            if (isEmpty || isEmptyScalar || isEmptyCollection) {
+              again = true
+              return YAML.visit.REMOVE
+            }
+          }
+        }
+      })
+    }
     YAML.visit(this._document, {
       Map(_, {items}) {
         items.sort(
@@ -50,36 +81,6 @@ export class Config {
         })
       }
     })
-    let again = true
-    while (again) {
-      again = false
-      YAML.visit(this._document, {
-        Pair(_, node, path) {
-          const resourcePath = [...path, node]
-            .filter((p: any) => YAML.isPair(p))
-            .map((p: any) => p.key.toString())
-            .join('.')
-          if (!resourcePaths.includes(resourcePath)) {
-            if (
-              YAML.isScalar(node.value) &&
-              (node.value.value === undefined ||
-                node.value.value === null ||
-                node.value.value === '')
-            ) {
-              again = true
-              return YAML.visit.REMOVE
-            }
-            if (
-              YAML.isCollection(node.value) &&
-              node.value.items.length === 0
-            ) {
-              again = true
-              return YAML.visit.REMOVE
-            }
-          }
-        }
-      })
-    }
   }
 
   toString(): string {
