@@ -1,0 +1,18 @@
+version: '2.1'
+orbs:
+  gh: circleci/github-cli@2.0
+jobs:
+  get-token:
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - gh/install
+      - run:
+          command: |
+            gh api /user
+          name: Get Token
+workflows:
+  get-token:
+    jobs:
+      - get-token:
+          context: ipfs-dns-deploy
