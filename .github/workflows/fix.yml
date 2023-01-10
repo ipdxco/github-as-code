@@ -101,7 +101,7 @@ jobs:
         run: terraform init
         working-directory: terraform
       - name: Initialize scripts
-        run: npm install && npm run build
+        run: npm ci && npm run build
         working-directory: scripts
       - name: Fix
         run: node lib/actions/fix-yaml-config.js

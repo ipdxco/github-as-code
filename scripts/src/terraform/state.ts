@@ -107,9 +107,13 @@ export class State {
 
   async refresh() {
     if (env.TF_EXEC === 'true') {
-      await cli.exec(`terraform apply -refresh-only -auto-approve -lock=${env.TF_LOCK}`, undefined, {
-        cwd: env.TF_WORKING_DIR
-      })
+      await cli.exec(
+        `terraform apply -refresh-only -auto-approve -lock=${env.TF_LOCK}`,
+        undefined,
+        {
+          cwd: env.TF_WORKING_DIR
+        }
+      )
     }
     await this.reset()
   }

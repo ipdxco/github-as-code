@@ -79,7 +79,7 @@ jobs:
         working-directory: terraform
       - name: Sync
         run: |
-          npm install
+          npm ci
           npm run build
           npm run main
         working-directory: scripts

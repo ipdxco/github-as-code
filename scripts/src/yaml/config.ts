@@ -53,12 +53,13 @@ export class Config {
             .join('.')
           if (!resourcePaths.includes(resourcePath)) {
             const isEmpty = node.value === null || node.value === undefined
-            const isEmptyScalar = YAML.isScalar(node.value) &&
+            const isEmptyScalar =
+              YAML.isScalar(node.value) &&
               (node.value.value === undefined ||
                 node.value.value === null ||
                 node.value.value === '')
-            const isEmptyCollection = YAML.isCollection(node.value) &&
-              node.value.items.length === 0
+            const isEmptyCollection =
+              YAML.isCollection(node.value) && node.value.items.length === 0
             if (isEmpty || isEmptyScalar || isEmptyCollection) {
               again = true
               return YAML.visit.REMOVE
