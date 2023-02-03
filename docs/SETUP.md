@@ -98,6 +98,7 @@
         - `Administration`: `Read-only`
         - `Contents`: `Read-only`
         - `Metadata`: `Read-only`
+        - `Pages`: `Read-only`
     - `Organization permissions`
         - `Members`: `Read-only`
     </details>
@@ -107,6 +108,7 @@
         - `Administration`: `Read & Write`
         - `Contents`: `Read & Write`
         - `Metadata`: `Read-only`
+        - `Pages`: `Read & Write`
         - `Pull requests`: `Read & Write`
         - `Workflows`: `Read & Write`
     - `Organization permissions`
