@@ -56,3 +56,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - how sync handles ignored types
 - how indices are represented in the state (always lowercase)
 - how sync handles pending invitations (now it does not ignore them)
+- removed references to other resources from for_each expressions
