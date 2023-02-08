@@ -105,14 +105,14 @@ resource "github_branch_protection" "this" {
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     {
       for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(config, {
-        pattern       = pattern
-        repository_id = github_repository.this[lower(repository)].node_id
+        pattern        = pattern
+        repository_key = lower(repository)
       })
     }
   ]...)
 
   pattern                         = each.value.pattern
-  repository_id                   = each.value.repository_id
+  repository_id                   = github_repository.this[each.value.repository_key].node_id
   allows_deletions                = try(each.value.allows_deletions, null)
   allows_force_pushes             = try(each.value.allows_force_pushes, null)
   enforce_admins                  = try(each.value.enforce_admins, null)
@@ -138,10 +138,6 @@ resource "github_branch_protection" "this" {
       contexts = try(required_status_checks.value["contexts"], null)
       strict   = try(required_status_checks.value["strict"], null)
     }
-  }
-
-  lifecycle {
-    ignore_changes = []
   }
 }
 
@@ -170,7 +166,7 @@ resource "github_team_repository" "this" {
       for permission, teams in lookup(repository_config, "teams", {}) : {
         for team in teams : lower("${team}:${repository}") => {
           repository = repository
-          team_id    = github_team.this[lower(team)].id
+          team_key   = lower(team)
           permission = permission
         }
       }
@@ -182,7 +178,7 @@ resource "github_team_repository" "this" {
   ]
 
   repository = each.value.repository
-  team_id    = each.value.team_id
+  team_id    = github_team.this[each.value.team_key].id
 
   permission = try(each.value.permission, null)
 
@@ -197,7 +193,7 @@ resource "github_team_membership" "this" {
     [
       for role, members in lookup(team_config, "members", {}) : {
         for member in members : lower("${team}:${member}") => {
-          team_id  = github_team.this[lower(team)].id
+          team_key = lower(team)
           username = member
           role     = role
         }
@@ -205,7 +201,7 @@ resource "github_team_membership" "this" {
     ]
   ])...)
 
-  team_id  = each.value.team_id
+  team_id  = github_team.this[each.value.team_key].id
   username = each.value.username
   role     = each.value.role
 
@@ -221,9 +217,9 @@ resource "github_repository_file" "this" {
       for config in [
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
           repository = repository
-          file       = file
-          branch     = github_repository.this[lower(repository)].default_branch
-          content    = try(file("${path.module}/../files/${config.content}"), config.content)
+          file           = file
+          repository_key = lower(repository)
+          content        = try(file("${path.module}/../files/${config.content}"), config.content)
         }) if contains(keys(config), "content")
       ] : lower("${config.repository}/${config.file}") => config
     }
@@ -232,7 +228,7 @@ resource "github_repository_file" "this" {
   repository          = each.value.repository
   file                = each.value.file
   content             = each.value.content
-  branch              = each.value.branch
+  branch              = github_repository.this[each.value.repository_key].default_branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
   commit_message      = "chore: Update ${each.value.file} [skip ci]"
 
