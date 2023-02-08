@@ -18,7 +18,6 @@ export async function addFileToAllRepos(
   for (const repository of repositories) {
     const file = new RepositoryFile(repository.name, name)
     file.content = content
-    file.overwrite_on_create = true
     if (!config.someResource(file)) {
       core.info(`Adding ${file.file} file to ${file.repository} repository`)
       config.addResource(file)
