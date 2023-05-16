@@ -12,7 +12,7 @@ resource "github_membership" "this" {
   role     = each.value.role
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes  = []
     prevent_destroy = true
   }
 }
@@ -29,6 +29,7 @@ resource "github_repository" "this" {
   allow_merge_commit                      = try(each.value.allow_merge_commit, null)
   allow_rebase_merge                      = try(each.value.allow_rebase_merge, null)
   allow_squash_merge                      = try(each.value.allow_squash_merge, null)
+  allow_update_branch                     = try(each.value.allow_update_branch, null)
   archive_on_destroy                      = try(each.value.archive_on_destroy, null)
   archived                                = try(each.value.archived, null)
   auto_init                               = try(each.value.auto_init, null)
@@ -36,6 +37,7 @@ resource "github_repository" "this" {
   delete_branch_on_merge                  = try(each.value.delete_branch_on_merge, null)
   description                             = try(each.value.description, null)
   gitignore_template                      = try(each.value.gitignore_template, null)
+  has_discussions                         = try(each.value.has_discussions, null)
   has_downloads                           = try(each.value.has_downloads, null)
   has_issues                              = try(each.value.has_issues, null)
   has_projects                            = try(each.value.has_projects, null)
@@ -44,9 +46,34 @@ resource "github_repository" "this" {
   ignore_vulnerability_alerts_during_read = try(each.value.ignore_vulnerability_alerts_during_read, null)
   is_template                             = try(each.value.is_template, null)
   license_template                        = try(each.value.license_template, null)
+  merge_commit_message                    = try(each.value.merge_commit_message, null)
+  merge_commit_title                      = try(each.value.merge_commit_title, null)
+  squash_merge_commit_message             = try(each.value.squash_merge_commit_message, null)
+  squash_merge_commit_title               = try(each.value.squash_merge_commit_title, null)
   topics                                  = try(each.value.topics, null)
   visibility                              = try(each.value.visibility, null)
   vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
+
+  security_and_analysis {
+    dynamic "advanced_security" {
+      for_each = try(each.value.visibility == "public" ? [] : [each.value.advanced_security ? "enabled" : "disabled"], [])
+      content {
+        status = advanced_security.value
+      }
+    }
+    dynamic "secret_scanning" {
+      for_each = try([each.value.secret_scanning ? "enabled" : "disabled"], [])
+      content {
+        status = secret_scanning.value
+      }
+    }
+    dynamic "secret_scanning_push_protection" {
+      for_each = try([each.value.secret_scanning_push_protection ? "enabled" : "disabled"], [])
+      content {
+        status = secret_scanning_push_protection.value
+      }
+    }
+  }
 
   dynamic "pages" {
     for_each = try([each.value.pages], [])
@@ -70,7 +97,7 @@ resource "github_repository" "this" {
   }
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes  = []
     prevent_destroy = true
   }
 }
@@ -115,7 +142,9 @@ resource "github_branch_protection" "this" {
   repository_id                   = github_repository.this[each.value.repository_key].node_id
   allows_deletions                = try(each.value.allows_deletions, null)
   allows_force_pushes             = try(each.value.allows_force_pushes, null)
+  blocks_creations                = try(each.value.blocks_creations, null)
   enforce_admins                  = try(each.value.enforce_admins, null)
+  lock_branch                     = try(each.value.lock_branch, null)
   push_restrictions               = try(each.value.push_restrictions, null)
   require_conversation_resolution = try(each.value.require_conversation_resolution, null)
   require_signed_commits          = try(each.value.require_signed_commits, null)
@@ -216,7 +245,7 @@ resource "github_repository_file" "this" {
     {
       for config in [
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
-          repository = repository
+          repository     = repository
           file           = file
           repository_key = lower(repository)
           content        = try(file("${path.module}/../files/${config.content}"), config.content)
@@ -225,13 +254,16 @@ resource "github_repository_file" "this" {
     }
   ]...)
 
-  repository          = each.value.repository
-  file                = each.value.file
-  content             = each.value.content
+  repository = each.value.repository
+  file       = each.value.file
+  content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
   branch              = github_repository.this[each.value.repository_key].default_branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
+  # Keep the defaults from 4.x
+  commit_author       = "GitHub"
+  commit_email        = "noreply@github.com"
   commit_message      = "chore: Update ${each.value.file} [skip ci]"
 
   lifecycle {
@@ -252,9 +284,9 @@ resource "github_issue_label" "this" {
 
   depends_on = [github_repository.this]
 
-  repository = each.value.repository
-  name       = each.value.label
-  color      = try(each.value.color, null)
+  repository  = each.value.repository
+  name        = each.value.label
+  color       = try(each.value.color, null)
   description = try(each.value.description, null)
 
   lifecycle {

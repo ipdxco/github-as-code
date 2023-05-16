@@ -117,7 +117,9 @@ export class RepositoryBranchProtectionRule implements Resource {
 
   @Expose() allows_deletions?: boolean
   @Expose() allows_force_pushes?: boolean
+  @Expose() blocks_creations?: boolean
   @Expose() enforce_admins?: boolean
+  @Expose() lock_branch?: boolean
   @Expose() push_restrictions?: string[]
   @Expose() require_conversation_resolution?: boolean
   @Expose() require_signed_commits?: boolean

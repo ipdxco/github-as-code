@@ -1,6 +1,6 @@
 import {GitHub} from '../github'
 import {context} from '@actions/github'
-import core from '@actions/core'
+import * as core from '@actions/core'
 
 async function findShaForPlan() {
   const github = await GitHub.getGitHub()
