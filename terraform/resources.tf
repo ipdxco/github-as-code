@@ -12,7 +12,7 @@ resource "github_membership" "this" {
   role     = each.value.role
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes  = []
     prevent_destroy = true
   }
 }
@@ -56,7 +56,7 @@ resource "github_repository" "this" {
 
   security_and_analysis {
     dynamic "advanced_security" {
-      for_each = try([each.value.advanced_security ? "enabled" : "disabled"], [])
+      for_each = try(each.value.visibility == "public" ? [] : [each.value.advanced_security ? "enabled" : "disabled"], [])
       content {
         status = advanced_security.value
       }
@@ -97,7 +97,7 @@ resource "github_repository" "this" {
   }
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes  = []
     prevent_destroy = true
   }
 }
@@ -245,7 +245,7 @@ resource "github_repository_file" "this" {
     {
       for config in [
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
-          repository = repository
+          repository     = repository
           file           = file
           repository_key = lower(repository)
           content        = try(file("${path.module}/../files/${config.content}"), config.content)
@@ -254,9 +254,9 @@ resource "github_repository_file" "this" {
     }
   ]...)
 
-  repository          = each.value.repository
-  file                = each.value.file
-  content             = each.value.content
+  repository = each.value.repository
+  file       = each.value.file
+  content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
   branch              = github_repository.this[each.value.repository_key].default_branch
@@ -281,9 +281,9 @@ resource "github_issue_label" "this" {
 
   depends_on = [github_repository.this]
 
-  repository = each.value.repository
-  name       = each.value.label
-  color      = try(each.value.color, null)
+  repository  = each.value.repository
+  name        = each.value.label
+  color       = try(each.value.color, null)
   description = try(each.value.description, null)
 
   lifecycle {
