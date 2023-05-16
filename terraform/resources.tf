@@ -261,6 +261,9 @@ resource "github_repository_file" "this" {
   # branch              = try(each.value.branch, null)
   branch              = github_repository.this[each.value.repository_key].default_branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
+  # Keep the defaults from 4.x
+  commit_author       = "GitHub"
+  commit_email        = "noreply@github.com"
   commit_message      = "chore: Update ${each.value.file} [skip ci]"
 
   lifecycle {
