@@ -55,14 +55,23 @@ resource "github_repository" "this" {
   vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
 
   security_and_analysis {
-    advanced_security {
-      status = try(each.value.advanced_security ? "enabled" : "disabled", null)
+    dynamic "advanced_security" {
+      for_each = try([each.value.advanced_security ? "enabled" : "disabled"], [])
+      content {
+        status = advanced_security.value
+      }
     }
-    secret_scanning {
-      status = try(each.value.secret_scanning ? "enabled" : "disabled", null)
+    dynamic "secret_scanning" {
+      for_each = try([each.value.secret_scanning ? "enabled" : "disabled"], [])
+      content {
+        status = secret_scanning.value
+      }
     }
-    secret_scanning_push_protection {
-      status = try(each.value.secret_scanning_push_protection ? "enabled" : "disabled", null)
+    dynamic "secret_scanning_push_protection" {
+      for_each = try([each.value.secret_scanning_push_protection ? "enabled" : "disabled"], [])
+      content {
+        status = secret_scanning_push_protection.value
+      }
     }
   }
 
