@@ -228,6 +228,8 @@ resource "github_repository_file" "this" {
   repository          = each.value.repository
   file                = each.value.file
   content             = each.value.content
+  # Since 5.25.0 the branch attribute defaults to the default branch of the repository
+  # branch              = try(each.value.branch, null)
   branch              = github_repository.this[each.value.repository_key].default_branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
   commit_message      = "chore: Update ${each.value.file} [skip ci]"
