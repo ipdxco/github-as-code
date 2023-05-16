@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shared action for adding a file to all repositories
 - shared action for adding a label to all repositories
 - issue_label support
+- new args for repositories and branch protection rules
 
 ### Changed
 - Synchronization script: to use GitHub API directly instead of relying on TF GH Provider's Data Sources

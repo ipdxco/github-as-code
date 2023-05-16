@@ -4,6 +4,7 @@ members:
     - laurentsenta
 repositories:
   github-action-releaser:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -25,12 +26,15 @@ repositories:
       topic/ci:
         color: '#57cc2c'
         description: Topic CI
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       maintain:
         - ipdx
     visibility: public
     vulnerability_alerts: false
   github-mgmt:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -68,6 +72,8 @@ repositories:
     has_projects: false
     has_wiki: false
     is_template: false
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       triage:
         - ipdx
@@ -77,6 +83,7 @@ repositories:
     visibility: public
     vulnerability_alerts: false
   ipdx:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -90,12 +97,15 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       admin:
         - ipdx
     visibility: public
     vulnerability_alerts: false
   projects-migration:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -113,6 +123,8 @@ repositories:
       source:
         branch: main
         path: /docs
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       maintain:
         - ipdx
@@ -122,6 +134,7 @@ repositories:
     visibility: public
     vulnerability_alerts: false
   projects-status-history:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -139,12 +152,15 @@ repositories:
       stale:
         color: '#57cc2c'
         description: Stale
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       maintain:
         - ipdx
     visibility: public
     vulnerability_alerts: false
   rust-sccache-action:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -158,12 +174,15 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       maintain:
         - ipdx
     visibility: public
     vulnerability_alerts: true
   tf-aws-gh-runner:
+    advanced_security: false
     allow_auto_merge: false
     allow_merge_commit: true
     allow_rebase_merge: true
@@ -177,6 +196,8 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    secret_scanning_push_protection: false
+    secret_scanning: false
     teams:
       maintain:
         - ipdx
