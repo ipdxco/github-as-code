@@ -9,19 +9,25 @@ async function findShaForPlan() {
     return context.sha
   }
 
-  const pulls = await github.client.paginate(github.client.search.issuesAndPullRequests, {
-    q: `repository:${context.repo.owner}/${context.repo.repo} ${context.sha} type:pr is:merged`
-  })
+  const pulls = await github.client.paginate(
+    github.client.search.issuesAndPullRequests,
+    {
+      q: `repository:${context.repo.owner}/${context.repo.repo} ${context.sha} type:pr is:merged`
+    }
+  )
 
   if (pulls.length === 0) {
     return ''
   }
 
   const pull = pulls[0]
-  const commits = await github.client.paginate(github.client.pulls.listCommits, {
-    ...context.repo,
-    pull_number: pull.number,
-  })
+  const commits = await github.client.paginate(
+    github.client.pulls.listCommits,
+    {
+      ...context.repo,
+      pull_number: pull.number
+    }
+  )
 
   if (commits.length === 0) {
     return ''

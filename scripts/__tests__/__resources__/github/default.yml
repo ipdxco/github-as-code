@@ -18,6 +18,13 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    labels:
+      topic dx:
+        color: '#57cc2c'
+        description: Topic DX
+      topic/ci:
+        color: '#57cc2c'
+        description: Topic CI
     teams:
       maintain:
         - ipdx
@@ -128,6 +135,10 @@ repositories:
     has_projects: true
     has_wiki: true
     is_template: false
+    labels:
+      stale:
+        color: '#57cc2c'
+        description: Stale
     teams:
       maintain:
         - ipdx

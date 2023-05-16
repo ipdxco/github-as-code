@@ -303,4 +303,18 @@ export class GitHub {
     }
     return teamInvitations
   }
+
+  async listRepositoryLabels() {
+    const repositoryLabels = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} labels...`)
+      const labels = await this.client.paginate(
+        this.client.issues.listLabelsForRepo,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      repositoryLabels.push(...labels.map(label => ({repository, label})))
+    }
+    return repositoryLabels
+  }
 }
