@@ -54,15 +54,16 @@ export class Repository implements Resource {
             source: {...resource.values.pages?.at(0)?.source?.at(0)}
           }
           const template = resource.values.template?.at(0)
+          const security_and_analysis =
+            resource.values.security_and_analysis?.at(0)
           const advanced_security =
-            resource.values.security_and_analysis?.advanced_security?.status ===
+            security_and_analysis?.advanced_security?.at(0)?.status ===
             'enabled'
           const secret_scanning =
-            resource.values.security_and_analysis?.secret_scanning?.status ===
-            'enabled'
+            security_and_analysis?.secret_scanning?.at(0)?.status === 'enabled'
           const secret_scanning_push_protection =
-            resource.values.security_and_analysis
-              ?.secret_scanning_push_protection?.status === 'enabled'
+            security_and_analysis?.secret_scanning_push_protection?.at(0)
+              ?.status === 'enabled'
           repositories.push(
             plainToClassFromExist(new Repository(resource.values.name), {
               ...resource.values,
