@@ -132,7 +132,7 @@ export class RepositoryBranchProtectionRule implements Resource {
   required_status_checks?: RequiredStatusChecks
 
   getSchemaPath(_schema: ConfigSchema): Path {
-    return ['repositories', this.repository, 'branch_protection', this.pattern]
+    return new Path('repositories', this.repository, 'branch_protection', this.pattern)
   }
 
   getStateAddress(): string {

@@ -80,7 +80,7 @@ export class Member extends String implements Resource {
   getSchemaPath(schema: ConfigSchema): Path {
     const members = schema.members?.[this.role] ?? []
     const index = members.indexOf(this.username)
-    return ['members', this.role, index === -1 ? members.length : index]
+    return new Path('members', this.role, index === -1 ? members.length : index)
   }
 
   getStateAddress(): string {

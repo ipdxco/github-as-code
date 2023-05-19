@@ -140,7 +140,7 @@ export class Repository implements Resource {
   @Expose() vulnerability_alerts?: boolean
 
   getSchemaPath(_schema: ConfigSchema): Path {
-    return ['repositories', this.name]
+    return new Path('repositories', this.name)
   }
 
   getStateAddress(): string {

@@ -70,8 +70,8 @@ export class Team implements Resource {
   @Expose() parent_team_id?: string
   @Expose() privacy?: Privacy
 
-  getSchemaPath(schema: ConfigSchema): Path {
-    return ['teams', this.name]
+  getSchemaPath(_schema: ConfigSchema): Path {
+    return new Path('teams', this.name)
   }
 
   getStateAddress(): string {

@@ -109,13 +109,13 @@ export class TeamMember extends String implements Resource {
   getSchemaPath(schema: ConfigSchema): Path {
     const members = schema.teams?.[this.team]?.members?.[this.role] || []
     const index = members.indexOf(this.username)
-    return [
+    return new Path(
       'teams',
       this.team,
       'members',
       this.role,
       index === -1 ? members.length : index
-    ]
+    )
   }
 
   getStateAddress(): string {

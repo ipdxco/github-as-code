@@ -95,8 +95,7 @@ export class RepositoryLabels implements Resource {
   @Expose() labels?: Record<string, RepositoryLabel>
 
   getSchemaPath(_schema: ConfigSchema): Path {
-    // TODO: write a test which checks if this doesn't collide with repositories
-    return ['repositories', this.repository]
+    return new Path('repositories', this.repository).unique(false)
   }
 
   getStateAddress(): string {

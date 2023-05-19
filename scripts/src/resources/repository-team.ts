@@ -108,13 +108,13 @@ export class RepositoryTeam extends String implements Resource {
     const teams =
       schema.repositories?.[this.repository]?.teams?.[this.permission] || []
     const index = teams.indexOf(this.team)
-    return [
+    return new Path(
       'repositories',
       this.repository,
       'teams',
       this.permission,
       index === -1 ? teams.length : index
-    ]
+    )
   }
 
   getStateAddress(): string {

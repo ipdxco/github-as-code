@@ -114,7 +114,7 @@ export class RepositoryFile implements Resource {
   @Expose() overwrite_on_create?: boolean
 
   getSchemaPath(_schema: ConfigSchema): Path {
-    return ['repositories', this.repository, 'files', this.file]
+    return new Path('repositories', this.repository, 'files', this.file)
   }
 
   getStateAddress(): string {

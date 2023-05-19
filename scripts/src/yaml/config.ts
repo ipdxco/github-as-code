@@ -1,5 +1,5 @@
 import * as YAML from 'yaml'
-import {ConfigSchema, pathToYAML} from './schema'
+import {ConfigSchema, Path} from './schema'
 import {
   Resource,
   ResourceConstructor,
@@ -9,7 +9,7 @@ import {
 import {diff} from 'deep-diff'
 import env from '../env'
 import * as fs from 'fs'
-import {jsonEquals, yamlify} from '../utils'
+import {yamlify} from '../utils'
 
 export class Config {
   static FromPath(
@@ -35,7 +35,7 @@ export class Config {
   format(): void {
     const schema = this.get()
     const resources = this.getAllResources()
-    const resourcePaths = resources.map(r => r.getSchemaPath(schema).join('.'))
+    const resourcePaths = resources.map(r => r.getSchemaPath(schema))
     let again = true
     while (again) {
       again = false
@@ -47,11 +47,11 @@ export class Config {
           }
         },
         Pair(_, node, path) {
-          const resourcePath = [...path, node]
+          const resourcePathParts = [...path, node]
             .filter((p: any) => YAML.isPair(p))
             .map((p: any) => p.key.toString())
-            .join('.')
-          if (!resourcePaths.includes(resourcePath)) {
+          const resourcePath = new Path(...resourcePathParts)
+          if (!resourcePaths.some(p => p.equals(resourcePath))) {
             const isEmpty = node.value === null || node.value === undefined
             const isEmptyScalar =
               YAML.isScalar(node.value) &&
@@ -117,9 +117,7 @@ export class Config {
     const schema = this.get()
     return this.getResources(
       resource.constructor as ResourceConstructor<T>
-    ).find(r =>
-      jsonEquals(r.getSchemaPath(schema), resource.getSchemaPath(schema))
-    )
+    ).find(r => r.getSchemaPath(schema).equals(resource.getSchemaPath(schema)))
   }
 
   someResource<T extends Resource>(resource: T): boolean {
@@ -139,46 +137,46 @@ export class Config {
     for (const d of diffs || []) {
       if (d.kind === 'N') {
         this._document.addIn(
-          pathToYAML([...path, ...(d.path || [])]),
+          path.extend(...(d.path || [])).toYAML(),
           yamlify(d.rhs)
         )
       } else if (d.kind === 'E') {
         this._document.setIn(
-          pathToYAML([...path, ...(d.path || [])]),
+          path.extend(...(d.path || [])).toYAML(),
           yamlify(d.rhs)
         )
-        delete (this._document.getIn([...path, ...(d.path || [])], true) as any)
+        delete (this._document.getIn(path.extend(...(d.path || [])).get(), true) as any)
           .comment
-        delete (this._document.getIn([...path, ...(d.path || [])], true) as any)
+        delete (this._document.getIn(path.extend(...(d.path || [])).get(), true) as any)
           .commentBefore
       } else if (d.kind === 'D' && canDeleteProperties) {
-        this._document.deleteIn(pathToYAML([...path, ...(d.path || [])]))
+        this._document.deleteIn(path.extend(...(d.path || [])).toYAML())
       } else if (d.kind === 'A') {
         if (d.item.kind === 'N') {
           this._document.addIn(
-            pathToYAML([...path, ...(d.path || []), d.index]),
+            path.extend(...(d.path || []), d.index).toYAML(),
             yamlify(d.item.rhs)
           )
         } else if (d.item.kind === 'E') {
           this._document.setIn(
-            pathToYAML([...path, ...(d.path || []), d.index]),
+            path.extend(...(d.path || []), d.index).toYAML(),
             yamlify(d.item.rhs)
           )
           delete (
             this._document.getIn(
-              [...path, ...(d.path || []), d.index],
+              path.extend(...(d.path || []), d.index).toYAML(),
               true
             ) as any
           ).comment
           delete (
             this._document.getIn(
-              [...path, ...(d.path || []), d.index],
+              path.extend(...(d.path || []), d.index).toYAML(),
               true
             ) as any
           ).commentBefore
         } else if (d.item.kind === 'D') {
           this._document.setIn(
-            pathToYAML([...path, ...(d.path || []), d.index]),
+            path.extend(...(d.path || []), d.index).toYAML(),
             undefined
           )
         } else {
@@ -191,7 +189,16 @@ export class Config {
   removeResource<T extends Resource>(resource: T): void {
     if (this.someResource(resource)) {
       const path = resource.getSchemaPath(this.get())
-      this._document.deleteIn(path)
+      const plain = resourceToPlain(resource)
+      if (path.isUnique()) {
+        this._document.deleteIn(path.get())
+      } else if (typeof plain === 'object') {
+        for (const key of Object.keys(plain)) {
+          this._document.deleteIn(path.extend(key).get())
+        }
+      } else {
+        throw new Error(`Cannot remove ${resource.constructor.name}`)
+      }
     }
   }
 
@@ -204,7 +211,8 @@ export class Config {
     for (const resource of oldResources) {
       if (
         !resources.some(r =>
-          jsonEquals(r.getSchemaPath(schema), resource.getSchemaPath(schema))
+          r.getStateAddress() === resource.getStateAddress() &&
+            r.getSchemaPath(schema).equals(resource.getSchemaPath(schema))
         )
       ) {
         this.removeResource(resource)

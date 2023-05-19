@@ -13,7 +13,7 @@ import {TeamMember} from './team-member'
 
 export interface Resource {
   // returns YAML config path under which the resource can be found
-  // e.g. ['members', 'admin', ]
+  // e.g. ['members', 'admin', 'galargh']
   getSchemaPath(schema: ConfigSchema): Path
   // returns Terraform state path under which the resource can be found
   // e.g. github_membership.this["galargh"]

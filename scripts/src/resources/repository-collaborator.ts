@@ -130,13 +130,13 @@ export class RepositoryCollaborator extends String implements Resource {
         this.permission
       ] || []
     const index = collaborators.indexOf(this.username)
-    return [
+    return new Path(
       'repositories',
       this.repository,
       'collaborators',
       this.permission,
       index === -1 ? collaborators.length : index
-    ]
+    )
   }
 
   getStateAddress(): string {

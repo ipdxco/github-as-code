@@ -32,7 +32,43 @@ interface TeamExtension {
   }
 }
 
-export type Path = (string | number)[]
+export class Path {
+  constructor(...path: (string | number)[]) {
+    this._path = path
+  }
+
+  private _path: (string | number)[]
+  private _unique: boolean = true
+
+  get(): (string | number)[] {
+    return this._path
+  }
+
+  isUnique(): boolean {
+    return this._unique
+  }
+
+  unique(unique: boolean = true): Path {
+    this._unique = unique
+    return this
+  }
+
+  toYAML(): (YAML.ParsedNode | number)[] {
+    return this._path.map(e => (typeof e === 'number' ? e : yamlify(e)))
+  }
+
+  toString(): string {
+    return this._path.join('.')
+  }
+
+  equals(other: Path): boolean {
+    return this.toString() === other.toString()
+  }
+
+  extend(...path: (string | number)[]): Path {
+    return new Path(...this._path, ...path)
+  }
+}
 
 export class ConfigSchema {
   members?: {
@@ -43,8 +79,4 @@ export class ConfigSchema {
     Repository & RepositoryExtension & RepositoryLabels
   >
   teams?: Record<string, Team & TeamExtension>
-}
-
-export function pathToYAML(path: Path): (YAML.ParsedNode | number)[] {
-  return path.map(e => (typeof e === 'number' ? e : yamlify(e)))
 }
