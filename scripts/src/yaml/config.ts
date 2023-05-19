@@ -145,10 +145,18 @@ export class Config {
           path.extend(...(d.path || [])).toYAML(),
           yamlify(d.rhs)
         )
-        delete (this._document.getIn(path.extend(...(d.path || [])).get(), true) as any)
-          .comment
-        delete (this._document.getIn(path.extend(...(d.path || [])).get(), true) as any)
-          .commentBefore
+        delete (
+          this._document.getIn(
+            path.extend(...(d.path || [])).get(),
+            true
+          ) as any
+        ).comment
+        delete (
+          this._document.getIn(
+            path.extend(...(d.path || [])).get(),
+            true
+          ) as any
+        ).commentBefore
       } else if (d.kind === 'D' && canDeleteProperties) {
         this._document.deleteIn(path.extend(...(d.path || [])).toYAML())
       } else if (d.kind === 'A') {
@@ -210,8 +218,9 @@ export class Config {
     const schema = this.get()
     for (const resource of oldResources) {
       if (
-        !resources.some(r =>
-          r.getStateAddress() === resource.getStateAddress() &&
+        !resources.some(
+          r =>
+            r.getStateAddress() === resource.getStateAddress() &&
             r.getSchemaPath(schema).equals(resource.getSchemaPath(schema))
         )
       ) {

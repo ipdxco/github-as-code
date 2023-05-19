@@ -31,7 +31,7 @@ function getResources<T extends Resource>(
   const schema = config.get()
   return config.getResources(resourceClass).filter(resource => {
     const node = config.document.getIn(
-      resource.getSchemaPath(schema),
+      resource.getSchemaPath(schema).get(),
       true
     ) as NodeBase
     return !node.comment?.includes('KEEP:')
