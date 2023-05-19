@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shared config fix rule which adds missing default branch protections
 - shared action for adding a file to all repositories
 - shared action for adding a label to all repositories
+- issue_label support
+- new args for repositories and branch protection rules
 
 ### Changed
 - Synchronization script: to use GitHub API directly instead of relying on TF GH Provider's Data Sources
@@ -40,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - workflows: not to use deprecated GitHub Actions runners anymore
 - workflows: not to use deprecated GitHub Actions expressions anymore
 - tf: to prevent destroy of membership and repository resources
+- apply: find sha for plan using proper credentials
 
 ### Fixed
 - links to supported resources in HOWTOs

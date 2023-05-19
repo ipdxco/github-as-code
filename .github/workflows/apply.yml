@@ -27,34 +27,16 @@ jobs:
       - name: Discover workspaces
         id: workspaces
         run: echo "this=$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)" >> $GITHUB_OUTPUT
+      - run: npm ci && npm run build
+        working-directory: scripts
       - name: Find sha for plan
         id: sha
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          QUERY: repository:${{ github.repository }} ${{ github.sha }}
-        uses: actions/github-script@v6
-        with:
-          result-encoding: string
-          script: |
-            if (process.env.GITHUB_EVENT_NAME === 'push') {
-              const { data: search } = await github.rest.search.issuesAndPullRequests({
-                q: process.env.QUERY,
-                per_page: 1
-              });
-              if (search.total_count !== 0) {
-                const { data: pulls } = await github.rest.pulls.listCommits({
-                  owner: process.env.GITHUB_REPOSITORY_OWNER,
-                  repo: process.env.GITHUB_REPOSITORY.slice(process.env.GITHUB_REPOSITORY_OWNER.length + 1),
-                  pull_number: search.items[0].number,
-                  per_page: 100
-                });
-                return pulls.at(-1).sha;
-              } else {
-                return '';
-              }
-            } else {
-              return process.env.GITHUB_SHA;
-            }
+          GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+        run: node lib/actions/find-sha-for-plan.js
+        working-directory: scripts
   apply:
     needs: [prepare]
     if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''

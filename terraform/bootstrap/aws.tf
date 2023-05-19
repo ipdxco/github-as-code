@@ -122,14 +122,14 @@ data "aws_iam_policy_document" "rw" {
 
 resource "aws_iam_user_policy" "ro" {
   name = "${var.name}-ro"
-  user = "${aws_iam_user.ro.name}"
+  user = aws_iam_user.ro.name
 
-  policy = "${data.aws_iam_policy_document.ro.json}"
+  policy = data.aws_iam_policy_document.ro.json
 }
 
 resource "aws_iam_user_policy" "rw" {
   name = "${var.name}-rw"
-  user = "${aws_iam_user.rw.name}"
+  user = aws_iam_user.rw.name
 
-  policy = "${data.aws_iam_policy_document.rw.json}"
+  policy = data.aws_iam_policy_document.rw.json
 }

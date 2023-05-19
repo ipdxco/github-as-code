@@ -54,11 +54,24 @@ export class Repository implements Resource {
             source: {...resource.values.pages?.at(0)?.source?.at(0)}
           }
           const template = resource.values.template?.at(0)
+          const security_and_analysis =
+            resource.values.security_and_analysis?.at(0)
+          const advanced_security =
+            security_and_analysis?.advanced_security?.at(0)?.status ===
+            'enabled'
+          const secret_scanning =
+            security_and_analysis?.secret_scanning?.at(0)?.status === 'enabled'
+          const secret_scanning_push_protection =
+            security_and_analysis?.secret_scanning_push_protection?.at(0)
+              ?.status === 'enabled'
           repositories.push(
             plainToClassFromExist(new Repository(resource.values.name), {
               ...resource.values,
               pages,
-              template
+              template,
+              advanced_security,
+              secret_scanning,
+              secret_scanning_push_protection
             })
           )
         }
@@ -91,6 +104,7 @@ export class Repository implements Resource {
   @Expose() allow_merge_commit?: boolean
   @Expose() allow_rebase_merge?: boolean
   @Expose() allow_squash_merge?: boolean
+  @Expose() allow_update_branch?: boolean
   @Expose() archive_on_destroy?: boolean
   @Expose() archived?: boolean
   @Expose() auto_init?: boolean
@@ -98,6 +112,7 @@ export class Repository implements Resource {
   @Expose() delete_branch_on_merge?: boolean
   @Expose() description?: string
   @Expose() gitignore_template?: string
+  @Expose() has_discussions?: boolean
   @Expose() has_downloads?: boolean
   @Expose() has_issues?: boolean
   @Expose() has_projects?: boolean
@@ -106,9 +121,17 @@ export class Repository implements Resource {
   @Expose() ignore_vulnerability_alerts_during_read?: boolean
   @Expose() is_template?: boolean
   @Expose() license_template?: string
+  @Expose() merge_commit_message?: string
+  @Expose() merge_commit_title?: string
   @Expose()
   @Type(() => Pages)
   pages?: Pages
+  // security_and_analysis
+  @Expose() advanced_security?: boolean
+  @Expose() secret_scanning?: boolean
+  @Expose() secret_scanning_push_protection?: boolean
+  @Expose() squash_merge_commit_message?: string
+  @Expose() squash_merge_commit_title?: string
   @Expose()
   @Type(() => Template)
   template?: Template

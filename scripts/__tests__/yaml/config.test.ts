@@ -350,8 +350,10 @@ members:
     - paul
     - Peter
 repositories:
-  a: {}
-  b: {}
+  a:
+    {}
+  b:
+    {}
   C:
     description: "c"
   `.trim()
