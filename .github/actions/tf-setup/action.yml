@@ -1,0 +1,40 @@
+name: Set up TF
+description: Set up terraform
+
+inputs:
+  working-directory:
+    description: Working directory
+    required: false
+    default: terraform
+  wrapper:
+    description: Whether to use the terraform wrapper
+    required: false
+    default: 'true'
+  upgrade:
+    description: Whether to upgrade terraform
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+      with:
+        terraform_version: 1.2.9
+        terraform_wrapper: ${{ inputs.wrapper }}
+    - name: Setup Custom Terraform Provider
+      run: |
+        curl -LO https://github.com/galargh/terraform-provider-github/releases/download/v5.25.2-rc1/terraform-provider-github_5.25.2-rc1_linux_amd64.zip
+        mkdir -p ~/.terraform.d/plugins/github.com/galargh/terraform-provider-github/5.25.2-rc1/linux_amd64/
+        unzip terraform-provider-github_5.25.2-rc1_linux_amd64.zip -d ~/.terraform.d/plugins/github.com/galargh/terraform-provider-github/5.25.2-rc1/linux_amd64/
+        rm terraform-provider-github_5.25.2-rc1_linux_amd64.zip
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+    - name: Init Terraform
+      env:
+        UPGRADE: ${{ inputs.upgrade }}
+      run: |
+        terraform init -upgrade=${{ env.UPGRADE }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

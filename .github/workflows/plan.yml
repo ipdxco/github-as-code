@@ -79,13 +79,10 @@ jobs:
         run: |
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+      - name: Setup Terraform
+        uses: ./.github/actions/tf-setup
         with:
-          terraform_version: 1.2.9
-      - name: Initialize terraform
-        run: terraform init
-        working-directory: terraform
+          working-directory: terraform
       - name: Plan terraform
         run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
@@ -118,14 +115,10 @@ jobs:
         run: |
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+      - name: Setup Terraform
+        uses: ./.github/actions/tf-setup
         with:
-          terraform_version: 1.2.9
-          terraform_wrapper: false
-      - name: Initialize terraform
-        run: terraform init
-        working-directory: terraform
+          wrapper: false
       - name: Download terraform plans
         uses: actions/download-artifact@v3
         with:
