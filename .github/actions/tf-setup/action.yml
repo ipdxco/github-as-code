@@ -26,8 +26,8 @@ runs:
     - name: Setup Custom Terraform Provider
       run: |
         curl -LO https://github.com/galargh/terraform-provider-github/releases/download/v5.25.2-rc1/terraform-provider-github_5.25.2-rc1_linux_amd64.zip
-        mkdir -p ~/.terraform.d/plugins/github.com/galargh/terraform-provider-github/5.25.2-rc1/linux_amd64/
-        unzip terraform-provider-github_5.25.2-rc1_linux_amd64.zip -d ~/.terraform.d/plugins/github.com/galargh/terraform-provider-github/5.25.2-rc1/linux_amd64/
+        mkdir -p ~/.terraform.d/plugins/github.com/galargh/github/5.25.2-rc1/linux_amd64/
+        unzip terraform-provider-github_5.25.2-rc1_linux_amd64.zip -d ~/.terraform.d/plugins/github.com/galargh/github/5.25.2-rc1/linux_amd64/
         rm terraform-provider-github_5.25.2-rc1_linux_amd64.zip
       shell: bash
       working-directory: ${{ inputs.working-directory }}
