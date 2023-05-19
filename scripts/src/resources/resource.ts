@@ -6,7 +6,7 @@ import {Repository} from './repository'
 import {RepositoryBranchProtectionRule} from './repository-branch-protection-rule'
 import {RepositoryCollaborator} from './repository-collaborator'
 import {RepositoryFile} from './repository-file'
-import {RepositoryLabel} from './repository-label'
+import {RepositoryLabels} from './repository-labels'
 import {RepositoryTeam} from './repository-team'
 import {Team} from './team'
 import {TeamMember} from './team-member'
@@ -39,7 +39,7 @@ export const ResourceConstructors: ResourceConstructor<Resource>[] = [
   RepositoryBranchProtectionRule,
   RepositoryCollaborator,
   RepositoryFile,
-  RepositoryLabel,
+  RepositoryLabels,
   RepositoryTeam,
   Repository,
   TeamMember,

@@ -8,6 +8,6 @@ locals {
     "github_team",
     "github_branch_protection",
     "github_repository_file",
-    "github_issue_label"
+    "github_issue_labels"
   ]
 }

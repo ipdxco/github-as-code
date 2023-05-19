@@ -271,23 +271,26 @@ resource "github_repository_file" "this" {
   }
 }
 
-resource "github_issue_label" "this" {
-  for_each = merge([
-    for repository, repository_config in lookup(local.config, "repositories", {}) :
-    {
-      for label, config in lookup(repository_config, "labels", {}) : lower("${repository}:${label}") => merge(config, {
-        repository = repository
-        label      = label
-      })
-    }
-  ]...)
+resource "github_issue_labels" "this" {
+  for_each = {
+    for repository, config in lookup(local.config, "repositories", {}) : lower(repository) => merge(config, {
+      name = repository
+    })
+  }
 
   depends_on = [github_repository.this]
 
-  repository  = each.value.repository
-  name        = each.value.label
-  color       = try(each.value.color, null)
-  description = try(each.value.description, null)
+  repository = each.value.name
+  authoritative = false
+
+  dynamic "label" {
+    for_each = lookup(each.value, "labels", {})
+    content {
+      name        = label.key
+      color       = try(label.value.color, null)
+      description = try(label.value.description, null)
+    }
+  }
 
   lifecycle {
     ignore_changes = []

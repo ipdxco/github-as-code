@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - workflows: not to use deprecated GitHub Actions expressions anymore
 - tf: to prevent destroy of membership and repository resources
 - apply: find sha for plan using proper credentials
+- made issue label support more efficient for large orgs
 
 ### Fixed
 - links to supported resources in HOWTOs

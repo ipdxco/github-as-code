@@ -7,7 +7,7 @@ import {RepositoryBranchProtectionRule} from './src/resources/repository-branch-
 import {RepositoryTeam} from './src/resources/repository-team'
 import {TeamMember} from './src/resources/team-member'
 import {RepositoryFile} from './src/resources/repository-file'
-import {RepositoryLabel} from './src/resources/repository-label'
+import {RepositoryLabels} from './src/resources/repository-labels'
 import {GitHub} from './src/github'
 
 jest.mock('./src/env', () => ({
@@ -67,7 +67,7 @@ global.ResourceCounts = {
   [RepositoryTeam.name]: 7,
   [TeamMember.name]: 2,
   [RepositoryFile.name]: 1,
-  [RepositoryLabel.name]: 3
+  [RepositoryLabels.name]: 2
 }
 global.ResourcesCount = Object.values(global.ResourceCounts).reduce(
   (a, b) => a + b,
