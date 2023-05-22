@@ -8,7 +8,7 @@ import {Role as TeamRole} from '../resources/team-member'
 import {Team} from '../resources/team'
 import * as YAML from 'yaml'
 import {yamlify} from '../utils'
-import {RepositoryLabels} from '../resources/repository-labels'
+import {RepositoryLabel} from '../resources/repository-label'
 
 type TeamMember = string
 type RepositoryCollaborator = string
@@ -24,6 +24,7 @@ interface RepositoryExtension {
     [permission in RepositoryTeamPermission]?: RepositoryTeam[]
   }
   branch_protection?: Record<string, RepositoryBranchProtectionRule>
+  labels?: Record<string, RepositoryLabel>
 }
 
 interface TeamExtension {
@@ -38,19 +39,9 @@ export class Path {
   }
 
   private _path: (string | number)[]
-  private _unique: boolean = true
 
   get(): (string | number)[] {
     return this._path
-  }
-
-  isUnique(): boolean {
-    return this._unique
-  }
-
-  unique(unique: boolean = true): Path {
-    this._unique = unique
-    return this
   }
 
   toYAML(): (YAML.ParsedNode | number)[] {
@@ -74,9 +65,6 @@ export class ConfigSchema {
   members?: {
     [role in MemberRole]?: Member[]
   }
-  repositories?: Record<
-    string,
-    Repository & RepositoryExtension & RepositoryLabels
-  >
+  repositories?: Record<string, Repository & RepositoryExtension>
   teams?: Record<string, Team & TeamExtension>
 }

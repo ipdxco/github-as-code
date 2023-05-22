@@ -56,7 +56,7 @@ test('can add and remove resources through sync', async () => {
   await config.sync(desiredResources)
 
   expect(addResourceSpy).not.toHaveBeenCalled()
-  expect(removeResourceAtSpy).toHaveBeenCalledTimes(resources.length)
+  expect(removeResourceAtSpy).toHaveBeenCalledTimes(global.UniqueResourcesCount)
   addResourceSpy.mockReset()
   removeResourceAtSpy.mockReset()
 

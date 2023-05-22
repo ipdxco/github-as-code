@@ -12,7 +12,7 @@ import {RepositoryFile} from '../../src/resources/repository-file'
 import {randomUUID} from 'crypto'
 import {Team, Privacy as TeamPrivacy} from '../../src/resources/team'
 import {RepositoryBranchProtectionRule} from '../../src/resources/repository-branch-protection-rule'
-import {RepositoryLabels} from '../../src/resources/repository-labels'
+import {RepositoryLabel} from '../../src/resources/repository-label'
 
 test('can retrieve resources from YAML schema', async () => {
   const config = Config.FromPath()
@@ -88,14 +88,13 @@ test('can remove repositories, including their sub-resources', async () => {
 test('cannot remove labels without removing repositories', async () => {
   const config = Config.FromPath()
 
-  const labels = config.getResources(RepositoryLabels)
+  const labels = config.getResources(RepositoryLabel)
 
   for (const [index, label] of labels.entries()) {
     config.removeResource(label)
     expect(config.someResource(label)).toBeFalsy()
-    expect(config.getResources(RepositoryLabels)).toHaveLength(
-      labels.length - index - 1
-    )
+    const newLabels = config.getResources(RepositoryLabel)
+    expect(newLabels).toHaveLength(labels.length - index - 1)
   }
 
   expect(config.getAllResources()).toHaveLength(

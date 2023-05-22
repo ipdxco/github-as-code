@@ -197,16 +197,7 @@ export class Config {
   removeResource<T extends Resource>(resource: T): void {
     if (this.someResource(resource)) {
       const path = resource.getSchemaPath(this.get())
-      const plain = resourceToPlain(resource)
-      if (path.isUnique()) {
-        this._document.deleteIn(path.get())
-      } else if (typeof plain === 'object') {
-        for (const key of Object.keys(plain)) {
-          this._document.deleteIn(path.extend(key).get())
-        }
-      } else {
-        throw new Error(`Cannot remove ${resource.constructor.name}`)
-      }
+      this._document.deleteIn(path.get())
     }
   }
 
