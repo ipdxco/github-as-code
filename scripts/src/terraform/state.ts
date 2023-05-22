@@ -1,4 +1,4 @@
-import {Id, StateSchema} from './schema'
+import {Address, Id, StateSchema} from './schema'
 import {
   Resource,
   ResourceConstructors,
@@ -168,7 +168,7 @@ export class State {
     await this.addResourceAt(id, resource.getStateAddress().toLowerCase())
   }
 
-  async addResourceAt(id: Id, address: string) {
+  async addResourceAt(id: Id, address: Address) {
     if (env.TF_EXEC === 'true') {
       await cli.exec(
         `terraform import -lock=${env.TF_LOCK} "${address.replaceAll(
@@ -185,7 +185,7 @@ export class State {
     await this.removeResourceAt(resource.getStateAddress().toLowerCase())
   }
 
-  async removeResourceAt(address: string) {
+  async removeResourceAt(address: Address) {
     if (env.TF_EXEC === 'true') {
       await cli.exec(
         `terraform state rm -lock=${env.TF_LOCK} "${address.replaceAll(
@@ -209,7 +209,15 @@ export class State {
         await this.removeResourceAt(address)
       }
     }
-    for (const [id, resource] of resources) {
+    const firsts = resources.filter(([_, resource], index, self) => {
+      const address = resource.getStateAddress().toLowerCase()
+      return (
+        self.findIndex(
+          ([_, r]) => r.getStateAddress().toLowerCase() === address
+        ) === index
+      )
+    })
+    for (const [id, resource] of firsts) {
       if (
         !addresses.some(a => a === resource.getStateAddress().toLowerCase())
       ) {
