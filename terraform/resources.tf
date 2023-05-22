@@ -281,7 +281,6 @@ resource "github_issue_labels" "this" {
   depends_on = [github_repository.this]
 
   repository = each.value.name
-  authoritative = false
 
   dynamic "label" {
     for_each = lookup(each.value, "labels", {})

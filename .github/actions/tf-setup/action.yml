@@ -14,6 +14,10 @@ inputs:
     description: Whether to upgrade terraform
     required: false
     default: 'false'
+  version:
+    description: TF GitHub Provider version
+    required: false
+    default: '5.25.2-rc4'
 
 runs:
   using: composite
@@ -24,11 +28,13 @@ runs:
         terraform_version: 1.2.9
         terraform_wrapper: ${{ inputs.wrapper }}
     - name: Setup Custom Terraform Provider
+      env:
+        VERSION: ${{ inputs.version }}
       run: |
-        curl -LO https://github.com/galargh/terraform-provider-github/releases/download/v5.25.2-rc1/terraform-provider-github_5.25.2-rc1_linux_amd64.zip
-        mkdir -p ~/.terraform.d/plugins/github.com/galargh/github/5.25.2-rc1/linux_amd64/
-        unzip terraform-provider-github_5.25.2-rc1_linux_amd64.zip -d ~/.terraform.d/plugins/github.com/galargh/github/5.25.2-rc1/linux_amd64/
-        rm terraform-provider-github_5.25.2-rc1_linux_amd64.zip
+        curl -LO https://github.com/galargh/terraform-provider-github/releases/download/v${VERSION}/terraform-provider-github_${VERSION}_linux_amd64.zip
+        mkdir -p ~/.terraform.d/plugins/registry.terraform.io/integrations/github/${VERSION}/linux_amd64/
+        unzip terraform-provider-github_${VERSION}_linux_amd64.zip -d ~/.terraform.d/plugins/registry.terraform.io/integrations/github/${VERSION}/linux_amd64/
+        rm terraform-provider-github_${VERSION}_linux_amd64.zip
       shell: bash
       working-directory: ${{ inputs.working-directory }}
     - name: Init Terraform

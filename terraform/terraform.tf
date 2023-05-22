@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     github = {
-      source  = "github.com/galargh/github"
-      version = "5.25.2-rc1"
+      source  = "registry.terraform.io/integrations/github"
+      version = "5.25.2-rc4"
     }
   }
 
