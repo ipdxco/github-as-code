@@ -140,16 +140,7 @@
               },
               "labels": {
                 "additionalProperties": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "color": {
-                      "type": "string"
-                    },
-                    "description": {
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/definitions/RepositoryLabel"
                 },
                 "type": "object"
               },
@@ -398,6 +389,18 @@
         },
         "overwrite_on_create": {
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "RepositoryLabel": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
         }
       },
       "type": "object"
