@@ -262,9 +262,9 @@ resource "github_repository_file" "this" {
   branch              = github_repository.this[each.value.repository_key].default_branch
   overwrite_on_create = try(each.value.overwrite_on_create, null)
   # Keep the defaults from 4.x
-  commit_author       = "GitHub"
-  commit_email        = "noreply@github.com"
-  commit_message      = "chore: Update ${each.value.file} [skip ci]"
+  commit_author  = "GitHub"
+  commit_email   = "noreply@github.com"
+  commit_message = "chore: Update ${each.value.file} [skip ci]"
 
   lifecycle {
     ignore_changes = []
@@ -286,8 +286,8 @@ resource "github_issue_labels" "this" {
     for_each = lookup(each.value, "labels", {})
     content {
       name        = label.key
-      color       = try(label.value.color, null)
-      description = try(label.value.description, null)
+      color       = try(label.value.color, "7B42BC")
+      description = try(label.value.description, "")
     }
   }
 
