@@ -54,23 +54,27 @@ resource "github_repository" "this" {
   visibility                              = try(each.value.visibility, null)
   vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
 
-  security_and_analysis {
-    dynamic "advanced_security" {
-      for_each = try(each.value.visibility == "public" ? [] : [each.value.advanced_security ? "enabled" : "disabled"], [])
-      content {
-        status = advanced_security.value
+  dynamic "security_and_analysis" {
+    for_each = try(each.value.visibility == "public" || local.advanced_security ? [{}] : [], [])
+
+    content {
+      dynamic "advanced_security" {
+        for_each = try(each.value.visibility == "public" || !local.advanced_security ? [] : [each.value.advanced_security ? "enabled" : "disabled"], [])
+        content {
+          status = advanced_security.value
+        }
       }
-    }
-    dynamic "secret_scanning" {
-      for_each = try([each.value.secret_scanning ? "enabled" : "disabled"], [])
-      content {
-        status = secret_scanning.value
+      dynamic "secret_scanning" {
+        for_each = try(each.value.visibility == "private" ? [] : [each.value.secret_scanning ? "enabled" : "disabled"], [])
+        content {
+          status = secret_scanning.value
+        }
       }
-    }
-    dynamic "secret_scanning_push_protection" {
-      for_each = try([each.value.secret_scanning_push_protection ? "enabled" : "disabled"], [])
-      content {
-        status = secret_scanning_push_protection.value
+      dynamic "secret_scanning_push_protection" {
+        for_each = try(each.value.visibility == "private" ? [] : [each.value.secret_scanning_push_protection ? "enabled" : "disabled"], [])
+        content {
+          status = secret_scanning_push_protection.value
+        }
       }
     }
   }
