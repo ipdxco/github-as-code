@@ -1,17 +1,15 @@
 import {Config} from '../../yaml/config'
 import {Repository} from '../../resources/repository'
-import {GitHub} from '../../github'
-import env from '../../env'
+import {RepositoryLabel} from '../../resources/repository-label'
 import * as core from '@actions/core'
 
 export async function addLabelToAllRepos(
-  label: string,
-  color: string,
-  description: string,
+  name: string,
+  color: string | undefined = undefined,
+  description: string | undefined = undefined,
   repositoryFilter: (repository: Repository) => boolean = () => true
 ): Promise<void> {
   const config = Config.FromPath()
-  const github = await GitHub.getGitHub()
 
   const repositories = config
     .getResources(Repository)
@@ -19,23 +17,15 @@ export async function addLabelToAllRepos(
     .filter(repositoryFilter)
 
   for (const repository of repositories) {
-    // labels are not supported by GitHub Management yet
-    const labels = await github.client.paginate(
-      github.client.issues.listLabelsForRepo,
-      {
-        owner: env.GITHUB_ORG,
-        repo: repository.name
-      }
-    )
-    if (!labels.map(l => l.name).includes(label)) {
-      core.info(`Adding label ${label} to ${repository.name}`)
-      await github.client.issues.createLabel({
-        owner: env.GITHUB_ORG,
-        repo: repository.name,
-        name: label,
-        color: color,
-        description: description
-      })
+    const label = new RepositoryLabel(repository.name, name)
+    label.color = color
+    label.description = description
+
+    if (!config.someResource(label)) {
+      core.info(`Adding ${label.name} file to ${label.repository} repository`)
+      config.addResource(label)
     }
   }
+
+  config.save()
 }
