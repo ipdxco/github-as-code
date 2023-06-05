@@ -17,3 +17,12 @@ A robust template for managing GitHub configurations as code via Pull Requests. 
 - Learn more about [what GitHub Management is and how it works](docs/ABOUT.md).
 - Get started with [setting up GitHub Management](docs/SETUP.md).
 - Uncover [how to effectively utilize GitHub Management](docs/HOWTOS.md).
+
+## Active Users
+
+A broad range of diverse organizations are already leveraging our GitHub Management solution via Pull Request Workflow. You can find a comprehensive list of these organizations on our [GitHub Management Router repository](https://github.com/protocol/github-mgmt-router). This list showcases the versatility and effectiveness of our GitHub Management system. Our solution can be tailored to meet your unique requirements, driving efficiency and streamlined GitHub organization management.
+
+
+
+
+
