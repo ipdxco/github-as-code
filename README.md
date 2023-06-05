@@ -1,10 +1,19 @@
-# GitHub Management via Terraform: Template
+<div align="center">
 
-This repository is meant to serve as a template for creating new repositories responsible for managing GitHub configuration as code with Terraform. It provides an opinionated way to manage GitHub configuration without following the Terraform usage guidelines to the letter. It was designed with managing multiple, medium to large sized GitHub organisations in mind and that is exactly what it is/is going to be optimised for.
+![Management Banner](https://github.com/protocol/github-mgmt-template/assets/6688074/15b2101a-149a-4556-a1b5-497b50d77813)
 
-**IMPORTANT**: Having write access to GitHub Management repository can be as powerful as having admin access to the organizations managed by that repository.
+# GitHub Management as Code
 
-To learn more, check out:
-- [What is GitHub Management and how does it work?](docs/ABOUT.md)
-- [How to set up GitHub Management?](docs/SETUP.md)
-- [How to work with GitHub Management?](docs/HOWTOS.md)
+A robust template for managing GitHub configurations as code via Pull Requests. Designed with the effective administration of multiple medium to large-sized GitHub organizations in mind.
+
+</div>
+
+## Importance of Access Control
+
+**NOTE**: Possessing write access to the GitHub Management repository can equate to having administrative privileges over the organizations managed by that repository. Please exercise caution and ensure proper access control measures.
+
+## Dive Deeper
+
+- Learn more about [what GitHub Management is and how it works](docs/ABOUT.md).
+- Get started with [setting up GitHub Management](docs/SETUP.md).
+- Uncover [how to effectively utilize GitHub Management](docs/HOWTOS.md).
