@@ -15,3 +15,26 @@ export function yamlify(value: any): YAML.ParsedNode {
   }
   return node
 }
+
+export function globToRegex(globPattern: string): RegExp {
+  const regexPattern = globPattern
+    .split('')
+    .map(char => {
+      if (char === '*') {
+        return '.*'
+      } else if (char === '?') {
+        return '.'
+      } else if (
+        ['.', '\\', '+', '(', ')', '[', ']', '{', '}', '|', '^', '$'].includes(
+          char
+        )
+      ) {
+        return `\\${char}`
+      } else {
+        return char
+      }
+    })
+    .join('')
+
+  return new RegExp(`^${regexPattern}$`)
+}
