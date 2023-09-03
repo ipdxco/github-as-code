@@ -4,7 +4,12 @@ description: Configure git user
 runs:
   using: composite
   steps:
-    - run: |
+    - if: github.event_name == 'workflow_dispatch'
+      run: |
         git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com>"
         git config --global user.name "${GITHUB_ACTOR}"
       shell: bash
+    - if: github.event_name != 'workflow_dispatch'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
