@@ -74,7 +74,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
     default_branch: master
     delete_branch_on_merge: false
     description: GitHub Management
-    homepage_url: https://github.com/protocol/github-mgmt-template
+    homepage_url: https://github.com/pl-strflt/github-mgmt-template
     is_template: false
     vulnerability_alerts: false
     archive_on_destroy: true
@@ -87,7 +87,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
         branch: master
         path: /docs
     template:
-      owner: protocol
+      owner: pl-strflt
       repository: github-mgmt-template
     topics:
       - github

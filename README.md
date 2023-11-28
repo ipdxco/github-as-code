@@ -1,6 +1,6 @@
 <div align="center">
 
-![Management Banner](https://github.com/protocol/github-mgmt-template/assets/6688074/15b2101a-149a-4556-a1b5-497b50d77813)
+![Management Banner](https://github.com/pl-strflt/github-mgmt-template/assets/6688074/15b2101a-149a-4556-a1b5-497b50d77813)
 
 # GitHub Management as Code
 
@@ -20,9 +20,4 @@ A robust template for managing GitHub configurations as code via Pull Requests. 
 
 ## Active Users
 
-A broad range of diverse organizations are already leveraging our GitHub Management solution via Pull Request Workflow. You can find a comprehensive list of these organizations on our [GitHub Management Router repository](https://github.com/protocol/github-mgmt-router). This list showcases the versatility and effectiveness of our GitHub Management system. Our solution can be tailored to meet your unique requirements, driving efficiency and streamlined GitHub organization management.
-
-
-
-
-
+A broad range of diverse organizations are already leveraging our GitHub Management solution via Pull Request Workflow. You can find a comprehensive list of these organizations on our [GitHub Management Router repository](https://github.com/pl-strflt/github-mgmt-router). This list showcases the versatility and effectiveness of our GitHub Management system. Our solution can be tailored to meet your unique requirements, driving efficiency and streamlined GitHub organization management.

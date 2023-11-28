@@ -10,7 +10,7 @@ on:
 
 jobs:
   upgrade:
-    uses: protocol/github-mgmt-template/.github/workflows/upgrade_reusable.yml@master
+    uses: pl-strflt/github-mgmt-template/.github/workflows/upgrade_reusable.yml@master
     with:
       ref: inputs.ref
     secrets:

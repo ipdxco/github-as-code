@@ -11,7 +11,7 @@
 
 *Example*
 
-I want to invite `galargh` as an admin to `protocol` organization through GitHub Management.
+I want to invite `galargh` as an admin to `pl-strflt` organization through GitHub Management.
 
 I ensure the YAML configuration file has the following entry:
 ```yaml
@@ -29,7 +29,7 @@ I push my changes to a new branch and create a PR. An admin reviews the PR and m
 
 *Example*
 
-I want to demote `galargh` from being an `admin` of `protocol` organization to a regular `member` through GitHub Management.
+I want to demote `galargh` from being an `admin` of `pl-strflt` organization to a regular `member` through GitHub Management.
 
 I change the entry for `galargh` in the YAML configuration file from:
 ```yaml
@@ -54,7 +54,7 @@ I push my changes to a new branch and create a PR. An admin reviews the PR and m
 
 *Example*
 
-I want to be able to configure who the member of the `protocol` organization is through GitHub Management.
+I want to be able to configure who the member of the `pl-strflt` organization is through GitHub Management.
 
 I add `github_membership` to `resource_types` array in [terraform/locals_override.tf](../terraform/locals_override.tf). I push my changes to a new branch and create a PR. An admin reviews the PR and merges the PR if everything looks OK. Then, they synchronize GitHub Management with GitHub configuration.
 
@@ -67,7 +67,7 @@ I add `github_membership` to `resource_types` array in [terraform/locals_overrid
 
 *Example*
 
-I do not want to configure the roles of `protocol` organization members through GitHub Management anymore.
+I do not want to configure the roles of `pl-strflt` organization members through GitHub Management anymore.
 
 I ensure that `terraform/resources_override.tf` contains the following entry:
 ```tf

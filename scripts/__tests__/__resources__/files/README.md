@@ -1,6 +1,6 @@
 # GitHub Management via Terraform: pl-strflt
 
-This repository is responsible for managing GitHub configuration of `pl-strflt` organisation as code with Terraform. It was created from [github-mgmt-template](https://github.com/protocol/github-mgmt-template) and it will receive updates from that repository.
+This repository is responsible for managing GitHub configuration of `pl-strflt` organisation as code with Terraform. It was created from [github-mgmt-template](https://github.com/pl-strflt/github-mgmt-template) and it will receive updates from that repository.
 
 **IMPORTANT**: Having write access to GitHub Management repository can be as powerful as having admin access to the organizations managed by that repository.
 

@@ -78,7 +78,7 @@ repositories:
       triage:
         - ipdx
     template:
-      owner: protocol
+      owner: pl-strflt
       repository: github-mgmt-template
     visibility: public
     vulnerability_alerts: false

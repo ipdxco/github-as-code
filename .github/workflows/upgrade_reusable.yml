@@ -34,7 +34,7 @@ jobs:
       - name: Checkout GitHub Management template
         uses: actions/checkout@v3
         with:
-          repository: protocol/github-mgmt-template
+          repository: pl-strflt/github-mgmt-template
           path: github-mgmt-template
           ref: ${{ github.event.inputs.ref }}
       - name: Checkout GitHub Management
