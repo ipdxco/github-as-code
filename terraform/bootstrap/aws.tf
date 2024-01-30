@@ -12,7 +12,7 @@ terraform {
     }
   }
 
-  required_version = "~> 1.1.4"
+  required_version = "~> 1.2.9"
 }
 
 provider "aws" {}
@@ -31,7 +31,17 @@ resource "aws_s3_bucket" "this" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "this" {
+  depends_on = [ aws_s3_bucket_ownership_controls.this ]
+
   bucket = aws_s3_bucket.this.id
   acl    = "private"
 }
