@@ -1,12 +1,9 @@
 import 'reflect-metadata'
 
-/*
-Put `github/*.yml` transform rules that you want executed during `Fix` workflow runs here.
+import { toggleArchivedRepos } from './shared/toggle-archived-repos'
 
-*Example*
-```ts
-import {protectDefaultBranches} from './shared/protect-default-branches'
+async function run(): Promise<void> {
+  await toggleArchivedRepos()
+}
 
-protectDefaultBranches()
-```
-*/
+run()
