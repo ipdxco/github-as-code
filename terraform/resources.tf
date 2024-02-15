@@ -294,14 +294,19 @@ resource "github_repository_file" "this" {
       }) if startswith(address, "managed.github_repository_file.this.${repository}:")
     } :
     {
-      for config in [
-        for file, config in lookup(repository_config, "files", {}) : merge(config, {
-          repository     = repository
-          file           = file
-          repository_key = lower(repository)
-          content        = try(file("${path.module}/../files/${config.content}"), config.content)
-        }) if contains(keys(config), "content")
-      ] : lower("${config.repository}/${config.file}") => config
+      for obj in [
+        for file, config in lookup(repository_config, "files", {}) : {
+          config = merge(config, {
+            repository     = repository
+            file           = file
+            repository_key = lower(repository)
+            content        = try(file("${path.module}/../files/${config.content}"), config.content)
+          })
+          state = merge(try(local.state["managed.github_repository_file.this.${lower("${repository}/${file}")}"], {}), {
+            repository_key = lower(repository)
+          })
+        } if contains(keys(config), "content")
+      ] : lower("${obj.config.repository}/${obj.config.file}") => try(obj.state.content, "") == obj.config.content ? obj.state : obj.config
     }
   ]...)
 
@@ -310,12 +315,12 @@ resource "github_repository_file" "this" {
   content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
-  branch              = github_repository.this[each.value.repository_key].default_branch
-  overwrite_on_create = try(each.value.overwrite_on_create, null)
+  branch              = try(each.value.branch, github_repository.this[each.value.repository_key].default_branch)
+  overwrite_on_create = try(each.value.overwrite_on_create, true)
   # Keep the defaults from 4.x
-  commit_author       = "GitHub"
-  commit_email        = "noreply@github.com"
-  commit_message      = "chore: Update ${each.value.file} [skip ci]"
+  commit_author       = try(each.value.commit_author, "GitHub")
+  commit_email        = try(each.value.commit_email, "noreply@github.com")
+  commit_message      = try(each.value.commit_message, "chore: Update ${each.value.file} [skip ci]")
 
   lifecycle {
     ignore_changes = []
