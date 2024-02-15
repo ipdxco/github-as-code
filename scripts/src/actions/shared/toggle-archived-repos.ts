@@ -21,7 +21,7 @@ export async function toggleArchivedRepos(): Promise<void> {
       if (stateRepository !== undefined && stateRepository.archived) {
         config.addResource(stateRepository)
         for (const resource of resources) {
-          if ('repository' in resource && resource.repository === stateRepository.name) {
+          if ('repository' in resource && (resource as any).repository === stateRepository.name) {
             config.addResource(resource)
           }
         }

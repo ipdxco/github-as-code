@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { toggleArchivedRepos } from './shared/toggle-archived-repos'
-import { getAccessSummaryDescription } from
+import { getAccessSummaryDescription } from './shared/get-access-summary-description'
 
 import * as core from '@actions/core'
 
