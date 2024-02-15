@@ -87,7 +87,9 @@ jobs:
         run: terraform init
         working-directory: terraform
       - name: Plan terraform
-        run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
+        run: |
+          terraform show -json > $TF_WORKSPACE.tfstate.json
+          terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
         uses: actions/upload-artifact@v3

@@ -19,9 +19,30 @@ resource "github_membership" "this" {
 
 resource "github_repository" "this" {
   for_each = {
-    for repository, config in lookup(local.config, "repositories", {}) : lower(repository) => merge(config, {
-      name = repository
-    })
+    for repository, config in lookup(local.config, "repositories", {}) : lower(repository) =>
+      try(config.archived, false) ?
+      local.state["managed.github_repository.this.${repository}"] :
+      merge(config, {
+        name = repository
+        security_and_analysis = (try(config.visibility, "private") == "public" || local.advanced_security) ? [
+          {
+            advanced_security = try(config.visibility, "private") == "public" || !local.advanced_security ? [] : [{"status": try(config.advanced_security, false) ? "enabled" : "disabled"}]
+            secret_scanning = try(config.visibility, "private") != "public" ? [] : [{"status": try(config.secret_scanning, false) ? "enabled" : "disabled"}]
+            secret_scanning_push_protection = try(config.visibility, "private") != "public" ? [] : [{"status": try(config.secret_scanning_push_protection, false) ? "enabled" : "disabled"}]
+          }] : []
+        pages = try(config.pages, null) == null ? [] : [
+          {
+            cname = try(config.pages.cname, null)
+            source = try(config.pages.source, null) == null ? [] : [
+              {
+                branch = config.pages.source.branch
+                path   = try(config.pages.source.path, null)
+              }
+            ]
+          }
+        ]
+        template = try([config.template], [])
+      })
   }
 
   name                                    = each.value.name
@@ -55,36 +76,36 @@ resource "github_repository" "this" {
   vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
 
   dynamic "security_and_analysis" {
-    for_each = try(each.value.visibility == "public" || local.advanced_security ? [{}] : [], [])
+    for_each = try(each.value.security_and_analysis, [])
 
     content {
       dynamic "advanced_security" {
-        for_each = try(each.value.visibility == "public" || !local.advanced_security ? [] : [each.value.advanced_security ? "enabled" : "disabled"], [])
+        for_each = security_and_analysis.value["advanced_security"]
         content {
-          status = advanced_security.value
+          status = advanced_security.value["status"]
         }
       }
       dynamic "secret_scanning" {
-        for_each = try(each.value.visibility == "private" ? [] : [each.value.secret_scanning ? "enabled" : "disabled"], [])
+        for_each = security_and_analysis.value["secret_scanning"]
         content {
-          status = secret_scanning.value
+          status = secret_scanning.value["status"]
         }
       }
       dynamic "secret_scanning_push_protection" {
-        for_each = try(each.value.visibility == "private" ? [] : [each.value.secret_scanning_push_protection ? "enabled" : "disabled"], [])
+        for_each = security_and_analysis.value["secret_scanning_push_protection"]
         content {
-          status = secret_scanning_push_protection.value
+          status = secret_scanning_push_protection.value["status"]
         }
       }
     }
   }
 
   dynamic "pages" {
-    for_each = try([each.value.pages], [])
+    for_each = try(each.value.pages, [])
     content {
       cname = try(pages.value["cname"], null)
       dynamic "source" {
-        for_each = [pages.value["source"]]
+        for_each = pages.value["source"]
         content {
           branch = source.value["branch"]
           path   = try(source.value["path"], null)
@@ -93,7 +114,7 @@ resource "github_repository" "this" {
     }
   }
   dynamic "template" {
-    for_each = try([each.value.template], [])
+    for_each = try(each.value.template, [])
     content {
       owner      = template.value["owner"]
       repository = template.value["repository"]
@@ -109,15 +130,21 @@ resource "github_repository" "this" {
 resource "github_repository_collaborator" "this" {
   for_each = merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
-    [
-      for permission, members in lookup(repository_config, "collaborators", {}) : {
-        for member in members : lower("${repository}:${member}") => {
-          repository = repository
-          username   = member
-          permission = permission
+      try(repository_config.archived, false) ?
+      [
+        {
+          for address, resource in local.state : resource.index => resource if startswith(address, "managed.github_repository_collaborator.this.${repository}:")
         }
-      }
-    ]
+      ] :
+      [
+        for permission, members in lookup(repository_config, "collaborators", {}) : {
+          for member in members : lower("${repository}:${member}") => {
+            repository = repository
+            username   = member
+            permission = permission
+          }
+        }
+      ]
   ])...)
 
   depends_on = [github_repository.this]
@@ -134,6 +161,12 @@ resource "github_repository_collaborator" "this" {
 resource "github_branch_protection" "this" {
   for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
+    try(repository_config.archived, false) ?
+    {
+      for address, resource in local.state : resource.index => merge(resource, {
+        repository_key = split(":", resource.index)[0]
+      }) if startswith(address, "managed.github_branch_protection.this.${repository}:")
+    } :
     {
       for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(config, {
         pattern        = pattern
@@ -195,6 +228,14 @@ resource "github_team" "this" {
 resource "github_team_repository" "this" {
   for_each = merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
+    try(repository_config.archived, false) ?
+    [
+      {
+        for address, resource in local.state : resource.index => merge(resource, {
+          team_key   = split(":", resource.index)[1]
+        }) if startswith(address, "managed.github_team_repository.this.${repository}:")
+      }
+    ] :
     [
       for permission, teams in lookup(repository_config, "teams", {}) : {
         for team in teams : lower("${team}:${repository}") => {
@@ -246,6 +287,12 @@ resource "github_team_membership" "this" {
 resource "github_repository_file" "this" {
   for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
+    try(repository_config.archived, false) ?
+    {
+      for address, resource in local.state : resource.index => merge(resource, {
+        repository_key = split("/", resource.index)[0]
+      }) if startswith(address, "managed.github_repository_file.this.${repository}:")
+    } :
     {
       for config in [
         for file, config in lookup(repository_config, "files", {}) : merge(config, {
@@ -278,6 +325,10 @@ resource "github_repository_file" "this" {
 resource "github_issue_label" "this" {
   for_each = merge([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
+    try(repository_config.archived, false) ?
+    {
+      for address, resource in local.state : resource.index => resource if startswith(address, "managed.github_issue_label.this.${repository}:")
+    } :
     {
       for label, config in lookup(repository_config, "labels", {}) : lower("${repository}:${label}") => merge(config, {
         repository = repository

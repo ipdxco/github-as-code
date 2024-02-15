@@ -78,4 +78,6 @@ jobs:
           SHA: ${{ needs.prepare.outputs.sha }}
         run: gh run download -n "${TF_WORKSPACE}_${SHA}.tfplan" --repo "${GITHUB_REPOSITORY}"
       - name: Terraform Apply
-        run: terraform apply -lock-timeout=0s -no-color "${TF_WORKSPACE}.tfplan"
+        run: |
+          terraform show -json > $TF_WORKSPACE.tfstate.json
+          terraform apply -lock-timeout=0s -no-color "${TF_WORKSPACE}.tfplan"
