@@ -20,63 +20,63 @@ resource "github_membership" "this" {
 resource "github_repository" "this" {
   for_each = {
     for repository, config in lookup(local.config, "repositories", {}) : lower(repository) =>
-      try(config.archived, false) ?
-      local.state["managed.github_repository.this.${repository}"] :
-      merge(config, {
-        name = repository
-        security_and_analysis = (try(config.visibility, "private") == "public" || local.advanced_security) ? [
-          {
-            advanced_security = try(config.visibility, "private") == "public" || !local.advanced_security ? [] : [{"status": try(config.advanced_security, false) ? "enabled" : "disabled"}]
-            secret_scanning = try(config.visibility, "private") != "public" ? [] : [{"status": try(config.secret_scanning, false) ? "enabled" : "disabled"}]
-            secret_scanning_push_protection = try(config.visibility, "private") != "public" ? [] : [{"status": try(config.secret_scanning_push_protection, false) ? "enabled" : "disabled"}]
-          }] : []
-        pages = try(config.pages, null) == null ? [] : [
-          {
-            cname = try(config.pages.cname, null)
-            source = try(config.pages.source, null) == null ? [] : [
-              {
-                branch = config.pages.source.branch
-                path   = try(config.pages.source.path, null)
-              }
-            ]
-          }
-        ]
-        template = try([config.template], [])
-      })
+    try(config.archived, false) ?
+    local.state["managed.github_repository.this.${lower(repository)}"] :
+    merge(local.defaults.github_repository, merge(config, {
+      name = repository
+      security_and_analysis = (try(config.visibility, "private") == "public" || local.advanced_security) ? [
+        {
+          advanced_security               = try(config.visibility, "private") == "public" || !local.advanced_security ? [] : [{ "status" : try(config.advanced_security, false) ? "enabled" : "disabled" }]
+          secret_scanning                 = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning, false) ? "enabled" : "disabled" }]
+          secret_scanning_push_protection = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning_push_protection, false) ? "enabled" : "disabled" }]
+      }] : []
+      pages = try(config.pages, null) == null ? [] : [
+        {
+          cname = try(config.pages.cname, null)
+          source = try(config.pages.source, null) == null ? [] : [
+            {
+              branch = config.pages.source.branch
+              path   = try(config.pages.source.path, null)
+            }
+          ]
+        }
+      ]
+      template = try([config.template], [])
+    }))
   }
 
   name                                    = each.value.name
-  allow_auto_merge                        = try(each.value.allow_auto_merge, null)
-  allow_merge_commit                      = try(each.value.allow_merge_commit, null)
-  allow_rebase_merge                      = try(each.value.allow_rebase_merge, null)
-  allow_squash_merge                      = try(each.value.allow_squash_merge, null)
-  allow_update_branch                     = try(each.value.allow_update_branch, null)
-  archive_on_destroy                      = try(each.value.archive_on_destroy, null)
-  archived                                = try(each.value.archived, null)
-  auto_init                               = try(each.value.auto_init, null)
-  default_branch                          = try(each.value.default_branch, null)
-  delete_branch_on_merge                  = try(each.value.delete_branch_on_merge, null)
-  description                             = try(each.value.description, null)
-  gitignore_template                      = try(each.value.gitignore_template, null)
-  has_discussions                         = try(each.value.has_discussions, null)
-  has_downloads                           = try(each.value.has_downloads, null)
-  has_issues                              = try(each.value.has_issues, null)
-  has_projects                            = try(each.value.has_projects, null)
-  has_wiki                                = try(each.value.has_wiki, null)
-  homepage_url                            = try(each.value.homepage_url, null)
-  ignore_vulnerability_alerts_during_read = try(each.value.ignore_vulnerability_alerts_during_read, null)
-  is_template                             = try(each.value.is_template, null)
-  license_template                        = try(each.value.license_template, null)
-  merge_commit_message                    = try(each.value.merge_commit_message, null)
-  merge_commit_title                      = try(each.value.merge_commit_title, null)
-  squash_merge_commit_message             = try(each.value.squash_merge_commit_message, null)
-  squash_merge_commit_title               = try(each.value.squash_merge_commit_title, null)
-  topics                                  = try(each.value.topics, null)
-  visibility                              = try(each.value.visibility, null)
-  vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
+  allow_auto_merge                        = each.value.allow_auto_merge
+  allow_merge_commit                      = each.value.allow_merge_commit
+  allow_rebase_merge                      = each.value.allow_rebase_merge
+  allow_squash_merge                      = each.value.allow_squash_merge
+  allow_update_branch                     = each.value.allow_update_branch
+  archive_on_destroy                      = each.value.archive_on_destroy
+  archived                                = each.value.archived
+  auto_init                               = each.value.auto_init
+  default_branch                          = each.value.default_branch
+  delete_branch_on_merge                  = each.value.delete_branch_on_merge
+  description                             = each.value.description
+  gitignore_template                      = each.value.gitignore_template
+  has_discussions                         = each.value.has_discussions
+  has_downloads                           = each.value.has_downloads
+  has_issues                              = each.value.has_issues
+  has_projects                            = each.value.has_projects
+  has_wiki                                = each.value.has_wiki
+  homepage_url                            = each.value.homepage_url
+  ignore_vulnerability_alerts_during_read = each.value.ignore_vulnerability_alerts_during_read
+  is_template                             = each.value.is_template
+  license_template                        = each.value.license_template
+  merge_commit_message                    = each.value.merge_commit_message
+  merge_commit_title                      = each.value.merge_commit_title
+  squash_merge_commit_message             = each.value.squash_merge_commit_message
+  squash_merge_commit_title               = each.value.squash_merge_commit_title
+  topics                                  = each.value.topics
+  visibility                              = each.value.visibility
+  vulnerability_alerts                    = each.value.vulnerability_alerts
 
   dynamic "security_and_analysis" {
-    for_each = try(each.value.security_and_analysis, [])
+    for_each = each.value.security_and_analysis
 
     content {
       dynamic "advanced_security" {
@@ -101,7 +101,7 @@ resource "github_repository" "this" {
   }
 
   dynamic "pages" {
-    for_each = try(each.value.pages, [])
+    for_each = each.value.pages
     content {
       cname = try(pages.value["cname"], null)
       dynamic "source" {
@@ -114,7 +114,7 @@ resource "github_repository" "this" {
     }
   }
   dynamic "template" {
-    for_each = try(each.value.template, [])
+    for_each = each.value.template
     content {
       owner      = template.value["owner"]
       repository = template.value["repository"]
@@ -130,21 +130,21 @@ resource "github_repository" "this" {
 resource "github_repository_collaborator" "this" {
   for_each = merge(flatten([
     for repository, repository_config in lookup(local.config, "repositories", {}) :
-      try(repository_config.archived, false) ?
-      [
-        {
-          for address, resource in local.state : resource.index => resource if startswith(address, "managed.github_repository_collaborator.this.${repository}:")
-        }
-      ] :
-      [
-        for permission, members in lookup(repository_config, "collaborators", {}) : {
-          for member in members : lower("${repository}:${member}") => {
-            repository = repository
-            username   = member
-            permission = permission
-          }
-        }
-      ]
+    try(repository_config.archived, false) ?
+    [
+      {
+        for address, resource in local.state : resource.index => resource if try(regex("managed.github_repository_collaborator.this.${lower(repository)}:", address), null) != null
+      }
+    ] :
+    [
+      for permission, members in lookup(repository_config, "collaborators", {}) : {
+        for member in members : lower("${repository}:${member}") => merge(local.defaults.github_repository_collaborator, {
+          repository = repository
+          username   = member
+          permission = permission
+        })
+      }
+    ]
   ])...)
 
   depends_on = [github_repository.this]
@@ -164,31 +164,33 @@ resource "github_branch_protection" "this" {
     try(repository_config.archived, false) ?
     {
       for address, resource in local.state : resource.index => merge(resource, {
-        repository_key = split(":", resource.index)[0]
-      }) if startswith(address, "managed.github_branch_protection.this.${repository}:")
+        repository_key = null
+      }) if try(regex("managed.github_branch_protection.this.${lower(repository)}:", address), null) != null
     } :
     {
-      for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(config, {
-        pattern        = pattern
-        repository_key = lower(repository)
-      })
+      for pattern, config in lookup(repository_config, "branch_protection", {}) : lower("${repository}:${pattern}") => merge(local.defaults.github_branch_protection, merge(config, {
+        pattern                       = pattern
+        repository_key                = lower(repository)
+        required_pull_request_reviews = try([config.required_pull_request_reviews], [])
+        required_status_checks        = try([config.required_status_checks], [])
+      }))
     }
   ]...)
 
   pattern                         = each.value.pattern
-  repository_id                   = github_repository.this[each.value.repository_key].node_id
-  allows_deletions                = try(each.value.allows_deletions, null)
-  allows_force_pushes             = try(each.value.allows_force_pushes, null)
-  blocks_creations                = try(each.value.blocks_creations, null)
-  enforce_admins                  = try(each.value.enforce_admins, null)
-  lock_branch                     = try(each.value.lock_branch, null)
-  push_restrictions               = try(each.value.push_restrictions, null)
-  require_conversation_resolution = try(each.value.require_conversation_resolution, null)
-  require_signed_commits          = try(each.value.require_signed_commits, null)
-  required_linear_history         = try(each.value.required_linear_history, null)
+  repository_id                   = each.value.repository_id != null ? each.value.repository_id : github_repository.this[each.value.repository_key].node_id
+  allows_deletions                = each.value.allows_deletions
+  allows_force_pushes             = each.value.allows_force_pushes
+  blocks_creations                = each.value.blocks_creations
+  enforce_admins                  = each.value.enforce_admins
+  lock_branch                     = each.value.lock_branch
+  push_restrictions               = each.value.push_restrictions
+  require_conversation_resolution = each.value.require_conversation_resolution
+  require_signed_commits          = each.value.require_signed_commits
+  required_linear_history         = each.value.required_linear_history
 
   dynamic "required_pull_request_reviews" {
-    for_each = try([each.value.required_pull_request_reviews], [])
+    for_each = each.value.required_pull_request_reviews
     content {
       dismiss_stale_reviews           = try(required_pull_request_reviews.value["dismiss_stale_reviews"], null)
       dismissal_restrictions          = try(required_pull_request_reviews.value["dismissal_restrictions"], null)
@@ -199,7 +201,7 @@ resource "github_branch_protection" "this" {
     }
   }
   dynamic "required_status_checks" {
-    for_each = try([each.value.required_status_checks], [])
+    for_each = each.value.required_status_checks
     content {
       contexts = try(required_status_checks.value["contexts"], null)
       strict   = try(required_status_checks.value["strict"], null)
@@ -209,16 +211,15 @@ resource "github_branch_protection" "this" {
 
 resource "github_team" "this" {
   for_each = {
-    for team, config in lookup(local.config, "teams", {}) : lower(team) => merge(config, {
-      name           = team
-      parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, config.parent_team_id)).id, config.parent_team_id), null)
-    })
+    for team, config in lookup(local.config, "teams", {}) : lower(team) => merge(local.defaults.github_team, merge(config, {
+      name = team
+    }))
   }
 
   name           = each.value.name
-  description    = try(each.value.description, null)
-  parent_team_id = try(each.value.parent_team_id, null)
-  privacy        = try(each.value.privacy, null)
+  description    = each.value.description
+  parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, each.value.parent_team_id)).id, each.value.parent_team_id), null)
+  privacy        = each.value.privacy
 
   lifecycle {
     ignore_changes = []
@@ -232,17 +233,17 @@ resource "github_team_repository" "this" {
     [
       {
         for address, resource in local.state : resource.index => merge(resource, {
-          team_key   = split(":", resource.index)[1]
-        }) if startswith(address, "managed.github_team_repository.this.${repository}:")
+          team_key = null
+        }) if try(regex("managed.github_team_repository.this.${lower(repository)}:", address), null) != null
       }
     ] :
     [
       for permission, teams in lookup(repository_config, "teams", {}) : {
-        for team in teams : lower("${team}:${repository}") => {
+        for team in teams : lower("${team}:${repository}") => merge(local.defaults.github_team_repository, {
           repository = repository
           team_key   = lower(team)
           permission = permission
-        }
+        })
       }
     ]
   ])...)
@@ -252,9 +253,9 @@ resource "github_team_repository" "this" {
   ]
 
   repository = each.value.repository
-  team_id    = github_team.this[each.value.team_key].id
+  team_id    = each.value.team_id != null ? each.value.team_id : github_team.this[each.value.team_key].id
 
-  permission = try(each.value.permission, null)
+  permission = each.value.permission
 
   lifecycle {
     ignore_changes = []
@@ -266,16 +267,16 @@ resource "github_team_membership" "this" {
     for team, team_config in lookup(local.config, "teams", {}) :
     [
       for role, members in lookup(team_config, "members", {}) : {
-        for member in members : lower("${team}:${member}") => {
+        for member in members : lower("${team}:${member}") => merge(local.defaults.github_team_membership, {
           team_key = lower(team)
           username = member
           role     = role
-        }
+        })
       }
     ]
   ])...)
 
-  team_id  = github_team.this[each.value.team_key].id
+  team_id  = each.value.team_id != null ? each.value.team_id : github_team.this[each.value.team_key].id
   username = each.value.username
   role     = each.value.role
 
@@ -290,20 +291,20 @@ resource "github_repository_file" "this" {
     try(repository_config.archived, false) ?
     {
       for address, resource in local.state : resource.index => merge(resource, {
-        repository_key = split("/", resource.index)[0]
-      }) if startswith(address, "managed.github_repository_file.this.${repository}:")
+        repository_key = null
+      }) if try(regex("managed.github_repository_file.this.${lower(repository)}:", address), null) != null
     } :
     {
       for obj in [
         for file, config in lookup(repository_config, "files", {}) : {
-          config = merge(config, {
+          config = merge(local.defaults.github_repository_file, merge(config, {
             repository     = repository
             file           = file
             repository_key = lower(repository)
             content        = try(file("${path.module}/../files/${config.content}"), config.content)
-          })
+          }))
           state = merge(try(local.state["managed.github_repository_file.this.${lower("${repository}/${file}")}"], {}), {
-            repository_key = lower(repository)
+            repository_key = null
           })
         } if contains(keys(config), "content")
       ] : lower("${obj.config.repository}/${obj.config.file}") => try(obj.state.content, "") == obj.config.content ? obj.state : obj.config
@@ -315,12 +316,12 @@ resource "github_repository_file" "this" {
   content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
-  branch              = try(each.value.branch, github_repository.this[each.value.repository_key].default_branch)
-  overwrite_on_create = try(each.value.overwrite_on_create, true)
+  branch              = each.value.branch != null ? each.value.branch : github_repository.this[each.value.repository_key].default_branch
+  overwrite_on_create = each.value.overwrite_on_create != null ? each.value.overwrite_on_create : true
   # Keep the defaults from 4.x
-  commit_author       = try(each.value.commit_author, "GitHub")
-  commit_email        = try(each.value.commit_email, "noreply@github.com")
-  commit_message      = try(each.value.commit_message, "chore: Update ${each.value.file} [skip ci]")
+  commit_author  = each.value.commit_author != null ? each.value.commit_author : "GitHub"
+  commit_email   = each.value.commit_email != null ? each.value.commit_email : "noreply@github.com"
+  commit_message = each.value.commit_message != null ? each.value.commit_message : "chore: Update ${each.value.file} [skip ci]"
 
   lifecycle {
     ignore_changes = []
@@ -332,13 +333,12 @@ resource "github_issue_label" "this" {
     for repository, repository_config in lookup(local.config, "repositories", {}) :
     try(repository_config.archived, false) ?
     {
-      for address, resource in local.state : resource.index => resource if startswith(address, "managed.github_issue_label.this.${repository}:")
-    } :
-    {
-      for label, config in lookup(repository_config, "labels", {}) : lower("${repository}:${label}") => merge(config, {
+      for address, resource in local.state : resource.index => resource if try(regex("managed.github_issue_label.this.${lower(repository)}:", address), null) != null
+      } : {
+      for label, config in lookup(repository_config, "labels", {}) : lower("${repository}:${label}") => merge(local.defaults.github_issue_label, merge(config, {
         repository = repository
         label      = label
-      })
+      }))
     }
   ]...)
 
@@ -346,8 +346,8 @@ resource "github_issue_label" "this" {
 
   repository  = each.value.repository
   name        = each.value.label
-  color       = try(each.value.color, null)
-  description = try(each.value.description, null)
+  color       = each.value.color
+  description = each.value.description
 
   lifecycle {
     ignore_changes = []
