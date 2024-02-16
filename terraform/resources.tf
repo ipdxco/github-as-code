@@ -5,11 +5,11 @@ resource "github_membership" "this" {
         source = "config"
         index = member
       }
-    ] : item.index => item.source
+    ] : item.index => local.resources[item.source].github_membership.this[item.index]
   }
 
-  username = local.resources[each.value].github_membership.this[each.key].username
-  role     = local.resources[each.value].github_membership.this[each.key].role
+  username = each.value.username
+  role     = each.value.role
 
   lifecycle {
     ignore_changes  = []
@@ -28,41 +28,41 @@ resource "github_repository" "this" {
           source = "config"
           index = repository
         }
-    ] : item.index => item.source
+    ] : item.index => local.resources[item.source].github_repository.this[item.index]
   }
 
-  name                                    = local.resources[each.value].github_repository.this[each.key].name
-  allow_auto_merge                        = try(local.resources[each.value].github_repository.this[each.key].allow_auto_merge, null)
-  allow_merge_commit                      = try(local.resources[each.value].github_repository.this[each.key].allow_merge_commit, null)
-  allow_rebase_merge                      = try(local.resources[each.value].github_repository.this[each.key].allow_rebase_merge, null)
-  allow_squash_merge                      = try(local.resources[each.value].github_repository.this[each.key].allow_squash_merge, null)
-  allow_update_branch                     = try(local.resources[each.value].github_repository.this[each.key].allow_update_branch, null)
-  archive_on_destroy                      = try(local.resources[each.value].github_repository.this[each.key].archive_on_destroy, null)
-  archived                                = try(local.resources[each.value].github_repository.this[each.key].archived, null)
-  auto_init                               = try(local.resources[each.value].github_repository.this[each.key].auto_init, null)
-  default_branch                          = try(local.resources[each.value].github_repository.this[each.key].default_branch, null)
-  delete_branch_on_merge                  = try(local.resources[each.value].github_repository.this[each.key].delete_branch_on_merge, null)
-  description                             = try(local.resources[each.value].github_repository.this[each.key].description, null)
-  gitignore_template                      = try(local.resources[each.value].github_repository.this[each.key].gitignore_template, null)
-  has_discussions                         = try(local.resources[each.value].github_repository.this[each.key].has_discussions, null)
-  has_downloads                           = try(local.resources[each.value].github_repository.this[each.key].has_downloads, null)
-  has_issues                              = try(local.resources[each.value].github_repository.this[each.key].has_issues, null)
-  has_projects                            = try(local.resources[each.value].github_repository.this[each.key].has_projects, null)
-  has_wiki                                = try(local.resources[each.value].github_repository.this[each.key].has_wiki, null)
-  homepage_url                            = try(local.resources[each.value].github_repository.this[each.key].homepage_url, null)
-  ignore_vulnerability_alerts_during_read = try(local.resources[each.value].github_repository.this[each.key].ignore_vulnerability_alerts_during_read, null)
-  is_template                             = try(local.resources[each.value].github_repository.this[each.key].is_template, null)
-  license_template                        = try(local.resources[each.value].github_repository.this[each.key].license_template, null)
-  merge_commit_message                    = try(local.resources[each.value].github_repository.this[each.key].merge_commit_message, null)
-  merge_commit_title                      = try(local.resources[each.value].github_repository.this[each.key].merge_commit_title, null)
-  squash_merge_commit_message             = try(local.resources[each.value].github_repository.this[each.key].squash_merge_commit_message, null)
-  squash_merge_commit_title               = try(local.resources[each.value].github_repository.this[each.key].squash_merge_commit_title, null)
-  topics                                  = try(local.resources[each.value].github_repository.this[each.key].topics, null)
-  visibility                              = try(local.resources[each.value].github_repository.this[each.key].visibility, null)
-  vulnerability_alerts                    = try(local.resources[each.value].github_repository.this[each.key].vulnerability_alerts, null)
+  name                                    = each.value.name
+  allow_auto_merge                        = try(each.value.allow_auto_merge, null)
+  allow_merge_commit                      = try(each.value.allow_merge_commit, null)
+  allow_rebase_merge                      = try(each.value.allow_rebase_merge, null)
+  allow_squash_merge                      = try(each.value.allow_squash_merge, null)
+  allow_update_branch                     = try(each.value.allow_update_branch, null)
+  archive_on_destroy                      = try(each.value.archive_on_destroy, null)
+  archived                                = try(each.value.archived, null)
+  auto_init                               = try(each.value.auto_init, null)
+  default_branch                          = try(each.value.default_branch, null)
+  delete_branch_on_merge                  = try(each.value.delete_branch_on_merge, null)
+  description                             = try(each.value.description, null)
+  gitignore_template                      = try(each.value.gitignore_template, null)
+  has_discussions                         = try(each.value.has_discussions, null)
+  has_downloads                           = try(each.value.has_downloads, null)
+  has_issues                              = try(each.value.has_issues, null)
+  has_projects                            = try(each.value.has_projects, null)
+  has_wiki                                = try(each.value.has_wiki, null)
+  homepage_url                            = try(each.value.homepage_url, null)
+  ignore_vulnerability_alerts_during_read = try(each.value.ignore_vulnerability_alerts_during_read, null)
+  is_template                             = try(each.value.is_template, null)
+  license_template                        = try(each.value.license_template, null)
+  merge_commit_message                    = try(each.value.merge_commit_message, null)
+  merge_commit_title                      = try(each.value.merge_commit_title, null)
+  squash_merge_commit_message             = try(each.value.squash_merge_commit_message, null)
+  squash_merge_commit_title               = try(each.value.squash_merge_commit_title, null)
+  topics                                  = try(each.value.topics, null)
+  visibility                              = try(each.value.visibility, null)
+  vulnerability_alerts                    = try(each.value.vulnerability_alerts, null)
 
   dynamic "security_and_analysis" {
-    for_each = try(local.resources[each.value].github_repository.this[each.key].security_and_analysis, [])
+    for_each = try(each.value.security_and_analysis, [])
 
     content {
       dynamic "advanced_security" {
@@ -87,7 +87,7 @@ resource "github_repository" "this" {
   }
 
   dynamic "pages" {
-    for_each = try(local.resources[each.value].github_repository.this[each.key].pages, [])
+    for_each = try(each.value.pages, [])
     content {
       cname = try(pages.value["cname"], null)
       dynamic "source" {
@@ -100,7 +100,7 @@ resource "github_repository" "this" {
     }
   }
   dynamic "template" {
-    for_each = try(local.resources[each.value].github_repository.this[each.key].template, [])
+    for_each = try(each.value.template, [])
     content {
       owner      = template.value["owner"]
       repository = template.value["repository"]
@@ -115,28 +115,28 @@ resource "github_repository" "this" {
 
 resource "github_repository_collaborator" "this" {
   for_each = {
-    for item in [
+    for item in flatten([
       for repository, config in local.resources.config.github_repository.this : flatten([
         try(config.archived, false) ? [
-          for member, config in local.resources.state.github_repository_collaborator.this : {
+          for member, config in try(local.resources.state.github_repository_collaborator.this, {}) : {
             source = "state"
             index = member
-          } if try(regex("^${repository}:", member), null) != null
+          } if lower(config.repository) == repository
         ] : [
           for member, config in local.resources.config.github_repository_collaborator.this : {
             source = "config"
             index = member
-          } if try(regex("^${repository}:", member), null) != null
+          } if lower(config.repository) == repository
         ]
       ])
-    ] : item.index => item.source
+    ]) : item.index => local.resources[item.source].github_repository_collaborator.this[item.index]
   }
 
   depends_on = [github_repository.this]
 
-  repository = local.resources[each.value].github_repository_collaborator.this[each.key].repository
-  username   = local.resources[each.value].github_repository_collaborator.this[each.key].username
-  permission = local.resources[each.value].github_repository_collaborator.this[each.key].permission
+  repository = each.value.repository
+  username   = each.value.username
+  permission = each.value.permission
 
   lifecycle {
     ignore_changes = []
@@ -145,41 +145,41 @@ resource "github_repository_collaborator" "this" {
 
 resource "github_branch_protection" "this" {
   for_each = {
-    for item in [
+    for item in flatten([
       for repository, config in local.resources.config.github_repository.this : flatten([
         try(config.archived, false) ? [
-          for branch_protection, config in local.resources.state.github_branch_protection.this : {
+          for branch_protection, config in try(local.resources.state.github_branch_protection.this, {}) : {
             source = "state"
             index = branch_protection
-          } if try(regex("^${repository}:", branch_protection), null) != null
+          } if split(":", branch_protection)[0] == repository
         ] : [
           for branch_protection, config in local.resources.config.github_branch_protection.this : {
             source = "config"
             index = branch_protection
-          } if try(regex("^${repository}:", branch_protection), null) != null
+          } if lower(config.repository) == repository
         ]
       ])
-    ] : item.index => item.source
+    ]) : item.index => local.resources[item.source].github_branch_protection.this[item.index]
   }
 
   depends_on = [github_repository.this]
 
-  pattern                         = local.resources[each.value].github_branch_protection.this[each.key].pattern
+  pattern                         = each.value.pattern
 
-  repository_id = try(local.resources[each.value].github_branch_protection.this[each.key].repository_id, github_repository.this[lower(local.resources[each.value].github_branch_protection.this[each.key].repository)].node_id)
+  repository_id = try(each.value.repository_id, github_repository.this[lower(each.value.repository)].node_id)
 
-  allows_deletions                = try(local.resources[each.value].github_branch_protection.this[each.key].allows_deletions, null)
-  allows_force_pushes             = try(local.resources[each.value].github_branch_protection.this[each.key].allows_force_pushes, null)
-  blocks_creations                = try(local.resources[each.value].github_branch_protection.this[each.key].blocks_creations, null)
-  enforce_admins                  = try(local.resources[each.value].github_branch_protection.this[each.key].enforce_admins, null)
-  lock_branch                     = try(local.resources[each.value].github_branch_protection.this[each.key].lock_branch, null)
-  push_restrictions               = try(local.resources[each.value].github_branch_protection.this[each.key].push_restrictions, null)
-  require_conversation_resolution = try(local.resources[each.value].github_branch_protection.this[each.key].require_conversation_resolution, null)
-  require_signed_commits          = try(local.resources[each.value].github_branch_protection.this[each.key].require_signed_commits, null)
-  required_linear_history         = try(local.resources[each.value].github_branch_protection.this[each.key].required_linear_history, null)
+  allows_deletions                = try(each.value.allows_deletions, null)
+  allows_force_pushes             = try(each.value.allows_force_pushes, null)
+  blocks_creations                = try(each.value.blocks_creations, null)
+  enforce_admins                  = try(each.value.enforce_admins, null)
+  lock_branch                     = try(each.value.lock_branch, null)
+  push_restrictions               = try(each.value.push_restrictions, null)
+  require_conversation_resolution = try(each.value.require_conversation_resolution, null)
+  require_signed_commits          = try(each.value.require_signed_commits, null)
+  required_linear_history         = try(each.value.required_linear_history, null)
 
   dynamic "required_pull_request_reviews" {
-    for_each = try(local.resources[each.value].github_branch_protection.this[each.key].required_pull_request_reviews, [])
+    for_each = try(each.value.required_pull_request_reviews, [])
     content {
       dismiss_stale_reviews           = try(required_pull_request_reviews.value["dismiss_stale_reviews"], null)
       dismissal_restrictions          = try(required_pull_request_reviews.value["dismissal_restrictions"], null)
@@ -190,7 +190,7 @@ resource "github_branch_protection" "this" {
     }
   }
   dynamic "required_status_checks" {
-    for_each = try(local.resources[each.value].github_branch_protection.this[each.key].required_status_checks, null)
+    for_each = try(each.value.required_status_checks, null)
     content {
       contexts = try(required_status_checks.value["contexts"], null)
       strict   = try(required_status_checks.value["strict"], null)
@@ -205,15 +205,15 @@ resource "github_team" "this" {
         source = "config"
         index = team
       }
-    ] : item.index => item.source
+    ] : item.index => local.resources[item.source].github_team.this[item.index]
   }
 
-  name           = local.resources[each.value].github_team.this[each.key].name
+  name           = each.value.name
 
-  parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, local.resources[each.value].github_team.this[each.key].parent_team_id)).id, local.resources[each.value].github_team.this[each.key].parent_team_id), null)
+  parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, each.value.parent_team_id)).id, each.value.parent_team_id), null)
 
-  description    = try(local.resources[each.value].github_team.this[each.key].description, null)
-  privacy        = try(local.resources[each.value].github_team.this[each.key].privacy, null)
+  description    = try(each.value.description, null)
+  privacy        = try(each.value.privacy, null)
 
   lifecycle {
     ignore_changes = []
@@ -222,29 +222,29 @@ resource "github_team" "this" {
 
 resource "github_team_repository" "this" {
   for_each = {
-    for item in [
+    for item in flatten([
       for repository, config in local.resources.config.github_repository.this : flatten([
         try(config.archived, false) ? [
-          for team, config in local.resources.state.github_team_repository.this : {
+          for team, config in try(local.resources.state.github_team_repository.this, {}) : {
             source = "state"
             index = team
-          } if try(regex(":${repository}$", team), null) != null
+          } if lower(config.repository) == repository
         ] : [
           for team, config in local.resources.config.github_team_repository.this : {
             source = "config"
             index = team
-          } if try(regex(":${repository}$", team), null) != null
+          } if lower(config.repository) == repository
         ]
       ])
-    ] : item.index => item.source
+    ]) : item.index => local.resources[item.source].github_team_repository.this[item.index]
   }
 
   depends_on = [github_team.this, github_repository.this]
 
-  repository = local.resources[each.value].github_team_repository.this[each.key].repository
-  permission = local.resources[each.value].github_team_repository.this[each.key].permission
+  repository = each.value.repository
+  permission = each.value.permission
 
-  team_id = try(local.resources[each.value].github_team_repository.this[each.key].team_id, github_team.this[lower(local.resources[each.value].github_team_repository.this[each.key].team)].id)
+  team_id = try(each.value.team_id, github_team.this[lower(each.value.team)].id)
 
   lifecycle {
     ignore_changes = []
@@ -258,15 +258,15 @@ resource "github_team_membership" "this" {
         source = "config"
         index = member
       }
-    ] : item.index => item.source
+    ] : item.index => local.resources[item.source].github_team_membership.this[item.index]
   }
 
   depends_on = [github_team.this]
 
-  username = local.resources[each.value].github_team_membership.this[each.key].username
-  role     = local.resources[each.value].github_team_membership.this[each.key].role
+  username = each.value.username
+  role     = each.value.role
 
-  team_id = try(local.resources[each.value].github_team_membership.this[each.key].team_id, github_team.this[lower(local.resources[each.value].github_team_membership.this[each.key].team)].id)
+  team_id = try(each.value.team_id, github_team.this[lower(each.value.team)].id)
 
   lifecycle {
     ignore_changes = []
@@ -275,36 +275,36 @@ resource "github_team_membership" "this" {
 
 resource "github_repository_file" "this" {
   for_each = {
-    for item in [
+    for item in flatten([
       for repository, config in local.resources.config.github_repository.this : flatten([
         try(config.archived, false) ? [
-          for file, config in local.resources.state.github_repository_file.this : {
+          for file, config in try(local.resources.state.github_repository_file.this, {}) : {
             source = "state"
             index = file
-          } if try(regex("^${repository}/", file), null) != null
+          } if lower(config.repository) == repository
         ] : [
           for file, config in local.resources.config.github_repository_file.this : {
             source = try(local.resources.state.github_repository_file.this[file].content, "") == try(config.content, "") ? "state" : "config"
             index = file
-          } if try(regex("^${repository}/", file), null) != null
+          } if lower(config.repository) == repository
         ]
       ])
-    ] : item.index => item.source
+    ]) : item.index => local.resources[item.source].github_repository_file.this[item.index]
   }
 
   depends_on = [github_repository.this]
 
-  repository = local.resources[each.value].github_repository_file.this[each.key].repository
-  file       = local.resources[each.value].github_repository_file.this[each.key].file
-  content    = local.resources[each.value].github_repository_file.this[each.key].content
+  repository = each.value.repository
+  file       = each.value.file
+  content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
-  branch              = try(local.resources[each.value].github_repository_file.this[each.key].repository, github_repository.this[lower(local.resources[each.value].github_repository_file.this[each.key].repository)].default_branch)
-  overwrite_on_create = try(local.resources[each.value].github_repository_file.this[each.key].overwrite_on_create, true)
+  branch              = try(each.value.branch, github_repository.this[each.value.repository].default_branch)
+  overwrite_on_create = try(each.value.overwrite_on_create, true)
   # Keep the defaults from 4.x
-  commit_author  = try(local.resources[each.value].github_repository_file.this[each.key].commit_author, "GitHub")
-  commit_email   = try(local.resources[each.value].github_repository_file.this[each.key].commit_email, "noreply@github.com")
-  commit_message = try(local.resources[each.value].github_repository_file.this[each.key].commit_message, "chore: Update ${each.value.file} [skip ci]")
+  commit_author  = try(each.value.commit_author, "GitHub")
+  commit_email   = try(each.value.commit_email, "noreply@github.com")
+  commit_message = try(each.value.commit_message, "chore: Update ${each.value.file} [skip ci]")
 
   lifecycle {
     ignore_changes = []
@@ -313,30 +313,30 @@ resource "github_repository_file" "this" {
 
 resource "github_issue_label" "this" {
   for_each = {
-    for item in [
+    for item in flatten([
       for repository, config in local.resources.config.github_repository.this : flatten([
         try(config.archived, false) ? [
-          for label, config in local.resources.state.github_issue_label.this : {
+          for label, config in try(local.resources.state.github_issue_label.this, {}) : {
             source = "state"
             index = label
-          } if try(regex("^${repository}:", label), null) != null
+          } if lower(config.repository) == repository
         ] : [
           for label, config in local.resources.config.github_issue_label.this : {
             source = "config"
             index = label
-          } if try(regex("^${repository}:", label), null) != null
+          } if lower(config.repository) == repository
         ]
       ])
-    ] : item.index => item.source
+    ]) : item.index => local.resources[item.source].github_issue_label.this[item.index]
   }
 
   depends_on = [github_repository.this]
 
-  repository  = local.resources[each.value].github_issue_label.this[each.key].repository
-  name        = local.resources[each.value].github_issue_label.this[each.key].name
+  repository  = each.value.repository
+  name        = each.value.name
 
-  color       = try(local.resources[each.value].github_issue_label.this[each.key].color, null)
-  description = try(local.resources[each.value].github_issue_label.this[each.key].description, null)
+  color       = try(each.value.color, null)
+  description = try(each.value.description, null)
 
   lifecycle {
     ignore_changes = []

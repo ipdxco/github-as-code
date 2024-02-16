@@ -15,7 +15,7 @@ locals {
                 role     = role
               }
             ]
-          ]) : lower("${item.username}") => item...
+          ]) : lower("${item.username}") => item
         }
       }
       "github_repository" = {
@@ -41,7 +41,7 @@ locals {
                 }] : []
               template = try([config.template], [])
             })
-          ] : lower("${item.name}") => item...
+          ] : lower("${item.name}") => item
         }
       }
       "github_repository_collaborator" = {
@@ -56,7 +56,7 @@ locals {
                 }
               ]
             ])
-          ]): lower("${item.repository}:${item.username}") => item...
+          ]): lower("${item.repository}:${item.username}") => item
         }
       }
       "github_branch_protection" = {
@@ -70,14 +70,14 @@ locals {
                 required_status_checks        = try([config.required_status_checks], [])
               })
             ]
-          ]): lower("${item.repository}:${item.username}") => item...
+          ]): lower("${item.repository}:${item.pattern}") => item
         }
       }
       "github_team" = {
         "this" = {
           for item in [for team, config in lookup(local.config, "teams", {}) : merge(config, {
             name = team
-          })] : lower("${item.name}") => item...
+          })] : lower("${item.name}") => item
         }
       }
       "github_team_repository" = {
@@ -92,7 +92,7 @@ locals {
                 }
               ]
             ])
-          ]): lower("${item.team}:${item.repository}") => item...
+          ]): lower("${item.team}:${item.repository}") => item
         }
       }
       "github_team_membership" = {
@@ -107,7 +107,7 @@ locals {
                 }
               ]
             ])
-          ]): lower("${item.repository}:${item.username}") => item...
+          ]): lower("${item.team}:${item.username}") => item
         }
       }
       "github_repository_file" = {
@@ -120,7 +120,7 @@ locals {
                 content = try(file("${path.module}/../files/${config.content}"), config.content)
               })
             ]
-          ]): lower("${item.repository}/${item.path}") => item...
+          ]): lower("${item.repository}/${item.file}") => item
         }
       }
       "github_issue_label" = {
@@ -132,7 +132,7 @@ locals {
                 label = label
               })
             ]
-          ]): lower("${item.repository}:${item.label}") => item...
+          ]): lower("${item.repository}:${item.label}") => item
         }
       }
     }
