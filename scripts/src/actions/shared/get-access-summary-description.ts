@@ -47,11 +47,16 @@ function getAccessSummaryFrom(source: State | Config): Record<string, any> {
 }
 
 function describeAccessSummary(accessSummary: Record<string, any>): string {
-  const lines: string[] = []
+  const lines: string[] = [
+    '<details><summary>Access Summary</summary>',
+    '',
+    '```',
+  ]
+
   const permissions = ['admin', 'maintain', 'push', 'triage', 'pull']
 
   for (const [username, summary] of Object.entries(accessSummary)) {
-    lines.push(`User @${username}:`)
+    lines.push(`User ${username}:`)
     if (summary.role !== undefined) {
       lines.push(`  - is a ${summary.role} of the organization`)
     } else {
@@ -69,7 +74,7 @@ function describeAccessSummary(accessSummary: Record<string, any>): string {
               if (access.type === 'collaborator') {
                 buffer.push(`    - ${repository} as a direct collaborator`)
               } else {
-                buffer.push(`    - ${repository} through team @${access.team}`)
+                buffer.push(`    - ${repository} through team ${access.team}`)
               }
             }
           }
@@ -85,6 +90,8 @@ function describeAccessSummary(accessSummary: Record<string, any>): string {
       lines.push(`  - has no access to any repository`)
     }
   }
+
+  lines.push('```', '')
 
   return lines.join('\n')
 }
