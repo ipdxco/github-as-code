@@ -1,102 +1,157 @@
 locals {
   organization = terraform.workspace
-  config       = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
-  state = {
-    for resource in jsondecode(file("${path.module}/${local.organization}.tfstate.json")).values.root_module.resources :
-    "${resource.mode}.${resource.type}.${resource.name}.${resource.index}" => merge(resource.values, { "index" = resource.index })
-  }
   resource_types    = []
   advanced_security = false
-  defaults = {
-    github_membership = {
-      username = null
-      role     = null
+  config       = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
+  state = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
+  resources = {
+    "config" = {
+      "github_membership" = {
+        "this" = {
+          for item in flatten([
+            for role, members in lookup(local.config, "members", {}) : [
+              for member in members : {
+                username = member
+                role     = role
+              }
+            ]
+          ]) : lower("${item.username}") => item...
+        }
+      }
+      "github_repository" = {
+        "this" = {
+          for item in [
+            for repository, config in lookup(local.config, "repositories", {}): merge(config, {
+              name = repository
+              security_and_analysis = (try(config.visibility, "private") == "public" || local.advanced_security) ? [
+                {
+                  advanced_security               = try(config.visibility, "private") == "public" || !local.advanced_security ? [] : [{ "status" : try(config.advanced_security, false) ? "enabled" : "disabled" }]
+                  secret_scanning                 = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning, false) ? "enabled" : "disabled" }]
+                  secret_scanning_push_protection = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning_push_protection, false) ? "enabled" : "disabled" }]
+                }] : []
+              pages = try(config.pages, null) != null ? [
+                {
+                  cname = try(config.pages.cname, null)
+                  source = try(config.pages.source, null) == null ? [] : [
+                    {
+                      branch = config.pages.source.branch
+                      path   = try(config.pages.source.path, null)
+                    }
+                  ]
+                }] : []
+              template = try([config.template], [])
+            })
+          ] : lower("${item.name}") => item...
+        }
+      }
+      "github_repository_collaborator" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}): flatten([
+              for permission, members in lookup(config, "collaborators", {}) : [
+                for member in members : {
+                  repository = repository
+                  username   = member
+                  permission = permission
+                }
+              ]
+            ])
+          ]): lower("${item.repository}:${item.username}") => item...
+        }
+      }
+      "github_branch_protection" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}): [
+              for pattern, config in lookup(config, "branch_protection", {}) : merge(config, {
+                pattern = pattern
+                repository = repository
+                required_pull_request_reviews = try([config.required_pull_request_reviews], [])
+                required_status_checks        = try([config.required_status_checks], [])
+              })
+            ]
+          ]): lower("${item.repository}:${item.username}") => item...
+        }
+      }
+      "github_team" = {
+        "this" = {
+          for item in [for team, config in lookup(local.config, "teams", {}) : merge(config, {
+            name = team
+          })] : lower("${item.name}") => item...
+        }
+      }
+      "github_team_repository" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}): flatten([
+              for permission, teams in lookup(config, "teams", {}) : [
+                for team in teams : {
+                  repository = repository
+                  team   = team
+                  permission = permission
+                }
+              ]
+            ])
+          ]): lower("${item.team}:${item.repository}") => item...
+        }
+      }
+      "github_team_membership" = {
+        "this" = {
+          for item in flatten([
+            for team, config in lookup(local.config, "teams", {}): flatten([
+              for role, members in lookup(config, "members", {}) : [
+                for member in members : {
+                  team = team
+                  username   = member
+                  role = role
+                }
+              ]
+            ])
+          ]): lower("${item.repository}:${item.username}") => item...
+        }
+      }
+      "github_repository_file" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}): [
+              for file, config in lookup(config, "files", {}) : merge(config, {
+                repository = repository
+                file = file
+                content = try(file("${path.module}/../files/${config.content}"), config.content)
+              })
+            ]
+          ]): lower("${item.repository}/${item.path}") => item...
+        }
+      }
+      "github_issue_label" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}): [
+              for label, config in lookup(config, "labels", {}) : merge(config, {
+                repository = repository
+                label = label
+              })
+            ]
+          ]): lower("${item.repository}:${item.label}") => item...
+        }
+      }
     }
-    github_repository = {
-      name                                    = null
-      allow_auto_merge                        = null
-      allow_merge_commit                      = null
-      allow_rebase_merge                      = null
-      allow_squash_merge                      = null
-      allow_update_branch                     = null
-      archive_on_destroy                      = null
-      archived                                = null
-      auto_init                               = null
-      default_branch                          = null
-      delete_branch_on_merge                  = null
-      description                             = null
-      gitignore_template                      = null
-      has_discussions                         = null
-      has_downloads                           = null
-      has_issues                              = null
-      has_projects                            = null
-      has_wiki                                = null
-      homepage_url                            = null
-      ignore_vulnerability_alerts_during_read = null
-      is_template                             = null
-      license_template                        = null
-      merge_commit_message                    = null
-      merge_commit_title                      = null
-      squash_merge_commit_message             = null
-      squash_merge_commit_title               = null
-      topics                                  = null
-      visibility                              = null
-      vulnerability_alerts                    = null
-      security_and_analysis                   = []
-      pages                                   = []
-      template                                = []
-    }
-    github_repository_collaborator = {
-      repository = null
-      username   = null
-      permission = null
-    }
-    github_branch_protection = {
-      pattern                         = null
-      repository_id                   = null
-      allows_deletions                = null
-      allows_force_pushes             = null
-      blocks_creations                = null
-      enforce_admins                  = null
-      lock_branch                     = null
-      push_restrictions               = null
-      require_conversation_resolution = null
-      require_signed_commits          = null
-      required_linear_history         = null
-      required_pull_request_reviews   = []
-      required_status_checks          = []
-    }
-    github_team = {
-      name           = null
-      description    = null
-      parent_team_id = null
-      privacy        = null
-    }
-    github_team_repository = {
-      repository = null
-      team_id    = null
-      permission = null
-    }
-    github_team_membership = {
-      team_id  = null
-      username = null
-      role     = null
-    }
-    github_repository_file = {
-      repository          = null
-      file                = null
-      content             = null
-      branch              = null
-      overwrite_on_create = null
-      commit_author       = null
-      commit_email        = null
-      commit_message      = null
-    }
-    github_issue_label = {
-      repository  = null
-      name        = null
-      color       = null
-      description = null
-    }
+    "state" = {
+      for mode, item in {
+        for item in local.state.values.root_module.resources : item.mode => item...
+      } : mode => {
+        for type, item in {
+          for item in item : item.type => item...
+        } : type => {
+          for name, item in {
+            for item in item : item.name => item...
+          } : name => {
+            for index, item in {
+              for item in item : item.index => item.values
+            } : index => item
+          }
+        }
+      }
+    }.managed
   }
 }
