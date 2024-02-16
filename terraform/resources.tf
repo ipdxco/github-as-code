@@ -162,8 +162,6 @@ resource "github_branch_protection" "this" {
     ]) : item.index => local.resources[item.source].github_branch_protection.this[item.index]
   }
 
-  depends_on = [github_repository.this]
-
   pattern                         = each.value.pattern
 
   repository_id = try(each.value.repository_id, github_repository.this[lower(each.value.repository)].node_id)
@@ -239,7 +237,7 @@ resource "github_team_repository" "this" {
     ]) : item.index => local.resources[item.source].github_team_repository.this[item.index]
   }
 
-  depends_on = [github_team.this, github_repository.this]
+  depends_on = [github_repository.this]
 
   repository = each.value.repository
   permission = each.value.permission
@@ -260,8 +258,6 @@ resource "github_team_membership" "this" {
       }
     ] : item.index => local.resources[item.source].github_team_membership.this[item.index]
   }
-
-  depends_on = [github_team.this]
 
   username = each.value.username
   role     = each.value.role
@@ -291,8 +287,6 @@ resource "github_repository_file" "this" {
       ])
     ]) : item.index => local.resources[item.source].github_repository_file.this[item.index]
   }
-
-  depends_on = [github_repository.this]
 
   repository = each.value.repository
   file       = each.value.file
