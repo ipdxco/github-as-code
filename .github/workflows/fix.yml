@@ -64,7 +64,7 @@ jobs:
     if: needs.prepare.outputs.skip-fix == 'false'
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -97,6 +97,7 @@ jobs:
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.2.9
+          terraform_wrapper: false
       - name: Initialize terraform
         run: terraform init
         working-directory: terraform
@@ -104,6 +105,7 @@ jobs:
         run: npm ci && npm run build
         working-directory: scripts
       - name: Fix
+        id: fix
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
       - name: Upload YAML config
@@ -113,6 +115,15 @@ jobs:
           path: github/${{ env.TF_WORKSPACE }}.yml
           if-no-files-found: error
           retention-days: 1
+      # NOTE(galargh, 2024-02-15): This will only work if GitHub as Code is used for a single organization
+      - name: Comment on pull request
+        if: github.event_name == 'pull_request_target' && steps.fix.outputs.comment
+        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # v2.3.1
+        with:
+          header: fix
+          number: ${{ github.event.pull_request.number }}
+          message: ${{ steps.fix.outputs.comment }}
+
   push:
     needs: [prepare, fix]
     permissions:

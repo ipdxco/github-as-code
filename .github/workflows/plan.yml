@@ -83,11 +83,14 @@ jobs:
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.2.9
+          terraform_wrapper: false
       - name: Initialize terraform
         run: terraform init
         working-directory: terraform
       - name: Plan terraform
-        run: terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
+        run: |
+          terraform show -json > $TF_WORKSPACE.tfstate.json
+          terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
         uses: actions/upload-artifact@v3
@@ -156,6 +159,7 @@ jobs:
       - name: Comment on pull request
         uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # v2.3.1
         with:
+          header: plan
           number: ${{ github.event.pull_request.number }}
           message: |
             Before merge, verify that all the following plans are correct. They will be applied as-is after the merge.
