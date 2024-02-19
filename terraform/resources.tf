@@ -3,7 +3,7 @@ resource "github_membership" "this" {
     for item in [
       for member, config in local.resources.config.github_membership.this : {
         source = "config"
-        index = member
+        index  = member
       }
     ] : item.index => local.resources[item.source].github_membership.this[item.index]
   }
@@ -21,13 +21,13 @@ resource "github_repository" "this" {
   for_each = {
     for item in [
       for repository, config in local.resources.config.github_repository.this :
-        try(config.archived, false) ? {
-          source = "state"
-          index = repository
+      try(config.archived, false) ? {
+        source = "state"
+        index  = repository
         } : {
-          source = "config"
-          index = repository
-        }
+        source = "config"
+        index  = repository
+      }
     ] : item.index => local.resources[item.source].github_repository.this[item.index]
   }
 
@@ -120,12 +120,12 @@ resource "github_repository_collaborator" "this" {
         try(config.archived, false) ? [
           for member, config in try(local.resources.state.github_repository_collaborator.this, {}) : {
             source = "state"
-            index = member
+            index  = member
           } if lower(config.repository) == repository
-        ] : [
+          ] : [
           for member, config in local.resources.config.github_repository_collaborator.this : {
             source = "config"
-            index = member
+            index  = member
           } if lower(config.repository) == repository
         ]
       ])
@@ -150,19 +150,19 @@ resource "github_branch_protection" "this" {
         try(config.archived, false) ? [
           for branch_protection, config in try(local.resources.state.github_branch_protection.this, {}) : {
             source = "state"
-            index = branch_protection
+            index  = branch_protection
           } if split(":", branch_protection)[0] == repository
-        ] : [
+          ] : [
           for branch_protection, config in local.resources.config.github_branch_protection.this : {
             source = "config"
-            index = branch_protection
+            index  = branch_protection
           } if lower(config.repository) == repository
         ]
       ])
     ]) : item.index => local.resources[item.source].github_branch_protection.this[item.index]
   }
 
-  pattern                         = each.value.pattern
+  pattern = each.value.pattern
 
   repository_id = try(each.value.repository_id, github_repository.this[lower(each.value.repository)].node_id)
 
@@ -201,17 +201,17 @@ resource "github_team" "this" {
     for item in [
       for team, config in local.resources.config.github_team.this : {
         source = "config"
-        index = team
+        index  = team
       }
     ] : item.index => local.resources[item.source].github_team.this[item.index]
   }
 
-  name           = each.value.name
+  name = each.value.name
 
   parent_team_id = try(try(element(data.github_organization_teams.this[0].teams, index(data.github_organization_teams.this[0].teams.*.name, each.value.parent_team_id)).id, each.value.parent_team_id), null)
 
-  description    = try(each.value.description, null)
-  privacy        = try(each.value.privacy, null)
+  description = try(each.value.description, null)
+  privacy     = try(each.value.privacy, null)
 
   lifecycle {
     ignore_changes = []
@@ -225,12 +225,12 @@ resource "github_team_repository" "this" {
         try(config.archived, false) ? [
           for team, config in try(local.resources.state.github_team_repository.this, {}) : {
             source = "state"
-            index = team
+            index  = team
           } if lower(config.repository) == repository
-        ] : [
+          ] : [
           for team, config in local.resources.config.github_team_repository.this : {
             source = "config"
-            index = team
+            index  = team
           } if lower(config.repository) == repository
         ]
       ])
@@ -254,7 +254,7 @@ resource "github_team_membership" "this" {
     for item in [
       for member, config in local.resources.config.github_team_membership.this : {
         source = "config"
-        index = member
+        index  = member
       }
     ] : item.index => local.resources[item.source].github_team_membership.this[item.index]
   }
@@ -276,12 +276,12 @@ resource "github_repository_file" "this" {
         try(config.archived, false) ? [
           for file, config in try(local.resources.state.github_repository_file.this, {}) : {
             source = "state"
-            index = file
+            index  = file
           } if lower(config.repository) == repository
-        ] : [
+          ] : [
           for file, config in local.resources.config.github_repository_file.this : {
             source = try(local.resources.state.github_repository_file.this[file].content, "") == try(config.content, "") ? "state" : "config"
-            index = file
+            index  = file
           } if lower(config.repository) == repository
         ]
       ])
@@ -312,12 +312,12 @@ resource "github_issue_label" "this" {
         try(config.archived, false) ? [
           for label, config in try(local.resources.state.github_issue_label.this, {}) : {
             source = "state"
-            index = label
+            index  = label
           } if lower(config.repository) == repository
-        ] : [
+          ] : [
           for label, config in local.resources.config.github_issue_label.this : {
             source = "config"
-            index = label
+            index  = label
           } if lower(config.repository) == repository
         ]
       ])
@@ -326,8 +326,8 @@ resource "github_issue_label" "this" {
 
   depends_on = [github_repository.this]
 
-  repository  = each.value.repository
-  name        = each.value.name
+  repository = each.value.repository
+  name       = each.value.name
 
   color       = try(each.value.color, null)
   description = try(each.value.description, null)

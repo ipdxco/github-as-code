@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import {sync} from './sync'
 import {State} from './terraform/state'
 import {Config} from './yaml/config'
-import { toggleArchivedRepos } from './actions/shared/toggle-archived-repos'
+import {toggleArchivedRepos} from './actions/shared/toggle-archived-repos'
 
 async function runSync(): Promise<void> {
   const state = await State.New()

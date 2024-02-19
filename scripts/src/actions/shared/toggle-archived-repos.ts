@@ -1,6 +1,6 @@
 import {Config} from '../../yaml/config'
 import {Repository} from '../../resources/repository'
-import { State } from '../../terraform/state'
+import {State} from '../../terraform/state'
 
 export async function toggleArchivedRepos(): Promise<void> {
   const state = await State.New()
@@ -17,11 +17,16 @@ export async function toggleArchivedRepos(): Promise<void> {
       repository.archived = true
       config.addResource(repository)
     } else {
-      const stateRepository = stateRepositories.find(r => r.name === configRepository.name)
+      const stateRepository = stateRepositories.find(
+        r => r.name === configRepository.name
+      )
       if (stateRepository !== undefined && stateRepository.archived) {
         config.addResource(stateRepository)
         for (const resource of resources) {
-          if ('repository' in resource && (resource as any).repository === stateRepository.name) {
+          if (
+            'repository' in resource &&
+            (resource as any).repository === stateRepository.name
+          ) {
             config.addResource(resource)
           }
         }
