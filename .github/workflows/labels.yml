@@ -1,0 +1,39 @@
+name: Labels
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'The source repository to sync labels from'
+        required: true
+      targets:
+        description: 'The target repositories to sync labels to (comma-separated)'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sync:
+    permissions:
+      contents: read
+    name: Sync
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+      TF_WORKSPACE: ${{ github.repository_owner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Initialize scripts
+        run: npm install && npm run build
+        working-directory: scripts
+      - name: Sync
+        run: node lib/actions/sync-labels.js
+        working-directory: scripts
+        env:
+          SOURCE_REPOSITORY: ${{ github.event.inputs.source }}
+          TARGET_REPOSITORIES: ${{ github.event.inputs.targets }}
