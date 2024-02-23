@@ -2,27 +2,12 @@ import 'reflect-metadata'
 import {RepositoryTeam} from '../resources/repository-team'
 import {Team} from '../resources/team'
 import {Config} from '../yaml/config'
-import * as fs from 'fs'
 import {Member} from '../resources/member'
 import {NodeBase} from 'yaml/dist/nodes/Node'
 import {RepositoryCollaborator} from '../resources/repository-collaborator'
 import {Resource, ResourceConstructor} from '../resources/resource'
 import {Role, TeamMember} from '../resources/team-member'
 import {GitHub} from '../github'
-
-const AUDIT_LOG_IGNORED_EVENT_CATEGORIES = ['org_credential_authorization']
-const AUDIT_LOG_LENGTH_IN_MONTHS = 12
-
-function stripOrgPrefix(repoOrTeam: string): string {
-  return repoOrTeam.split('/').slice(1).join('/') // org/repo => repo
-}
-
-function getRepositories(event: any): string[] {
-  // event.repo is either an array of org/repo strings, a single org/repo string, or null
-  return (
-    Array.isArray(event.repo ?? []) ? event.repo ?? [] : [event.repo]
-  ).map(stripOrgPrefix)
-}
 
 function getResources<T extends Resource>(
   config: Config,
@@ -44,51 +29,87 @@ function getResources<T extends Resource>(
  * 2. It removes all 'Alumni' team from all the repositories.
  * 3. It populates 'Alumni' team with organization members who:
  *  a. do not have 'KEEP:' in their inline comment AND
- *  b. have not been added to the organization in the past 12 months AND
- *  c. have not performed any audit log activity in the past 12 months.
+ *  b. have not been added to the organization recently (if passed through NEW_MEMBERS) AND
+ *  c. have not performed any activity in the past X months.
  * 4. It removes repository collaborators who:
  *  a. do not have 'KEEP:' in their inline comment AND
- *  b. have not been added to the repository in the past 12 months AND
- *  c. have not performed any audit log activity on the repository they're a collaborator of in the past 12 months.
+ *  b. have not been added to the repository recently (if passed through NEW_REPOSITORY_COLLABORATORS) AND
+ *  c. have not performed any activity on the repository they're a collaborator of in the past X months.
  * 5. It removes team members who:
  *  a. do not have 'KEEP:' in their inline comment AND
- *  b. have not been added to the team in the past 12 months AND
- *  c. have not performed any audit log activity on any repository the team they're a member of has access to in the past 12 months.
+ *  b. have not been added to the team recently (if passed through NEW_TEAM_MEMBERS) AND
+ *  c. have not performed any activity on any repository the team they're a member of has access to in the past X months.
  * 6. It removes teams which:
  *  a. do not have 'KEEP:' in their inline comment AND
  *  b. do not have members anymore.
  */
 async function run(): Promise<void> {
-  if (!process.env.LOG_PATH) {
-    throw new Error(
-      'LOG_PATH environment variable is not set. It should point to the path of the JSON audit log. You can download it by following these instructions: https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization'
-    )
-  }
+  const newMembers = JSON.parse(process.env.NEW_MEMBERS || '[]')
+  const newRepositoryCollaborators = JSON.parse(
+    process.env.NEW_REPOSITORY_COLLABORATORS || '{}'
+  )
+  const newTeamMembers = JSON.parse(process.env.NEW_TEAM_MEMBERS || '{}')
 
   const github = await GitHub.getGitHub()
 
-  const archivedRepositories = (await github.listRepositories())
+  const githubRepositories = await github.listRepositories()
+
+  const since = new Date()
+  since.setMonth(since.getMonth() - 12)
+
+  const githubRepositoryActivities =
+    await github.listRepositoryActivities(since)
+  const githubRepositoryPullRequests =
+    await github.listRepositoryPullRequests(since)
+  const githubRepositoryIssues = await github.listRepositoryIssues(since)
+  const githubRepositoryPullRequestReviewComments =
+    await github.listRepositoryPullRequestReviewComments(since)
+  const githubRepositoryIssueComments =
+    await github.listRepositoryIssueComments(since)
+  const githubRepositoryCommitComments =
+    await github.listRepositoryCommitComments(since)
+
+  const activeActorsByRepository = [
+    ...githubRepositoryActivities.map(({repository, activity}) => ({
+      repository: repository.name,
+      actor: activity.actor?.login
+    })),
+    ...githubRepositoryPullRequests.map(({repository, pullRequest}) => ({
+      repository: repository.name,
+      actor: pullRequest.user?.login
+    })),
+    ...githubRepositoryIssues.map(({repository, issue}) => ({
+      repository: repository.name,
+      actor: issue.user?.login
+    })),
+    ...githubRepositoryPullRequestReviewComments.map(
+      ({repository, comment}) => ({
+        repository: repository.name,
+        actor: comment.user?.login
+      })
+    ),
+    ...githubRepositoryIssueComments.map(({repository, comment}) => ({
+      repository: repository.name,
+      actor: comment.user?.login
+    })),
+    ...githubRepositoryCommitComments.map(({repository, comment}) => ({
+      repository: repository.name,
+      actor: comment.user?.login
+    }))
+  ]
+    .filter(({actor}) => actor)
+    .reduce<any>((acc, {repository, actor}) => {
+      acc[repository] = acc[repository] ?? []
+      acc[repository].push(actor)
+      return acc
+    }, {})
+  const activeActors = Array.from(
+    new Set(Object.values(activeActorsByRepository).flat())
+  )
+  const archivedRepositories = githubRepositories
     .filter(repository => repository.archived)
     .map(repository => repository.name)
-  const teamSlugsByName = (await github.listTeams()).reduce(
-    (map: Record<string, string>, team) => {
-      map[team.name] = team.slug
-      return map
-    },
-    {}
-  )
 
-  const logStartDate = new Date()
-  logStartDate.setMonth(logStartDate.getMonth() - AUDIT_LOG_LENGTH_IN_MONTHS)
-
-  const log = JSON.parse(
-    fs.readFileSync(process.env.LOG_PATH).toString()
-  ).filter((event: any) => {
-    return (
-      new Date(event.created_at) >= logStartDate &&
-      !AUDIT_LOG_IGNORED_EVENT_CATEGORIES.includes(event.action.split('.')[0])
-    )
-  })
   const config = Config.FromPath()
 
   // alumni is a team for all the members who should get credit for their work
@@ -108,12 +129,9 @@ async function run(): Promise<void> {
   // add members that have been inactive to the alumni team
   const members = getResources(config, Member)
   for (const member of members) {
-    const isNew = log.some(
-      (event: any) =>
-        event.action === 'org.add_member' && event.user === member.username
-    )
+    const isNew = newMembers.includes(member.username)
     if (!isNew) {
-      const isActive = log.some((event: any) => event.actor === member.username)
+      const isActive = activeActors.includes(member.username)
       if (!isActive) {
         console.log(`Adding ${member.username} to the ${alumniTeam.name} team`)
         const teamMember = new TeamMember(
@@ -129,18 +147,13 @@ async function run(): Promise<void> {
   // remove repository collaborators that have been inactive
   const repositoryCollaborators = getResources(config, RepositoryCollaborator)
   for (const repositoryCollaborator of repositoryCollaborators) {
-    const isNew = log.some(
-      (event: any) =>
-        event.action === 'repo.add_member' &&
-        event.user === repositoryCollaborator.username &&
-        stripOrgPrefix(event.repo) === repositoryCollaborator.repository
-    )
+    const isNew = newRepositoryCollaborators[
+      repositoryCollaborator.username
+    ]?.includes(repositoryCollaborator.repository)
     if (!isNew) {
-      const isCollaboratorActive = log.some(
-        (event: any) =>
-          event.actor === repositoryCollaborator.username &&
-          getRepositories(event).includes(repositoryCollaborator.repository)
-      )
+      const isCollaboratorActive = activeActorsByRepository[
+        repositoryCollaborator.repository
+      ]?.includes(repositoryCollaborator.username)
       const isRepositoryArchived = archivedRepositories.includes(
         repositoryCollaborator.repository
       )
@@ -158,22 +171,13 @@ async function run(): Promise<void> {
     teamMember => teamMember.team !== alumniTeam.name
   )
   for (const teamMember of teamMembers) {
-    const isNew = log.some(
-      (event: any) =>
-        event.action === 'team.add_member' &&
-        event.user === teamMember.username &&
-        stripOrgPrefix(event.data.team) === teamSlugsByName[teamMember.team]
-    )
+    const isNew = newTeamMembers[teamMember.username]?.includes(teamMember.team)
     if (!isNew) {
       const repositories = repositoryTeams
         .filter(repositoryTeam => repositoryTeam.team === teamMember.team)
         .map(repositoryTeam => repositoryTeam.repository)
-      const isActive = log.some(
-        (event: any) =>
-          event.actor === teamMember.username &&
-          getRepositories(event).some(repository =>
-            repositories.includes(repository)
-          )
+      const isActive = repositories.some(repository =>
+        activeActorsByRepository[repository]?.includes(teamMember.username)
       )
       if (!isActive) {
         console.log(

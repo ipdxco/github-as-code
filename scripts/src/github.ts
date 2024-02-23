@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import * as core from '@actions/core'
+import {Octokit as Core} from '@octokit/core'
 import {Octokit} from '@octokit/rest'
 import {retry} from '@octokit/plugin-retry'
 import {throttling} from '@octokit/plugin-throttling'
 import {createAppAuth} from '@octokit/auth-app'
 import env from './env'
-import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types' // eslint-disable-line import/named
+import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types' // eslint-disable-line import/no-unresolved
 
 const Client = Octokit.plugin(retry, throttling)
 const Endpoints = new Octokit()
@@ -43,13 +44,15 @@ export class GitHub {
       throttle: {
         onRateLimit: (
           retryAfter: number,
-          options: {method: string; url: string; request: {retryCount: number}}
+          options: {method: string; url: string},
+          octokit: Core,
+          retryCount: number
         ) => {
           core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`
           )
 
-          if (options.request.retryCount === 0) {
+          if (retryCount === 0) {
             // only retries once
             core.info(`Retrying after ${retryAfter} seconds!`)
             return true
@@ -57,13 +60,15 @@ export class GitHub {
         },
         onSecondaryRateLimit: (
           retryAfter: number,
-          options: {method: string; url: string; request: {retryCount: number}}
+          options: {method: string; url: string},
+          octokit: Core,
+          retryCount: number
         ) => {
           core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`
           )
 
-          if (options.request.retryCount === 0) {
+          if (retryCount === 0) {
             // only retries once
             core.info(`Retrying after ${retryAfter} seconds!`)
             return true
@@ -316,5 +321,161 @@ export class GitHub {
       repositoryLabels.push(...labels.map(label => ({repository, label})))
     }
     return repositoryLabels
+  }
+
+  async listRepositoryActivities(since: Date) {
+    const repositoryActivities = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} activities...`)
+      const activitiesIterator = this.client.paginate.iterator(
+        this.client.repos.listActivities,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      for await (const {data: activities} of activitiesIterator) {
+        let shouldContinue = true
+        for (const activity of activities) {
+          if (new Date(activity.timestamp) < since) {
+            shouldContinue = false
+            break
+          }
+          repositoryActivities.push({repository, activity})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return repositoryActivities
+  }
+
+  async listRepositoryPullRequests(since: Date) {
+    const repositoryPullRequests = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} pull requests...`)
+      const pullRequestsIterator = this.client.paginate.iterator(
+        this.client.pulls.list,
+        {owner: env.GITHUB_ORG, repo: repository.name, state: 'all'}
+      )
+      for await (const {data: pullRequests} of pullRequestsIterator) {
+        let shouldContinue = true
+        for (const pullRequest of pullRequests) {
+          if (new Date(pullRequest.created_at) < since) {
+            shouldContinue = false
+            break
+          }
+          repositoryPullRequests.push({repository, pullRequest})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return repositoryPullRequests
+  }
+
+  async listRepositoryIssues(since: Date) {
+    const issues = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} issues...`)
+      const issuesIterator = this.client.paginate.iterator(
+        this.client.issues.listForRepo,
+        {owner: env.GITHUB_ORG, repo: repository.name, state: 'all'}
+      )
+      for await (const {data: issuesData} of issuesIterator) {
+        let shouldContinue = true
+        for (const issue of issuesData) {
+          if (new Date(issue.created_at) < since) {
+            shouldContinue = false
+            break
+          }
+          issues.push({repository, issue})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return issues
+  }
+
+  async listRepositoryPullRequestReviewComments(since: Date) {
+    const pullRequestComments = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} pull request comments...`)
+      const pullRequestCommentsIterator = this.client.paginate.iterator(
+        this.client.pulls.listReviewCommentsForRepo,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      for await (const {data: comments} of pullRequestCommentsIterator) {
+        let shouldContinue = true
+        for (const comment of comments) {
+          if (new Date(comment.created_at) < since) {
+            shouldContinue = false
+            break
+          }
+          pullRequestComments.push({repository, comment})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return pullRequestComments
+  }
+
+  async listRepositoryIssueComments(since: Date) {
+    const issueComments = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} issue comments...`)
+      const issueCommentsIterator = this.client.paginate.iterator(
+        this.client.issues.listCommentsForRepo,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      for await (const {data: comments} of issueCommentsIterator) {
+        let shouldContinue = true
+        for (const comment of comments) {
+          if (new Date(comment.created_at) < since) {
+            shouldContinue = false
+            break
+          }
+          issueComments.push({repository, comment})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return issueComments
+  }
+
+  async listRepositoryCommitComments(since: Date) {
+    const commitComments = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} commit comments...`)
+      const commitCommentsIterator = this.client.paginate.iterator(
+        this.client.repos.listCommitCommentsForRepo,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      for await (const {data: comments} of commitCommentsIterator) {
+        let shouldContinue = true
+        for (const comment of comments) {
+          if (new Date(comment.created_at) < since) {
+            shouldContinue = false
+            break
+          }
+          commitComments.push({repository, comment})
+        }
+        if (!shouldContinue) {
+          break
+        }
+      }
+    }
+    return commitComments
   }
 }
