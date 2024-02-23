@@ -6,6 +6,7 @@ import {TeamMember} from '../../resources/team-member'
 import {RepositoryTeam} from '../../resources/repository-team'
 import {diff} from 'deep-diff'
 import * as core from '@actions/core'
+import {Repository} from '../../resources/repository'
 
 type AccessSummary = Record<
   string,
@@ -21,6 +22,11 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
   const teamRepositories = source.getResources(RepositoryTeam)
   const repositoryCollaborators = source.getResources(RepositoryCollaborator)
 
+  const archivedRepositories = source
+    .getResources(Repository)
+    .filter(repository => repository.archived)
+    .map(repository => repository.name)
+
   const usernames = new Set<string>([
     ...members.map(member => member.username),
     ...repositoryCollaborators.map(collaborator => collaborator.username)
@@ -34,20 +40,29 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
     const teams = teamMembers
       .filter(teamMember => teamMember.username === username)
       .map(teamMember => teamMember.team)
-    const repositoryCollaborator = repositoryCollaborators.filter(
-      repositoryCollaborator => repositoryCollaborator.username === username
-    )
-    const teamRepository = teamRepositories.filter(teamRepository =>
-      teams.includes(teamRepository.team)
-    )
+    const repositoryCollaborator = repositoryCollaborators
+      .filter(
+        repositoryCollaborator => repositoryCollaborator.username === username
+      )
+      .filter(
+        repositoryCollaborator =>
+          !archivedRepositories.includes(repositoryCollaborator.repository)
+      )
+    const teamRepository = teamRepositories
+      .filter(teamRepository => teams.includes(teamRepository.team))
+      .filter(
+        teamRepository =>
+          !archivedRepositories.includes(teamRepository.repository)
+      )
 
     const repositories: Record<string, {permission: string}> = {}
 
     for (const rc of repositoryCollaborator) {
       repositories[rc.repository] = repositories[rc.repository] ?? {}
       if (
+        !repositories[rc.repository].permission ||
         permissions.indexOf(rc.permission) <
-        permissions.indexOf(repositories[rc.repository].permission)
+          permissions.indexOf(repositories[rc.repository].permission)
       ) {
         repositories[rc.repository].permission = rc.permission
       }
@@ -56,20 +71,38 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
     for (const tr of teamRepository) {
       repositories[tr.repository] = repositories[tr.repository] ?? {}
       if (
+        !repositories[tr.repository].permission ||
         permissions.indexOf(tr.permission) <
-        permissions.indexOf(repositories[tr.repository].permission)
+          permissions.indexOf(repositories[tr.repository].permission)
       ) {
         repositories[tr.repository].permission = tr.permission
       }
     }
 
-    accessSummary[username] = {
-      role,
-      repositories
+    if (role !== undefined || Object.keys(repositories).length > 0) {
+      accessSummary[username] = {
+        role,
+        repositories
+      }
     }
   }
 
-  return accessSummary
+  return deepSort(accessSummary)
+}
+
+// deep sort object
+function deepSort(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(deepSort)
+  } else if (typeof obj === 'object') {
+    const sorted: any = {}
+    for (const key of Object.keys(obj).sort()) {
+      sorted[key] = deepSort(obj[key])
+    }
+    return sorted
+  } else {
+    return obj
+  }
 }
 
 export async function describeAccessChanges(): Promise<string> {
@@ -79,9 +112,11 @@ export async function describeAccessChanges(): Promise<string> {
   const before = getAccessSummaryFrom(state)
   const after = getAccessSummaryFrom(config)
 
-  core.info(JSON.stringify({before, after}))
+  core.info(JSON.stringify({before, after}, null, 2))
 
   const changes = diff(before, after) || []
+
+  core.debug(JSON.stringify(changes, null, 2))
 
   const changesByUser: Record<string, any> = {}
   for (const change of changes) {
@@ -99,17 +134,9 @@ export async function describeAccessChanges(): Promise<string> {
       switch (change.kind) {
         case 'E':
           if (path[1] === 'role') {
-            if (change.lhs === undefined) {
-              lines.push(
-                `  - will join the organization as a ${change.rhs} (remember to accept the email invitation)`
-              )
-            } else if (change.rhs === undefined) {
-              lines.push(`  - will leave the organization`)
-            } else {
-              lines.push(
-                `  - will have the role in the organization change from ${change.lhs} to ${change.rhs}`
-              )
-            }
+            lines.push(
+              `  - will have the role in the organization change from ${change.lhs} to ${change.rhs}`
+            )
           } else {
             lines.push(
               `  - will have the permission to ${path[2]} change from ${change.lhs} to ${change.rhs}`
@@ -117,10 +144,40 @@ export async function describeAccessChanges(): Promise<string> {
           }
           break
         case 'N':
-          lines.push(`  - will gain ${change.rhs} permission to ${path[2]}`)
+          if (path.length === 1) {
+            if (change.rhs.role) {
+              lines.push(
+                `  - will join the organization as a ${change.rhs} (remind them to accept the email invitation)`
+              )
+            }
+            if (change.rhs.repositories) {
+              for (const repository of Object.keys(change.rhs.repositories)) {
+                lines.push(
+                  `  - will gain ${change.rhs.repositories[repository].permission} permission to ${repository}`
+                )
+              }
+            }
+          } else {
+            lines.push(`  - will gain ${change.rhs} permission to ${path[2]}`)
+          }
           break
         case 'D':
-          lines.push(`  - will lose ${change.lhs} permission to ${path[2]}`)
+          if (path.length === 1) {
+            if (change.lhs.role) {
+              lines.push(`  - will leave the organization`)
+            }
+            if (change.lhs.repositories) {
+              for (const repository of Object.keys(change.lhs.repositories)) {
+                lines.push(
+                  `  - will lose ${change.lhs.repositories[repository].permission} permission to ${repository}`
+                )
+              }
+            }
+          } else {
+            lines.push(
+              `  - will lose ${change.lhs.permission} permission to ${path[2]}`
+            )
+          }
           break
       }
     }
