@@ -1,0 +1,69 @@
+name: Clean Up
+
+on:
+  workflow_dispatch:
+    inputs:
+      members:
+        description: 'The members added to the org recently (JSON Array)'
+        required: false
+        default: '[]'
+      repository-collaborators:
+        description: 'The repository collaborators added to the org recently (JSON Map)'
+        required: false
+        default: '{}'
+      team-members:
+        description: 'The team members added to the org recently (JSON Map)'
+        required: false
+        default: '{}'
+      cutoff:
+        description: 'The number of months to consider for inactivity'
+        required: false
+        default: '12'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sync:
+    permissions:
+      contents: write
+    name: Clean Up
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_APP_ID: ${{ secrets.RO_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
+      TF_WORKSPACE: ${{ github.repository_owner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Initialize scripts
+        run: npm install && npm run build
+        working-directory: scripts
+      - name: Remove inactive members
+        run: node lib/actions/remove-inactive-members.js
+        working-directory: scripts
+        env:
+          NEW_MEMBERS: ${{ github.event.inputs.members }}
+          NEW_REPOSITORY_COLLABORATORS: ${{ github.event.inputs['repository-collaborators'] }}
+          NEW_TEAM_MEMBERS: ${{ github.event.inputs['team-members'] }}
+          CUTOFF_IN_MONTHS: ${{ github.event.inputs.cutoff }}
+      - name: Check if github was modified
+        id: github-modified
+        run: |
+          if [ -z "$(git status --porcelain -- github)" ]; then
+            echo "this=false" >> $GITHUB_OUTPUT
+          else
+            echo "this=true" >> $GITHUB_OUTPUT
+          fi
+      - uses: ./.github/actions/git-config-user
+        if: steps.github-modified.outputs.this == 'true'
+      - if: steps.github-modified.outputs.this == 'true'
+        env:
+          SUFFIX: cleanup
+        run: |
+          git add --all -- github
+          git commit -m "cleanup@${GITHUB_RUN_ID}"
+          git checkout -B "${GITHUB_REF_NAME}-${SUFFIX}"
+          git push origin "${GITHUB_REF_NAME}-${SUFFIX}" --force

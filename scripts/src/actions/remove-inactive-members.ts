@@ -39,9 +39,6 @@ function getResources<T extends Resource>(
  *  a. do not have 'KEEP:' in their inline comment AND
  *  b. have not been added to the team recently (if passed through NEW_TEAM_MEMBERS) AND
  *  c. have not performed any activity on any repository the team they're a member of has access to in the past X months.
- * 6. It removes teams which:
- *  a. do not have 'KEEP:' in their inline comment AND
- *  b. do not have members anymore.
  */
 async function run(): Promise<void> {
   const newMembers = JSON.parse(process.env.NEW_MEMBERS || '[]')
@@ -186,19 +183,6 @@ async function run(): Promise<void> {
         )
         config.removeResource(teamMember)
       }
-    }
-  }
-
-  // remove teams that have no members
-  const teams = getResources(config, Team)
-  const teamMembersAfterRemoval = config.getResources(TeamMember)
-  for (const team of teams) {
-    const hasMembers = teamMembersAfterRemoval.some(
-      teamMember => teamMember.team === team.name
-    )
-    if (!hasMembers) {
-      console.log(`Removing ${team.name} team`)
-      config.removeResource(team)
     }
   }
 
