@@ -32,13 +32,13 @@ jobs:
           installation_id: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GITHUB_APP_PEM_FILE }}
       - name: Checkout GitHub Management template
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: pl-strflt/github-mgmt-template
           path: github-mgmt-template
           ref: ${{ github.event.inputs.ref }}
       - name: Checkout GitHub Management
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: github-mgmt
           token: ${{ steps.token.outputs.token }}

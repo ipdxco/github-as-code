@@ -23,7 +23,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Discover workspaces
         id: workspaces
         run: echo "this=$(ls github | jq --raw-input '[.[0:-4]]' | jq -sc add)" >> $GITHUB_OUTPUT
@@ -65,7 +65,7 @@ jobs:
         working-directory: terraform
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup terraform
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:

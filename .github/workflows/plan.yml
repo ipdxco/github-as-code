@@ -25,7 +25,7 @@ jobs:
       workspaces: ${{ steps.workspaces.outputs.this }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -70,7 +70,7 @@ jobs:
       TF_VAR_write_delay_ms: 300
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -112,7 +112,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
