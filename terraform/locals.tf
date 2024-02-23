@@ -4,7 +4,7 @@ locals {
   advanced_security = false
   config            = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
   state             = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
-  resources = {
+  sources = {
     "config" = {
       "github_membership" = {
         "this" = {
@@ -153,5 +153,128 @@ locals {
         }
       }
     }.managed
+  }
+  resources = {
+    "github_membership" = {
+      for item in [
+        for member, config in local.sources.config.github_membership.this : {
+          source = "config"
+          index  = member
+        }
+      ] : item.index => local.sources[item.source].github_membership.this[item.index]
+    }
+    "github_repository" = {
+      for item in [
+        for repository, config in local.sources.config.github_repository.this :
+        try(config.archived, false) ? {
+          source = "state"
+          index  = repository
+          } : {
+          source = "config"
+          index  = repository
+        }
+      ] : item.index => local.sources[item.source].github_repository.this[item.index]
+    }
+    "github_repository_collaborator" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for member, config in try(local.sources.state.github_repository_collaborator.this, {}) : {
+              source = "state"
+              index  = member
+            } if lower(config.repository) == repository
+            ] : [
+            for member, config in local.sources.config.github_repository_collaborator.this : {
+              source = "config"
+              index  = member
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_repository_collaborator.this[item.index]
+    }
+    "github_branch_protection" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for branch_protection, config in try(local.sources.state.github_branch_protection.this, {}) : {
+              source = "state"
+              index  = branch_protection
+            } if split(":", branch_protection)[0] == repository
+            ] : [
+            for branch_protection, config in local.sources.config.github_branch_protection.this : {
+              source = "config"
+              index  = branch_protection
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_branch_protection.this[item.index]
+    }
+    "github_team" = {
+      for item in [
+        for team, config in local.sources.config.github_team.this : {
+          source = "config"
+          index  = team
+        }
+      ] : item.index => local.sources[item.source].github_team.this[item.index]
+    }
+    "github_team_repository" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for team, config in try(local.sources.state.github_team_repository.this, {}) : {
+              source = "state"
+              index  = team
+            } if lower(config.repository) == repository
+            ] : [
+            for team, config in local.sources.config.github_team_repository.this : {
+              source = "config"
+              index  = team
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_team_repository.this[item.index]
+    }
+    "github_team_membership" = {
+      for item in [
+        for member, config in local.sources.config.github_team_membership.this : {
+          source = "config"
+          index  = member
+        }
+      ] : item.index => local.sources[item.source].github_team_membership.this[item.index]
+    }
+    "github_repository_file" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for file, config in try(local.sources.state.github_repository_file.this, {}) : {
+              source = "state"
+              index  = file
+            } if lower(config.repository) == repository
+            ] : [
+            for file, config in local.sources.config.github_repository_file.this : {
+              source = try(local.sources.state.github_repository_file.this[file].content, "") == try(config.content, "") ? "state" : "config"
+              index  = file
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_repository_file.this[item.index]
+    }
+    "github_issue_label" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for label, config in try(local.sources.state.github_issue_label.this, {}) : {
+              source = "state"
+              index  = label
+            } if lower(config.repository) == repository
+            ] : [
+            for label, config in local.sources.config.github_issue_label.this : {
+              source = "config"
+              index  = label
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_issue_label.this[item.index]
+    }
   }
 }
