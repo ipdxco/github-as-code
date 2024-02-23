@@ -49,13 +49,14 @@ async function run(): Promise<void> {
     process.env.NEW_REPOSITORY_COLLABORATORS || '{}'
   )
   const newTeamMembers = JSON.parse(process.env.NEW_TEAM_MEMBERS || '{}')
+  const cutoffInMonths = parseInt(process.env.CUTOFF_IN_MONTHS || '12')
 
   const github = await GitHub.getGitHub()
 
   const githubRepositories = await github.listRepositories()
 
   const since = new Date()
-  since.setMonth(since.getMonth() - 12)
+  since.setMonth(since.getMonth() - cutoffInMonths)
 
   const githubRepositoryActivities =
     await github.listRepositoryActivities(since)
