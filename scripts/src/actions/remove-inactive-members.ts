@@ -57,8 +57,6 @@ async function run(): Promise<void> {
 
   const githubRepositoryActivities =
     await github.listRepositoryActivities(since)
-  const githubRepositoryPullRequests =
-    await github.listRepositoryPullRequests(since)
   const githubRepositoryIssues = await github.listRepositoryIssues(since)
   const githubRepositoryPullRequestReviewComments =
     await github.listRepositoryPullRequestReviewComments(since)
@@ -71,10 +69,6 @@ async function run(): Promise<void> {
     ...githubRepositoryActivities.map(({repository, activity}) => ({
       repository: repository.name,
       actor: activity.actor?.login
-    })),
-    ...githubRepositoryPullRequests.map(({repository, pullRequest}) => ({
-      repository: repository.name,
-      actor: pullRequest.user?.login
     })),
     ...githubRepositoryIssues.map(({repository, issue}) => ({
       repository: repository.name,

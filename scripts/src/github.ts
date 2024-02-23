@@ -349,32 +349,6 @@ export class GitHub {
     return repositoryActivities
   }
 
-  async listRepositoryPullRequests(since: Date) {
-    const repositoryPullRequests = []
-    const repositories = await this.listRepositories()
-    for (const repository of repositories) {
-      core.info(`Listing ${repository.name} pull requests...`)
-      const pullRequestsIterator = this.client.paginate.iterator(
-        this.client.pulls.list,
-        {owner: env.GITHUB_ORG, repo: repository.name, state: 'all'}
-      )
-      for await (const {data: pullRequests} of pullRequestsIterator) {
-        let shouldContinue = true
-        for (const pullRequest of pullRequests) {
-          if (new Date(pullRequest.created_at) < since) {
-            shouldContinue = false
-            break
-          }
-          repositoryPullRequests.push({repository, pullRequest})
-        }
-        if (!shouldContinue) {
-          break
-        }
-      }
-    }
-    return repositoryPullRequests
-  }
-
   async listRepositoryIssues(since: Date) {
     const issues = []
     const repositories = await this.listRepositories()
@@ -382,7 +356,13 @@ export class GitHub {
       core.info(`Listing ${repository.name} issues...`)
       const issuesIterator = this.client.paginate.iterator(
         this.client.issues.listForRepo,
-        {owner: env.GITHUB_ORG, repo: repository.name, state: 'all'}
+        {
+          owner: env.GITHUB_ORG,
+          repo: repository.name,
+          state: 'all',
+          sort: 'created',
+          direction: 'desc'
+        }
       )
       for await (const {data: issuesData} of issuesIterator) {
         let shouldContinue = true
@@ -408,7 +388,7 @@ export class GitHub {
       core.info(`Listing ${repository.name} pull request comments...`)
       const pullRequestCommentsIterator = this.client.paginate.iterator(
         this.client.pulls.listReviewCommentsForRepo,
-        {owner: env.GITHUB_ORG, repo: repository.name}
+        {owner: env.GITHUB_ORG, repo: repository.name, direction: 'desc'}
       )
       for await (const {data: comments} of pullRequestCommentsIterator) {
         let shouldContinue = true
@@ -434,7 +414,12 @@ export class GitHub {
       core.info(`Listing ${repository.name} issue comments...`)
       const issueCommentsIterator = this.client.paginate.iterator(
         this.client.issues.listCommentsForRepo,
-        {owner: env.GITHUB_ORG, repo: repository.name}
+        {
+          owner: env.GITHUB_ORG,
+          repo: repository.name,
+          sort: 'created',
+          direction: 'desc'
+        }
       )
       for await (const {data: comments} of issueCommentsIterator) {
         let shouldContinue = true
@@ -458,21 +443,13 @@ export class GitHub {
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
       core.info(`Listing ${repository.name} commit comments...`)
-      const commitCommentsIterator = this.client.paginate.iterator(
+      const comments = await this.client.paginate(
         this.client.repos.listCommitCommentsForRepo,
         {owner: env.GITHUB_ORG, repo: repository.name}
       )
-      for await (const {data: comments} of commitCommentsIterator) {
-        let shouldContinue = true
-        for (const comment of comments) {
-          if (new Date(comment.created_at) < since) {
-            shouldContinue = false
-            break
-          }
+      for (const comment of comments) {
+        if (new Date(comment.created_at) >= since) {
           commitComments.push({repository, comment})
-        }
-        if (!shouldContinue) {
-          break
         }
       }
     }
