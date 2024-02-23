@@ -77,10 +77,6 @@ jobs:
           terraform workspace select "${TF_WORKSPACE_OPT}" || terraform workspace new "${TF_WORKSPACE_OPT}"
           echo "TF_WORKSPACE=${TF_WORKSPACE_OPT}" >> $GITHUB_ENV
         working-directory: terraform
-      - name: Pull terraform state
-        run: |
-          terraform show -json > $TF_WORKSPACE.tfstate.json
-        working-directory: terraform
       - name: Sync
         run: |
           npm ci

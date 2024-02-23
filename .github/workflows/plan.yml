@@ -87,9 +87,14 @@ jobs:
       - name: Initialize terraform
         run: terraform init
         working-directory: terraform
+      - name: Normalize config
+        run: |
+          npm ci
+          npm run build
+          node lib/scripts/normalize-config.js
+        working-directory: scripts
       - name: Plan terraform
         run: |
-          terraform show -json > $TF_WORKSPACE.tfstate.json
           terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
