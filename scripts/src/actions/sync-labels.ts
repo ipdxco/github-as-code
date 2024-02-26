@@ -60,6 +60,8 @@ async function sync() {
   const targetRepos = process.env.TARGET_REPOSITORIES?.split(',')?.map(r =>
     r.trim()
   )
+  const addLabels = process.env.ADD_LABELS == 'true'
+  const removeLabels = process.env.REMOVE_LABELS == 'true'
 
   if (!sourceRepo) {
     throw new Error('SOURCE_REPOSITORY environment variable not set')
@@ -84,24 +86,26 @@ async function sync() {
         .join(', ')}`
     )
 
-    // for each label in the repo, check if it exists in js-libp2p
-    for (const label of targetLabels) {
-      if (!sourceLabels.find(l => l.name === label.name)) {
-        core.info(`Removing ${label.name} label from ${repo} repository`)
-        await removeLabel(repo, label.name)
+    if (removeLabels) {
+      for (const label of targetLabels) {
+        if (!sourceLabels.find(l => l.name === label.name)) {
+          core.info(`Removing ${label.name} label from ${repo} repository`)
+          await removeLabel(repo, label.name)
+        }
       }
     }
 
-    // for each label in js-libp2p, check if it exists in the repo
-    for (const label of sourceLabels) {
-      if (!targetLabels.some(l => l.name === label.name)) {
-        core.info(`Adding ${label.name} label to ${repo} repository`)
-        await addLabel(
-          repo,
-          label.name,
-          label.color,
-          label.description || undefined
-        )
+    if (addLabels) {
+      for (const label of sourceLabels) {
+        if (!targetLabels.some(l => l.name === label.name)) {
+          core.info(`Adding ${label.name} label to ${repo} repository`)
+          await addLabel(
+            repo,
+            label.name,
+            label.color,
+            label.description || undefined
+          )
+        }
       }
     }
   }
