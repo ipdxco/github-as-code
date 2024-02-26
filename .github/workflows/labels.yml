@@ -9,6 +9,14 @@ on:
       targets:
         description: 'The target repositories to sync labels to (comma-separated)'
         required: true
+      add:
+        description: 'Whether to add labels to the target repositories'
+        required: false
+        default: true
+      remove:
+        description: 'Whether to remove labels from the target repositories'
+        required: false
+        default: false
 
 defaults:
   run:
@@ -37,3 +45,5 @@ jobs:
         env:
           SOURCE_REPOSITORY: ${{ github.event.inputs.source }}
           TARGET_REPOSITORIES: ${{ github.event.inputs.targets }}
+          ADD_LABELS: ${{ github.event.inputs.add }}
+          REMOVE_LABELS: ${{ github.event.inputs.remove }}
