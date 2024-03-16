@@ -29,30 +29,41 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
 
   const usernames = new Set<string>([
     ...members.map(member => member.username.toLowerCase()),
-    ...repositoryCollaborators.map(collaborator => collaborator.username.toLowerCase()),
+    ...repositoryCollaborators.map(collaborator =>
+      collaborator.username.toLowerCase()
+    )
   ])
 
   const accessSummary: AccessSummary = {}
   const permissions = ['admin', 'maintain', 'push', 'triage', 'pull']
 
   for (const username of usernames) {
-    const role = members.find(member => member.username.toLowerCase() === username)?.role
+    const role = members.find(
+      member => member.username.toLowerCase() === username
+    )?.role
     const teams = teamMembers
       .filter(teamMember => teamMember.username.toLowerCase() === username)
       .map(teamMember => teamMember.team.toLowerCase())
     const repositoryCollaborator = repositoryCollaborators
       .filter(
-        repositoryCollaborator => repositoryCollaborator.username.toLowerCase() === username
+        repositoryCollaborator =>
+          repositoryCollaborator.username.toLowerCase() === username
       )
       .filter(
         repositoryCollaborator =>
-          !archivedRepositories.includes(repositoryCollaborator.repository.toLowerCase())
+          !archivedRepositories.includes(
+            repositoryCollaborator.repository.toLowerCase()
+          )
       )
     const teamRepository = teamRepositories
-      .filter(teamRepository => teams.includes(teamRepository.team.toLowerCase()))
+      .filter(teamRepository =>
+        teams.includes(teamRepository.team.toLowerCase())
+      )
       .filter(
         teamRepository =>
-          !archivedRepositories.includes(teamRepository.repository.toLowerCase())
+          !archivedRepositories.includes(
+            teamRepository.repository.toLowerCase()
+          )
       )
 
     const repositories: Record<string, {permission: string}> = {}
@@ -136,9 +147,17 @@ export async function describeAccessChanges(): Promise<string> {
       switch (change.kind) {
         case 'E':
           if (path[1] === 'role') {
-            lines.push(
-              `  - will have the role in the organization change from ${change.lhs} to ${change.rhs}`
-            )
+            if (change.lhs === undefined) {
+              lines.push(
+                `  - will join the organization as a ${change.rhs} (remind them to accept the email invitation)`
+              )
+            } else if (change.rhs === undefined) {
+              lines.push(`  - will leave the organization`)
+            } else {
+              lines.push(
+                `  - will have the role in the organization change from ${change.lhs} to ${change.rhs}`
+              )
+            }
           } else {
             lines.push(
               `  - will have the permission to ${path[2]} change from ${change.lhs} to ${change.rhs}`
@@ -160,7 +179,9 @@ export async function describeAccessChanges(): Promise<string> {
               }
             }
           } else {
-            lines.push(`  - will gain ${change.rhs} permission to ${path[2]}`)
+            lines.push(
+              `  - will gain ${change.rhs.permission} permission to ${path[2]}`
+            )
           }
           break
         case 'D':
