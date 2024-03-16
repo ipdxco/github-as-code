@@ -25,57 +25,59 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
   const archivedRepositories = source
     .getResources(Repository)
     .filter(repository => repository.archived)
-    .map(repository => repository.name)
+    .map(repository => repository.name.toLowerCase())
 
   const usernames = new Set<string>([
-    ...members.map(member => member.username),
-    ...repositoryCollaborators.map(collaborator => collaborator.username)
+    ...members.map(member => member.username.toLowerCase()),
+    ...repositoryCollaborators.map(collaborator => collaborator.username.toLowerCase()),
   ])
 
   const accessSummary: AccessSummary = {}
   const permissions = ['admin', 'maintain', 'push', 'triage', 'pull']
 
   for (const username of usernames) {
-    const role = members.find(member => member.username === username)?.role
+    const role = members.find(member => member.username.toLowerCase() === username)?.role
     const teams = teamMembers
-      .filter(teamMember => teamMember.username === username)
-      .map(teamMember => teamMember.team)
+      .filter(teamMember => teamMember.username.toLowerCase() === username)
+      .map(teamMember => teamMember.team.toLowerCase())
     const repositoryCollaborator = repositoryCollaborators
       .filter(
-        repositoryCollaborator => repositoryCollaborator.username === username
+        repositoryCollaborator => repositoryCollaborator.username.toLowerCase() === username
       )
       .filter(
         repositoryCollaborator =>
-          !archivedRepositories.includes(repositoryCollaborator.repository)
+          !archivedRepositories.includes(repositoryCollaborator.repository.toLowerCase())
       )
     const teamRepository = teamRepositories
-      .filter(teamRepository => teams.includes(teamRepository.team))
+      .filter(teamRepository => teams.includes(teamRepository.team.toLowerCase()))
       .filter(
         teamRepository =>
-          !archivedRepositories.includes(teamRepository.repository)
+          !archivedRepositories.includes(teamRepository.repository.toLowerCase())
       )
 
     const repositories: Record<string, {permission: string}> = {}
 
     for (const rc of repositoryCollaborator) {
-      repositories[rc.repository] = repositories[rc.repository] ?? {}
+      const repository = rc.repository.toLowerCase()
+      repositories[repository] = repositories[repository] ?? {}
       if (
-        !repositories[rc.repository].permission ||
+        !repositories[repository].permission ||
         permissions.indexOf(rc.permission) <
-          permissions.indexOf(repositories[rc.repository].permission)
+          permissions.indexOf(repositories[repository].permission)
       ) {
-        repositories[rc.repository].permission = rc.permission
+        repositories[repository].permission = rc.permission
       }
     }
 
     for (const tr of teamRepository) {
-      repositories[tr.repository] = repositories[tr.repository] ?? {}
+      const repository = tr.repository.toLowerCase()
+      repositories[repository] = repositories[repository] ?? {}
       if (
-        !repositories[tr.repository].permission ||
+        !repositories[repository].permission ||
         permissions.indexOf(tr.permission) <
-          permissions.indexOf(repositories[tr.repository].permission)
+          permissions.indexOf(repositories[repository].permission)
       ) {
-        repositories[tr.repository].permission = tr.permission
+        repositories[repository].permission = tr.permission
       }
     }
 
