@@ -114,7 +114,7 @@ resource "github_branch_protection" "this" {
 
   pattern = each.value.pattern
 
-  repository_id = github_repository.this[split(":", each.key)[0]].node_id
+  repository_id = lookup(each.value, "repository_id", lookup(lookup(github_repository.this, lower(lookup(each.value, "repository", "")), {}), "node_id", null))
 
   allows_deletions                = try(each.value.allows_deletions, null)
   allows_force_pushes             = try(each.value.allows_force_pushes, null)
@@ -169,7 +169,7 @@ resource "github_team_repository" "this" {
   repository = each.value.repository
   permission = each.value.permission
 
-  team_id = github_team.this[split(":", each.key)[0]].id
+  team_id = lookup(each.value, "team_id", lookup(lookup(github_team.this, lower(lookup(each.value, "team", "")), {}), "id", null))
 
   lifecycle {
     ignore_changes = []
@@ -182,7 +182,7 @@ resource "github_team_membership" "this" {
   username = each.value.username
   role     = each.value.role
 
-  team_id = github_team.this[split(":", each.key)[0]].id
+  team_id = lookup(each.value, "team_id", lookup(lookup(github_team.this, lower(lookup(each.value, "team", "")), {}), "id", null))
 
   lifecycle {
     ignore_changes = []
@@ -197,7 +197,7 @@ resource "github_repository_file" "this" {
   content    = each.value.content
   # Since 5.25.0 the branch attribute defaults to the default branch of the repository
   # branch              = try(each.value.branch, null)
-  branch              = github_repository.this[each.value.repository].default_branch
+  branch              = lookup(each.value, "branch", lookup(lookup(github_repository.this, each.value.repository, {}), "default_branch", null))
   overwrite_on_create = try(each.value.overwrite_on_create, true)
   # Keep the defaults from 4.x
   commit_author  = try(each.value.commit_author, "GitHub")
