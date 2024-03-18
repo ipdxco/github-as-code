@@ -169,11 +169,13 @@ locals {
         try(config.archived, false) ? {
           source = "state"
           index  = repository
+          archived = config.archived
           } : {
           source = "config"
           index  = repository
+          archived = config.archived
         }
-      ] : item.index => local.sources[item.source].github_repository.this[item.index]
+      ] : item.index => merge(local.sources[item.source].github_repository.this[item.index], { archived = item.archived })
     }
     "github_repository_collaborator" = {
       for item in flatten([
