@@ -173,7 +173,7 @@ locals {
           } : {
           source = "config"
           index  = repository
-          archived = config.archived
+          archived = try(config.archived, false)
         }
       ] : item.index => merge(local.sources[item.source].github_repository.this[item.index], { archived = item.archived })
     }
