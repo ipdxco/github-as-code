@@ -20,10 +20,9 @@ concurrency:
 
 jobs:
   prepare:
-    # not starting for PRs if repo is private because we cannot write to private forks
+    # WARN: writing to private forks is not supported
     if: github.event_name == 'workflow_dispatch' ||
-        (github.event_name == 'pull_request_target' &&
-        github.event.pull_request.head.repo.private == false) ||
+        github.event_name == 'pull_request_target' ||
         (github.event_name == 'workflow_run' &&
         github.event.workflow_run.conclusion == 'success')
     permissions:
