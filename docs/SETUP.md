@@ -158,7 +158,7 @@
 - [ ] Manually set values that are impossible to control this value via terraform currently
    - [ ] [Set read repository contents permissions for `GITHUB_TOKEN`](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#setting-the-permissions-of-the-github_token-for-your-repository)
    - [ ] If the repository is public, [require approval for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks)
-   - [ ] If the repository is private, [disable sending write tokens or secrets to worfklows from fork pull requests](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-private-repository-forks)
+   - [ ] If the repository is private, [disable sending write tokens or secrets to workflows from fork pull requests](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-private-repository-forks)
 - [ ] Pull remote changes to the default branch
 - [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME.yml](github/$ORGANIZATION_NAME.yml) contains the following entry:
     ```yaml
