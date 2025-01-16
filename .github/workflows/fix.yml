@@ -108,7 +108,7 @@ jobs:
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
       - name: Upload YAML config
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TF_WORKSPACE }}.yml
           path: github/${{ env.TF_WORKSPACE }}.yml
@@ -152,7 +152,7 @@ jobs:
         with:
           path: base
       - name: Download YAML configs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
       - name: Copy YAML configs
