@@ -80,7 +80,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: 1.2.9
           terraform_wrapper: false
@@ -122,7 +122,7 @@ jobs:
           git fetch origin "pull/${NUMBER}/head"
           rm -rf github && git checkout "${SHA}" -- github
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: 1.2.9
           terraform_wrapper: false
