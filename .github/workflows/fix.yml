@@ -117,7 +117,7 @@ jobs:
       # NOTE(galargh, 2024-02-15): This will only work if GitHub as Code is used for a single organization
       - name: Comment on pull request
         if: github.event_name == 'pull_request_target' && steps.fix.outputs.comment
-        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # v2.3.1
+        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
         with:
           header: fix
           number: ${{ github.event.pull_request.number }}
