@@ -143,6 +143,8 @@
     - [ ] Rename the `$GITHUB_ORGANIZATION_NAME.yml` in `github` to the name of the GitHub organization
 - [ ] Push the changes to `$GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH`
 
+> [!WARNING] Please note that until you [synchronize GitHub Management with GitHub](#github-management-sync-flow) for the first time, the workflows that depend on Terraform state, like `Fix`, `Plan` or `Apply`, will fail. This is because the state is not yet initialized.
+
 ## GitHub Management Sync Flow
 
 - [ ] Follow [How to synchronize GitHub Management with GitHub?](HOWTOS.md#synchronize-github-management-with-github) to commit the terraform lock and initialize terraform state
