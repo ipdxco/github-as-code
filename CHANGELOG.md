@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updated upload and download artifacts actions to v4
 
 ### Fixed
+- fixed how terraform state is accessed before it the initial synchronization
 - links to supported resources in HOWTOs
 - posting PR comments when terraform plan output is very long
 - PR parsing in the update workflow

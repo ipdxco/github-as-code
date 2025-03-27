@@ -136,10 +136,10 @@ locals {
         }
       }
     }
-    "state" = {
+    "state" = lookup({
       for mode, item in {
-        for item in local.state.values.root_module.resources : item.mode => item...
-        } : mode => {
+        for item in try(local.state.values.root_module.resources, []) : item.mode => item...
+      } : mode => {
         for type, item in {
           for item in item : item.type => item...
           } : type => {
@@ -152,7 +152,7 @@ locals {
           }
         }
       }
-    }.managed
+    }, "managed", {})
   }
   resources = {
     "github_membership" = {
