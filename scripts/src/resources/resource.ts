@@ -18,6 +18,7 @@ export interface Resource {
   // returns Terraform state path under which the resource can be found
   // e.g. github_membership.this["galargh"]
   getStateAddress(): string
+  getName(): string
 }
 
 export interface ResourceConstructor<T extends Resource> {

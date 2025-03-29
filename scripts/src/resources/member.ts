@@ -84,6 +84,10 @@ export class Member extends String implements Resource {
   }
 
   getStateAddress(): string {
-    return `${Member.StateType}.this["${this.username}"]`
+    return `${Member.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return this.username
   }
 }

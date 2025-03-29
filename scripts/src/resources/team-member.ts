@@ -119,6 +119,10 @@ export class TeamMember extends String implements Resource {
   }
 
   getStateAddress(): string {
-    return `${TeamMember.StateType}.this["${this.team}:${this.username}"]`
+    return `${TeamMember.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.team}:${this.username}`
   }
 }

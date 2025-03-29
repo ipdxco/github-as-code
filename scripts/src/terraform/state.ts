@@ -39,6 +39,16 @@ export class State {
 
   private _ignoredProperties: Record<string, string[]> = {}
   private _ignoredTypes: string[] = []
+  private _ignoredNames: Record<string, string[]> = {
+    // TODO: Populate from config
+    Team: ['noteam2'],
+    // TODO: Can't do that in practice..
+    TeamMember: [
+      'noteam2:infinisil',
+      'noteam2:infinisil-github-test',
+      'noteam2:infinixbot'
+    ]
+  }
   private _state?: StateSchema
 
   private updateIgnoredPropertiesFrom(path: string) {
@@ -162,6 +172,13 @@ export class State {
     resourceClass: ResourceConstructor<T>
   ): boolean {
     return this._ignoredTypes.includes(resourceClass.StateType)
+  }
+
+  isNameIgnored<T extends Resource>(
+    resourceClass: ResourceConstructor<T>,
+    name: string
+  ): boolean {
+    return this._ignoredNames[resourceClass.name]?.includes(name)
   }
 
   async addResource(id: Id, resource: Resource) {

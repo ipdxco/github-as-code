@@ -118,6 +118,10 @@ export class RepositoryTeam extends String implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryTeam.StateType}.this["${this.team}:${this.repository}"]`
+    return `${RepositoryTeam.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.team}:${this.repository}`
   }
 }

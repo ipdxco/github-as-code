@@ -75,6 +75,10 @@ export class Team implements Resource {
   }
 
   getStateAddress(): string {
-    return `${Team.StateType}.this["${this.name}"]`
+    return `${Team.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.name}`
   }
 }
