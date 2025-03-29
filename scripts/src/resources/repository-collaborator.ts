@@ -140,6 +140,10 @@ export class RepositoryCollaborator extends String implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryCollaborator.StateType}.this["${this.repository}:${this.username}"]`
+    return `${RepositoryCollaborator.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.repository}:${this.username}`
   }
 }

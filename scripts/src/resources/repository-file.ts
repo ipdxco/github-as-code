@@ -118,6 +118,10 @@ export class RepositoryFile implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryFile.StateType}.this["${this.repository}/${this.file}"]`
+    return `${RepositoryFile.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.repository}/${this.file}`
   }
 }

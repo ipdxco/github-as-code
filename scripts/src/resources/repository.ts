@@ -144,6 +144,10 @@ export class Repository implements Resource {
   }
 
   getStateAddress(): string {
-    return `${Repository.StateType}.this["${this.name}"]`
+    return `${Repository.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.name}`
   }
 }

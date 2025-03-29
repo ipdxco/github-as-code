@@ -85,6 +85,10 @@ export class RepositoryLabel implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryLabel.StateType}.this["${this.repository}:${this.name}"]`
+    return `${RepositoryLabel.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.repository}:${this.name}`
   }
 }

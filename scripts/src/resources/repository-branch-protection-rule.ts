@@ -136,6 +136,10 @@ export class RepositoryBranchProtectionRule implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryBranchProtectionRule.StateType}.this["${this.repository}:${this.pattern}"]`
+    return `${RepositoryBranchProtectionRule.StateType}.this["${this.getName()}"]`
+  }
+
+  getName(): string {
+    return `${this.repository}:${this.pattern}`
   }
 }
