@@ -127,12 +127,12 @@ locals {
         "this" = {
           for item in flatten([
             for repository, config in lookup(local.config, "repositories", {}) : [
-              for label, config in lookup(config, "labels", {}) : merge(config, {
+              for name, config in lookup(config, "labels", {}) : merge(config, {
                 repository = repository
-                label      = label
+                name       = name
               })
             ]
-          ]) : lower("${item.repository}:${item.label}") => item
+          ]) : lower("${item.repository}:${item.name}") => item
         }
       }
     }
