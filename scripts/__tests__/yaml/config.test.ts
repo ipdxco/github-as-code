@@ -12,6 +12,8 @@ import {RepositoryFile} from '../../src/resources/repository-file'
 import {randomUUID} from 'crypto'
 import {Team, Privacy as TeamPrivacy} from '../../src/resources/team'
 import {RepositoryBranchProtectionRule} from '../../src/resources/repository-branch-protection-rule'
+import {toggleArchivedRepos} from '../../src/actions/shared/toggle-archived-repos'
+import * as state from '../../src/terraform/state'
 
 test('can retrieve resources from YAML schema', async () => {
   const config = Config.FromPath()
@@ -384,4 +386,44 @@ test('can add and remove resources through sync', async () => {
   config.sync(desiredResources)
   resources = config.getAllResources()
   expect(resources).toHaveLength(desiredResources.length)
+})
+
+test('clears and re-adds repository fields when archiving/unarchiving', async () => {
+  let config = Config.FromPath()
+
+  const unarchivedRepo = config.getResources(Repository).find(r => !r.archived)!
+
+  expect(unarchivedRepo.visibility).toBeDefined()
+
+  unarchivedRepo.archived = true
+  config.addResource(unarchivedRepo)
+
+  await toggleArchivedRepos(config)
+
+  const archivedRepo = config
+    .getResources(Repository)
+    .find(r => r.getStateAddress() == unarchivedRepo.getStateAddress())!
+
+  expect(archivedRepo.archived).toBe(true)
+  expect(archivedRepo.visibility).not.toBeDefined()
+
+  archivedRepo.archived = false
+  config.addResource(archivedRepo)
+
+  const newState = JSON.parse(await state.loadState())
+  newState.values.root_module.resources.find(
+    (r: any) => r.address == unarchivedRepo.getStateAddress()
+  )!.values.archived = true
+
+  const loadStateMock = jest.spyOn(state, 'loadState')
+  loadStateMock.mockImplementation(async () => JSON.stringify(newState))
+
+  await toggleArchivedRepos(config)
+
+  const toggledRepo = config
+    .getResources(Repository)
+    .find(r => r.getStateAddress() == unarchivedRepo.getStateAddress())!
+
+  expect(toggledRepo.archived).toBe(false)
+  expect(toggledRepo.visibility).toBeDefined()
 })
