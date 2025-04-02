@@ -3,6 +3,15 @@ import {State} from './terraform/state'
 import {Id} from './terraform/schema'
 import {Config} from './yaml/config'
 
+export async function runSync(): Promise<void> {
+  const state = await State.New()
+  const config = Config.FromPath()
+
+  await sync(state, config)
+
+  config.save()
+}
+
 export async function sync(state: State, config: Config): Promise<void> {
   const resources: [Id, Resource][] = []
   for (const resourceClass of ResourceConstructors) {

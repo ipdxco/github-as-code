@@ -9,6 +9,7 @@ import {GitHub} from '../src/github'
 import env from '../src/env'
 import {Resource} from '../src/resources/resource'
 import {RepositoryFile} from '../src/resources/repository-file'
+import {toggleArchivedRepos} from '../src/actions/shared/toggle-archived-repos'
 
 test('sync', async () => {
   const yamlConfig = new config.Config('{}')
@@ -17,6 +18,7 @@ test('sync', async () => {
   const expectedYamlConfig = config.Config.FromPath()
 
   await sync(tfConfig, yamlConfig)
+  await toggleArchivedRepos(tfConfig, yamlConfig)
 
   yamlConfig.format()
 

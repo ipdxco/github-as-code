@@ -2,13 +2,24 @@ import {Config} from '../../yaml/config'
 import {Repository} from '../../resources/repository'
 import * as core from '@actions/core'
 
-export async function setPropertyInAllRepos(
+export async function runSetPropertyInAllRepos(
   name: keyof Repository,
   value: any,
   repositoryFilter: (repository: Repository) => boolean = () => true
 ): Promise<void> {
   const config = Config.FromPath()
 
+  await setPropertyInAllRepos(config, name, value, repositoryFilter)
+
+  config.save()
+}
+
+export async function setPropertyInAllRepos(
+  config: Config,
+  name: keyof Repository,
+  value: any,
+  repositoryFilter: (repository: Repository) => boolean = () => true
+): Promise<void> {
   const repositories = config
     .getResources(Repository)
     .filter(r => !r.archived)
@@ -24,6 +35,4 @@ export async function setPropertyInAllRepos(
       config.addResource(repository)
     }
   }
-
-  config.save()
 }
