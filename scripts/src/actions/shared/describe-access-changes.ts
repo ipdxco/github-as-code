@@ -45,25 +45,16 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
       .filter(teamMember => teamMember.username.toLowerCase() === username)
       .map(teamMember => teamMember.team.toLowerCase())
     const repositoryCollaborator = repositoryCollaborators
+      .filter(collaborator => collaborator.username.toLowerCase() === username)
       .filter(
-        repositoryCollaborator =>
-          repositoryCollaborator.username.toLowerCase() === username
-      )
-      .filter(
-        repositoryCollaborator =>
-          !archivedRepositories.includes(
-            repositoryCollaborator.repository.toLowerCase()
-          )
+        collaborator =>
+          !archivedRepositories.includes(collaborator.repository.toLowerCase())
       )
     const teamRepository = teamRepositories
-      .filter(teamRepository =>
-        teams.includes(teamRepository.team.toLowerCase())
-      )
+      .filter(repository => teams.includes(repository.team.toLowerCase()))
       .filter(
-        teamRepository =>
-          !archivedRepositories.includes(
-            teamRepository.repository.toLowerCase()
-          )
+        repository =>
+          !archivedRepositories.includes(repository.repository.toLowerCase())
       )
 
     const repositories: Record<string, {permission: string}> = {}
@@ -104,11 +95,12 @@ function getAccessSummaryFrom(source: State | Config): AccessSummary {
 }
 
 // deep sort object
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deepSort(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(deepSort)
   } else if (typeof obj === 'object') {
-    const sorted: any = {}
+    const sorted: Record<string, unknown> = {}
     for (const key of Object.keys(obj).sort()) {
       sorted[key] = deepSort(obj[key])
     }
@@ -131,19 +123,25 @@ export async function describeAccessChanges(): Promise<string> {
 
   core.debug(JSON.stringify(changes, null, 2))
 
-  const changesByUser: Record<string, any> = {}
+  const changesByUser: Record<string, typeof changes> = {}
   for (const change of changes) {
-    const path = change.path!
+    if (change.path === undefined) {
+      throw new Error(`Change ${change.kind} has no path`)
+    }
+    const path = change.path
     changesByUser[path[0]] = changesByUser[path[0]] || []
     changesByUser[path[0]].push(change)
   }
 
   // iterate over changesByUser and build a description
   const lines = []
-  for (const [username, changes] of Object.entries(changesByUser)) {
+  for (const [username, userChanges] of Object.entries(changesByUser)) {
     lines.push(`User ${username}:`)
-    for (const change of changes) {
-      const path = change.path!
+    for (const change of userChanges) {
+      if (change.path === undefined) {
+        throw new Error(`Change ${change.kind} has no path`)
+      }
+      const path = change.path
       switch (change.kind) {
         case 'E':
           if (path[1] === 'role') {
@@ -172,9 +170,11 @@ export async function describeAccessChanges(): Promise<string> {
               )
             }
             if (change.rhs.repositories) {
-              for (const repository of Object.keys(change.rhs.repositories)) {
+              for (const [repository, {permission}] of Object.entries(
+                change.rhs.repositories.repositories
+              )) {
                 lines.push(
-                  `  - will gain ${change.rhs.repositories[repository].permission} permission to ${repository}`
+                  `  - will gain ${permission} permission to ${repository}`
                 )
               }
             }
@@ -190,9 +190,11 @@ export async function describeAccessChanges(): Promise<string> {
               lines.push(`  - will leave the organization`)
             }
             if (change.lhs.repositories) {
-              for (const repository of Object.keys(change.lhs.repositories)) {
+              for (const [repository, {permission}] of Object.entries(
+                change.lhs.repositories.repositories
+              )) {
                 lines.push(
-                  `  - will lose ${change.lhs.repositories[repository].permission} permission to ${repository}`
+                  `  - will lose ${permission} permission to ${repository}`
                 )
               }
             }

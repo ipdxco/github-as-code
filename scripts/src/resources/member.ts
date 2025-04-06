@@ -4,13 +4,22 @@ import env from '../env'
 import {Path, ConfigSchema} from '../yaml/schema'
 import {Resource} from './resource'
 
+// eslint-disable-next-line no-shadow
 export enum Role {
   Admin = 'admin',
   Member = 'member'
 }
 
+export type MemberSchema = {
+  type: typeof Member.StateType
+  values: {
+    username: string
+    role: string
+  }
+}
+
 export class Member extends String implements Resource {
-  static StateType: string = 'github_membership'
+  static StateType = 'github_membership' as const
   static async FromGitHub(_members: Member[]): Promise<[Id, Member][]> {
     const github = await GitHub.getGitHub()
     const invitations = await github.listInvitations()
@@ -20,19 +29,25 @@ export class Member extends String implements Resource {
       if (invitation.role === 'billing_manager') {
         throw new Error(`Member role 'billing_manager' is not supported.`)
       }
+      if (invitation.login === null) {
+        throw new Error(`Invitation ${invitation.id} has no login`)
+      }
       const role = invitation.role === 'admin' ? Role.Admin : Role.Member
       result.push([
         `${env.GITHUB_ORG}:${invitation.login}`,
-        new Member(invitation.login!, role)
+        new Member(invitation.login, role)
       ])
     }
     for (const member of members) {
       if (member.role === 'billing_manager') {
         throw new Error(`Member role 'billing_manager' is not supported.`)
       }
+      if (member.user === null) {
+        throw new Error(`Member ${member.url} has no associated user`)
+      }
       result.push([
-        `${env.GITHUB_ORG}:${member.user!.login}`,
-        new Member(member.user!.login, member.role as Role)
+        `${env.GITHUB_ORG}:${member.user.login}`,
+        new Member(member.user.login, member.role as Role)
       ])
     }
     return result
@@ -43,7 +58,7 @@ export class Member extends String implements Resource {
       for (const resource of state.values.root_module.resources) {
         if (resource.type === Member.StateType && resource.mode === 'managed') {
           members.push(
-            new Member(resource.values.username, resource.values.role)
+            new Member(resource.values.username, resource.values.role as Role)
           )
         }
       }

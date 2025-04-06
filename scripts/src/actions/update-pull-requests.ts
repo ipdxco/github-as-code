@@ -1,7 +1,7 @@
 import {GitHub} from '../github'
 import {context} from '@actions/github'
 
-async function updatePullRequests() {
+async function updatePullRequests(): Promise<void> {
   const github = await GitHub.getGitHub()
 
   const pulls = await github.client.paginate(github.client.pulls.list, {

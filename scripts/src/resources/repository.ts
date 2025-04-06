@@ -22,6 +22,7 @@ class Template {
   @Expose() repository?: string
 }
 
+// eslint-disable-next-line no-shadow
 export enum Visibility {
   Private = 'private',
   Public = 'public'
@@ -29,7 +30,7 @@ export enum Visibility {
 
 @Exclude()
 export class Repository implements Resource {
-  static StateType: string = 'github_repository'
+  static StateType = 'github_repository' as const
   static async FromGitHub(
     _repositories: Repository[]
   ): Promise<[Id, Repository][]> {

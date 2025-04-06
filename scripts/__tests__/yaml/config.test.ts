@@ -1,17 +1,21 @@
 import 'reflect-metadata'
 
+import * as YAML from 'yaml'
 import {Config} from '../../src/yaml/config'
 import {
   Resource,
   ResourceConstructors,
   resourceToPlain
 } from '../../src/resources/resource'
-import {Member, Role as MemberRole, Role} from '../../src/resources/member'
+import {NodeBase} from 'yaml/dist/nodes/Node'
+import {Member, Role as MemberRole} from '../../src/resources/member'
 import {Repository} from '../../src/resources/repository'
 import {RepositoryFile} from '../../src/resources/repository-file'
 import {randomUUID} from 'crypto'
 import {Team, Privacy as TeamPrivacy} from '../../src/resources/team'
 import {RepositoryBranchProtectionRule} from '../../src/resources/repository-branch-protection-rule'
+import {Collection} from 'yaml/dist/nodes/Collection'
+import assert from 'node:assert'
 
 test('can retrieve resources from YAML schema', async () => {
   const config = Config.FromPath()
@@ -165,13 +169,17 @@ test('clears comments on member removal', async () => {
 
   const member = config.getResources(Member)[0]
 
-  ;(config.document.getIn(['members', member.role]) as any).items[0].comment =
-    comment
+  const nodes = config.document.getIn(['members', member.role]) as Collection
+  const node = nodes.items[0] as NodeBase
+  node.comment = comment
 
   config.removeResource(member)
 
-  const updatedMembers = config.document.getIn(['members', member.role]) as any
-  for (const item of updatedMembers.items) {
+  const updatedMembers = config.document.getIn([
+    'members',
+    member.role
+  ]) as Collection
+  for (const item of updatedMembers.items as NodeBase[]) {
     expect(item.comment).not.toEqual(comment)
   }
 })
@@ -191,10 +199,12 @@ test('clears comments on repository property updates', async () => {
   const repositories = config.document.getIn([
     'repositories',
     repository.name
-  ]) as any
-
-  repositories.items.find((i: any) => i.key.value === property)!.value.comment =
-    comment
+  ]) as Collection
+  const nodes = repositories.items as YAML.Pair<YAML.Scalar, NodeBase>[]
+  const node = nodes.find(i => i.key.value === property)
+  assert(node !== undefined)
+  assert(node.value !== null)
+  node.value.comment = comment
 
   repository[property] = description
 
@@ -203,11 +213,15 @@ test('clears comments on repository property updates', async () => {
   const updatedRepositories = config.document.getIn([
     'repositories',
     repository.name
-  ]) as any
-  expect(
-    updatedRepositories.items.find((i: any) => i.key.value === property)!.value
-      .comment
-  ).toBeUndefined()
+  ]) as Collection
+  const updatedNodes = updatedRepositories.items as YAML.Pair<
+    YAML.Scalar,
+    NodeBase
+  >[]
+  const updatedNode = updatedNodes.find(i => i.key.value === property)
+  assert(updatedNode !== undefined)
+  assert(updatedNode.value !== null)
+  expect(updatedNode.value.comment).toBeUndefined()
   expect(config.getResources(Repository)[0][property]).toEqual(description)
 })
 
@@ -218,15 +232,19 @@ test('does not clear comments on same member addition', async () => {
 
   const member = config.getResources(Member)[0]
 
-  const members = config.document.getIn(['members', member.role]) as any
-  members.items[0].comment = comment
+  const nodes = config.document.getIn(['members', member.role]) as Collection
+  const node = nodes.items[0] as NodeBase
+  node.comment = comment
 
   config.addResource(member)
 
-  const updatedMembers = config.document.getIn(['members', member.role]) as any
+  const updatedMembers = config.document.getIn([
+    'members',
+    member.role
+  ]) as Collection
 
   expect(
-    updatedMembers.items.some((i: any) => i.comment === comment)
+    (updatedMembers.items as NodeBase[]).some(i => i.comment === comment)
   ).toBeTruthy()
 })
 
@@ -243,20 +261,27 @@ test('does not clear comments on repository property updates to the same value',
   const repositories = config.document.getIn([
     'repositories',
     repository.name
-  ]) as any
-  repositories.items.find((i: any) => i.key.value === property)!.value.comment =
-    comment
+  ]) as Collection
+  const nodes = repositories.items as YAML.Pair<YAML.Scalar, NodeBase>[]
+  const node = nodes.find(i => i.key.value === property)
+  assert(node !== undefined)
+  assert(node.value !== null)
+  node.value.comment = comment
 
   config.addResource(repository)
 
   const updatedRepositories = config.document.getIn([
     'repositories',
     repository.name
-  ]) as any
-  expect(
-    updatedRepositories.items.find((i: any) => i.key.value === property)!.value
-      .comment
-  ).toEqual(comment)
+  ]) as Collection
+  const updatedNodes = updatedRepositories.items as YAML.Pair<
+    YAML.Scalar,
+    NodeBase
+  >[]
+  const updatedNode = updatedNodes.find(i => i.key.value === property)
+  assert(updatedNode !== undefined)
+  assert(updatedNode.value !== null)
+  expect(updatedNode.value.comment).toEqual(comment)
 })
 
 test('can add a repository followed by a repository branch protection rule', async () => {
@@ -283,15 +308,15 @@ test('does not remove properties when adding a team', async () => {
   const config = Config.FromPath()
 
   const team = config.getResources(Team)[0]
-  const definedValues = Object.values(resourceToPlain(team) as any).filter(
-    v => v !== undefined
-  )
+  const definedValues = Object.values(
+    resourceToPlain(team) as Record<string, unknown>
+  ).filter(v => v !== undefined)
   expect(definedValues).not.toHaveLength(0)
   config.addResource(new Team(team.name), false)
 
   const updatedTeam = config.getResources(Team)[0]
   const updatedDefinedValues = Object.values(
-    resourceToPlain(updatedTeam) as any
+    resourceToPlain(updatedTeam) as Record<string, unknown>
   ).filter(v => v !== undefined)
   expect(updatedDefinedValues).not.toHaveLength(0)
 })
@@ -300,15 +325,15 @@ test('does remove undefined properties when adding a team with delete flag set',
   const config = Config.FromPath()
 
   const team = config.getResources(Team)[0]
-  const definedValues = Object.values(resourceToPlain(team) as any).filter(
-    v => v !== undefined
-  )
+  const definedValues = Object.values(
+    resourceToPlain(team) as Record<string, unknown>
+  ).filter(v => v !== undefined)
   expect(definedValues).not.toHaveLength(0)
   config.addResource(new Team(team.name), true)
 
   const updatedTeam = config.getResources(Team)[0]
   const updatedDefinedValues = Object.values(
-    resourceToPlain(updatedTeam) as any
+    resourceToPlain(updatedTeam) as Record<string, unknown>
   ).filter(v => v !== undefined)
   expect(updatedDefinedValues).toHaveLength(0)
 })
@@ -336,7 +361,8 @@ members:
 
   const undefinedMember = config
     .getResources(Member)
-    .find(m => m.username === 'undefined')!
+    .find(m => m.username === 'undefined')
+  assert(undefinedMember !== undefined)
   config.removeResource(undefinedMember)
   config.format()
   const formatted = config.toString().trim()
@@ -363,7 +389,7 @@ repositories:
 
 test('can add and remove resources through sync', async () => {
   const config = new Config('{}')
-  let desiredResources: Resource[] = []
+  const desiredResources: Resource[] = []
   let resources = config.getAllResources()
 
   config.sync(desiredResources)

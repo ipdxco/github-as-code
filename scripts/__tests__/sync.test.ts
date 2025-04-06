@@ -9,6 +9,7 @@ import {GitHub} from '../src/github'
 import env from '../src/env'
 import {Resource} from '../src/resources/resource'
 import {RepositoryFile} from '../src/resources/repository-file'
+import {StateSchema} from '../src/terraform/schema'
 
 test('sync', async () => {
   const yamlConfig = new config.Config('{}')
@@ -35,10 +36,10 @@ test('sync new repository file', async () => {
       }
     }
   }
-  const tfSource = {
+  const tfSource: StateSchema = {
     values: {
       root_module: {
-        resources: [] as any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+        resources: []
       }
     }
   }
@@ -60,19 +61,20 @@ test('sync new repository file', async () => {
 
   const addResourceMock = jest.spyOn(tfConfig, 'addResource')
 
-  addResourceMock.mockImplementation(
-    async (_id: string, resource: Resource) => {
-      tfSource.values.root_module.resources.push({
-        mode: 'managed',
-        type: RepositoryFile.StateType,
-        values: {
-          repository: (resource as RepositoryFile).repository,
-          file: (resource as RepositoryFile).file,
-          ...resource
-        }
-      })
-    }
-  )
+  addResourceMock.mockImplementation(async (id: string, resource: Resource) => {
+    tfSource?.values?.root_module?.resources?.push({
+      mode: 'managed',
+      index: id,
+      address: resource.getStateAddress(),
+      type: RepositoryFile.StateType,
+      values: {
+        repository: (resource as RepositoryFile).repository,
+        file: (resource as RepositoryFile).file,
+        content: (resource as RepositoryFile).content ?? '',
+        ...resource
+      }
+    })
+  })
 
   const expectedYamlConfig = new config.Config(YAML.stringify(yamlSource))
 

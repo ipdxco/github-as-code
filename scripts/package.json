@@ -1,17 +1,17 @@
 {
-  "name": "sync",
+  "name": "scripts",
   "version": "0.0.0",
   "private": true,
-  "description": "Sync",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "format": "prettier --write '**/*.ts'",
-    "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint **/*.ts",
+    "format:check": "prettier --check '**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\"",
+    "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "test": "jest --passWithNoTests",
     "all": "npm run build && npm run format && npm run lint && npm test",
-    "schema": "npx ts-json-schema-generator --tsconfig tsconfig.json --path src/yaml/schema.ts --type ConfigSchema --out ../github/.schema.json",
+    "schema": "ts-json-schema-generator --tsconfig tsconfig.json --path src/yaml/schema.ts --type ConfigSchema --out ../github/.schema.json",
     "main": "node lib/main.js"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@octokit/types": "^13.10.0",
     "@types/deep-diff": "^1.0.5",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.10.10",

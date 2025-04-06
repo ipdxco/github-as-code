@@ -6,7 +6,7 @@ import * as core from '@actions/core'
 export async function addFileToAllRepos(
   name: string,
   content: string = name,
-  repositoryFilter: (repository: Repository) => boolean = () => true
+  repositoryFilter: (repository: Repository) => boolean = (): boolean => true
 ): Promise<void> {
   const config = Config.FromPath()
 

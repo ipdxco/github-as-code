@@ -3,7 +3,7 @@ import {Repository, Visibility} from '../../resources/repository'
 import {RepositoryBranchProtectionRule} from '../../resources/repository-branch-protection-rule'
 
 export async function protectDefaultBranches(
-  includePrivate: boolean = false
+  includePrivate = false
 ): Promise<void> {
   const config = Config.FromPath()
 

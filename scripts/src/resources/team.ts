@@ -4,6 +4,7 @@ import {Exclude, Expose, plainToClassFromExist} from 'class-transformer'
 import {GitHub} from '../github'
 import {Id, StateSchema} from '../terraform/schema'
 
+// eslint-disable-next-line no-shadow
 export enum Privacy {
   PUBLIC = 'closed',
   PRIVATE = 'secret'
@@ -11,7 +12,7 @@ export enum Privacy {
 
 @Exclude()
 export class Team implements Resource {
-  static StateType: string = 'github_team'
+  static StateType = 'github_team' as const
   static async FromGitHub(_teams: Team[]): Promise<[Id, Team][]> {
     const github = await GitHub.getGitHub()
     const teams = await github.listTeams()
@@ -28,12 +29,16 @@ export class Team implements Resource {
         if (resource.type === Team.StateType && resource.mode === 'managed') {
           let parent_team_id = resource.values.parent_team_id
           if (parent_team_id !== undefined) {
-            parent_team_id = state.values.root_module.resources.find(
-              (r: any) =>
-                r.type === 'github_team' &&
+            const parentTeam = state.values.root_module.resources.find(
+              r =>
+                r.type === Team.StateType &&
                 r.mode === 'managed' &&
                 `${r.values.id}` === `${parent_team_id}`
-            )?.values?.name
+            )
+            parent_team_id =
+              parentTeam !== undefined && parentTeam.type === Team.StateType
+                ? parentTeam.values.name
+                : undefined
           }
           teams.push(
             plainToClassFromExist(new Team(resource.values.name), {
@@ -70,7 +75,7 @@ export class Team implements Resource {
   @Expose() parent_team_id?: string
   @Expose() privacy?: Privacy
 
-  getSchemaPath(schema: ConfigSchema): Path {
+  getSchemaPath(_schema: ConfigSchema): Path {
     return ['teams', this.name]
   }
 

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-
 import * as core from '@actions/core'
 import {Octokit as Core} from '@octokit/core'
 import {Octokit} from '@octokit/rest'
@@ -7,10 +5,11 @@ import {retry} from '@octokit/plugin-retry'
 import {throttling} from '@octokit/plugin-throttling'
 import {createAppAuth} from '@octokit/auth-app'
 import env from './env'
-import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types' // eslint-disable-line import/no-unresolved
+import type {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
 
 const Client = Octokit.plugin(retry, throttling)
 const Endpoints = new Octokit()
+
 type Members = GetResponseDataTypeFromEndpointMethod<
   typeof Endpoints.orgs.getMembershipForUser
 >[]
@@ -18,6 +17,84 @@ type Repositories = GetResponseDataTypeFromEndpointMethod<
   typeof Endpoints.repos.listForOrg
 >
 type Teams = GetResponseDataTypeFromEndpointMethod<typeof Endpoints.teams.list>
+type RepositoryCollaborators = {
+  repository: Repositories[number]
+  collaborator: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.repos.listCollaborators
+  >[number]
+}[]
+type TeamMembers = {
+  team: Teams[number]
+  member: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.teams.listMembersInOrg
+  >[number]
+  membership: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.teams.getMembershipForUserInOrg
+  >
+}[]
+type TeamRepositories = {
+  team: Teams[number]
+  repository: Repositories[number]
+}[]
+type RepositoryBranchProtectionRules = {
+  repository: Repositories[number]
+  branchProtectionRule: {
+    pattern: string
+  }
+}[]
+type RepositoryFile = {
+  path: string
+  url: string
+  ref: string
+}
+type Invitations = GetResponseDataTypeFromEndpointMethod<
+  typeof Endpoints.orgs.listPendingInvitations
+>
+type RepositoryInvitations = GetResponseDataTypeFromEndpointMethod<
+  typeof Endpoints.repos.listInvitations
+>
+type TeamInvitations = {
+  team: Teams[number]
+  invitation: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.teams.listPendingInvitationsInOrg
+  >[number]
+}[]
+type RepositoryLabels = {
+  repository: Repositories[number]
+  label: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.issues.listLabelsForRepo
+  >[number]
+}[]
+type RepositoryActivities = {
+  repository: Repositories[number]
+  activity: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.repos.listActivities
+  >[number]
+}[]
+type RepositoryIssues = {
+  repository: Repositories[number]
+  issue: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.issues.listForRepo
+  >[number]
+}[]
+type RepositoryPullRequestReviewComments = {
+  repository: Repositories[number]
+  comment: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.pulls.listReviewCommentsForRepo
+  >[number]
+}[]
+type RepositoryIssueComments = {
+  repository: Repositories[number]
+  comment: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.issues.listCommentsForRepo
+  >[number]
+}[]
+type RepositoryCommitComments = {
+  repository: Repositories[number]
+  comment: GetResponseDataTypeFromEndpointMethod<
+    typeof Endpoints.repos.listCommitCommentsForRepo
+  >[number]
+}[]
 
 export class GitHub {
   static github: GitHub
@@ -47,7 +124,7 @@ export class GitHub {
           options: {method: string; url: string},
           octokit: Core,
           retryCount: number
-        ) => {
+        ): boolean => {
           core.warning(
             `Request quota exhausted for request ${options.method} ${options.url}`
           )
@@ -57,13 +134,15 @@ export class GitHub {
             core.info(`Retrying after ${retryAfter} seconds!`)
             return true
           }
+
+          return false
         },
         onSecondaryRateLimit: (
           retryAfter: number,
           options: {method: string; url: string},
           octokit: Core,
           retryCount: number
-        ) => {
+        ): boolean => {
           core.warning(
             `SecondaryRateLimit detected for request ${options.method} ${options.url}`
           )
@@ -73,13 +152,15 @@ export class GitHub {
             core.info(`Retrying after ${retryAfter} seconds!`)
             return true
           }
+
+          return false
         }
       }
     })
   }
 
   private members?: Members
-  async listMembers() {
+  async listMembers(): Promise<Members> {
     if (!this.members) {
       core.info('Listing members...')
       const members = await this.client.paginate(this.client.orgs.listMembers, {
@@ -100,7 +181,7 @@ export class GitHub {
   }
 
   private repositories?: Repositories
-  async listRepositories() {
+  async listRepositories(): Promise<Repositories> {
     if (!this.repositories) {
       core.info('Listing repositories...')
       this.repositories = await this.client.paginate(
@@ -114,7 +195,7 @@ export class GitHub {
   }
 
   private teams?: Teams
-  async listTeams() {
+  async listTeams(): Promise<Teams> {
     if (!this.teams) {
       core.info('Listing teams...')
       this.teams = await this.client.paginate(this.client.teams.list, {
@@ -124,7 +205,7 @@ export class GitHub {
     return this.teams
   }
 
-  async listRepositoryCollaborators() {
+  async listRepositoryCollaborators(): Promise<RepositoryCollaborators> {
     const repositoryCollaborators = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -140,7 +221,7 @@ export class GitHub {
     return repositoryCollaborators
   }
 
-  async listRepositoryBranchProtectionRules() {
+  async listRepositoryBranchProtectionRules(): Promise<RepositoryBranchProtectionRules> {
     // https://github.com/octokit/graphql.js/issues/61
     const repositoryBranchProtectionRules = []
     const repositories = await this.listRepositories()
@@ -171,7 +252,7 @@ export class GitHub {
     return repositoryBranchProtectionRules
   }
 
-  async listTeamMembers() {
+  async listTeamMembers(): Promise<TeamMembers> {
     const teamMembers = []
     const teams = await this.listTeams()
     for (const team of teams) {
@@ -203,7 +284,7 @@ export class GitHub {
     return teamMembers
   }
 
-  async listTeamRepositories() {
+  async listTeamRepositories(): Promise<TeamRepositories> {
     const teamRepositories = []
     const teams = await this.listTeams()
     for (const team of teams) {
@@ -219,7 +300,10 @@ export class GitHub {
     return teamRepositories
   }
 
-  async getRepositoryFile(repository: string, path: string) {
+  async getRepositoryFile(
+    repository: string,
+    path: string
+  ): Promise<RepositoryFile | undefined> {
     core.info(`Checking if ${repository}/${path} exists...`)
     try {
       const repo = (
@@ -253,7 +337,7 @@ export class GitHub {
     }
   }
 
-  async listInvitations() {
+  async listInvitations(): Promise<Invitations> {
     core.info('Listing invitations...')
     const invitations = await this.client.paginate(
       this.client.orgs.listPendingInvitations,
@@ -266,7 +350,7 @@ export class GitHub {
     )
   }
 
-  async listRepositoryInvitations() {
+  async listRepositoryInvitations(): Promise<RepositoryInvitations> {
     const repositoryInvitations = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -287,7 +371,7 @@ export class GitHub {
     return repositoryInvitations
   }
 
-  async listTeamInvitations() {
+  async listTeamInvitations(): Promise<TeamInvitations> {
     this.client.orgs.listInvitationTeams
     const teamInvitations = []
     const teams = await this.listTeams()
@@ -309,7 +393,7 @@ export class GitHub {
     return teamInvitations
   }
 
-  async listRepositoryLabels() {
+  async listRepositoryLabels(): Promise<RepositoryLabels> {
     const repositoryLabels = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -323,7 +407,7 @@ export class GitHub {
     return repositoryLabels
   }
 
-  async listRepositoryActivities(since: Date) {
+  async listRepositoryActivities(since: Date): Promise<RepositoryActivities> {
     const repositoryActivities = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -349,7 +433,7 @@ export class GitHub {
     return repositoryActivities
   }
 
-  async listRepositoryIssues(since: Date) {
+  async listRepositoryIssues(since: Date): Promise<RepositoryIssues> {
     const issues = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -381,7 +465,9 @@ export class GitHub {
     return issues
   }
 
-  async listRepositoryPullRequestReviewComments(since: Date) {
+  async listRepositoryPullRequestReviewComments(
+    since: Date
+  ): Promise<RepositoryPullRequestReviewComments> {
     const pullRequestComments = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -407,7 +493,9 @@ export class GitHub {
     return pullRequestComments
   }
 
-  async listRepositoryIssueComments(since: Date) {
+  async listRepositoryIssueComments(
+    since: Date
+  ): Promise<RepositoryIssueComments> {
     const issueComments = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
@@ -438,7 +526,9 @@ export class GitHub {
     return issueComments
   }
 
-  async listRepositoryCommitComments(since: Date) {
+  async listRepositoryCommitComments(
+    since: Date
+  ): Promise<RepositoryCommitComments> {
     const commitComments = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {

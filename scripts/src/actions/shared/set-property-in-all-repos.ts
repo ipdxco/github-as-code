@@ -4,8 +4,8 @@ import * as core from '@actions/core'
 
 export async function setPropertyInAllRepos(
   name: keyof Repository,
-  value: any,
-  repositoryFilter: (repository: Repository) => boolean = () => true
+  value: unknown,
+  repositoryFilter: (repository: Repository) => boolean = (): boolean => true
 ): Promise<void> {
   const config = Config.FromPath()
 
@@ -15,9 +15,10 @@ export async function setPropertyInAllRepos(
     .filter(repositoryFilter)
 
   for (const repository of repositories) {
-    const v = (repository as any)[name]
+    const v = repository[name]
     if (v !== value) {
-      ;(repository as any)[name] = value
+      // @ts-expect-error -- We expect the property to be writable
+      repository[name] = value
       core.info(
         `Setting ${name} property to ${value} for ${repository.name} repository`
       )

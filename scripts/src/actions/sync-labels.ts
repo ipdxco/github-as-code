@@ -3,7 +3,7 @@ import {Octokit} from '@octokit/rest'
 import {GitHub} from '../github'
 import env from '../env'
 import * as core from '@actions/core'
-import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types' // eslint-disable-line import/named
+import type {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
 
 const Endpoints = new Octokit()
 type Labels = GetResponseDataTypeFromEndpointMethod<
@@ -19,7 +19,7 @@ async function getLabels(repo: string): Promise<Labels> {
     github.client.issues.listLabelsForRepo,
     {
       owner: env.GITHUB_ORG,
-      repo: repo
+      repo
     }
   )
 
@@ -31,37 +31,37 @@ async function addLabel(
   name: string,
   color: string,
   description: string | undefined
-) {
+): Promise<void> {
   // initialize GitHub client
   const github = await GitHub.getGitHub()
 
   await github.client.issues.createLabel({
     owner: env.GITHUB_ORG,
-    repo: repo,
-    name: name,
-    color: color,
-    description: description
+    repo,
+    name,
+    color,
+    description
   })
 }
 
-async function removeLabel(repo: string, name: string) {
+async function removeLabel(repo: string, name: string): Promise<void> {
   // initialize GitHub client
   const github = await GitHub.getGitHub()
 
   await github.client.issues.deleteLabel({
     owner: env.GITHUB_ORG,
-    repo: repo,
-    name: name
+    repo,
+    name
   })
 }
 
-async function sync() {
+async function sync(): Promise<void> {
   const sourceRepo = process.env.SOURCE_REPOSITORY
   const targetRepos = process.env.TARGET_REPOSITORIES?.split(',')?.map(r =>
     r.trim()
   )
-  const addLabels = process.env.ADD_LABELS == 'true'
-  const removeLabels = process.env.REMOVE_LABELS == 'true'
+  const addLabels = process.env.ADD_LABELS === 'true'
+  const removeLabels = process.env.REMOVE_LABELS === 'true'
 
   if (!sourceRepo) {
     throw new Error('SOURCE_REPOSITORY environment variable not set')

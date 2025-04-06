@@ -21,6 +21,7 @@ export interface Resource {
 }
 
 export interface ResourceConstructor<T extends Resource> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new (...args: any[]): T
   // extracts all resources of specific type from the given YAML config
   FromConfig(config: ConfigSchema): T[]
@@ -48,7 +49,7 @@ export const ResourceConstructors: ResourceConstructor<Resource>[] = [
 
 export function resourceToPlain<T extends Resource>(
   resource: T | undefined
-): string | Record<string, any> | undefined {
+): string | Record<string, unknown> | undefined {
   if (resource !== undefined) {
     if (resource instanceof String) {
       return resource.toString()

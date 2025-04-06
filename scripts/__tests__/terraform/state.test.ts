@@ -47,11 +47,11 @@ test('can ignore resource properties', async () => {
 test('can add and remove resources through sync', async () => {
   const config = await State.New()
 
-  let addResourceSpy = jest.spyOn(config, 'addResource')
-  let removeResourceAtSpy = jest.spyOn(config, 'removeResourceAt')
+  const addResourceSpy = jest.spyOn(config, 'addResource')
+  const removeResourceAtSpy = jest.spyOn(config, 'removeResourceAt')
 
-  let desiredResources: [Id, Resource][] = []
-  let resources = config.getAllResources()
+  const desiredResources: [Id, Resource][] = []
+  const resources = config.getAllResources()
 
   await config.sync(desiredResources)
 
