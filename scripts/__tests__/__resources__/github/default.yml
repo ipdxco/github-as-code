@@ -160,27 +160,7 @@ repositories:
     visibility: public
     vulnerability_alerts: false
   rust-sccache-action:
-    advanced_security: false
-    allow_auto_merge: false
-    allow_merge_commit: true
-    allow_rebase_merge: true
-    allow_squash_merge: true
-    archived: false
-    auto_init: false
-    default_branch: main
-    delete_branch_on_merge: false
-    has_downloads: true
-    has_issues: true
-    has_projects: true
-    has_wiki: true
-    is_template: false
-    secret_scanning_push_protection: false
-    secret_scanning: false
-    teams:
-      maintain:
-        - ipdx
-    visibility: public
-    vulnerability_alerts: true
+    archived: true
   tf-aws-gh-runner:
     advanced_security: false
     allow_auto_merge: false

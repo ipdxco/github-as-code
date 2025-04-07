@@ -2,11 +2,20 @@ import {Config} from '../../yaml/config'
 import {Repository, Visibility} from '../../resources/repository'
 import {RepositoryBranchProtectionRule} from '../../resources/repository-branch-protection-rule'
 
-export async function protectDefaultBranches(
+export async function runProtectDefaultBranches(
   includePrivate: boolean = false
 ): Promise<void> {
   const config = Config.FromPath()
 
+  await protectDefaultBranches(config, includePrivate)
+
+  config.save()
+}
+
+export async function protectDefaultBranches(
+  config: Config,
+  includePrivate: boolean = false
+): Promise<void> {
   const repositories = config.getResources(Repository).filter(r => !r.archived)
 
   for (const repository of repositories) {
@@ -23,6 +32,4 @@ export async function protectDefaultBranches(
       }
     }
   }
-
-  config.save()
 }

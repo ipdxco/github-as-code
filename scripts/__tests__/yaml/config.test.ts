@@ -13,7 +13,7 @@ import {randomUUID} from 'crypto'
 import {Team, Privacy as TeamPrivacy} from '../../src/resources/team'
 import {RepositoryBranchProtectionRule} from '../../src/resources/repository-branch-protection-rule'
 import {toggleArchivedRepos} from '../../src/actions/shared/toggle-archived-repos'
-import * as state from '../../src/terraform/state'
+import {State} from '../../src/terraform/state'
 
 test('can retrieve resources from YAML schema', async () => {
   const config = Config.FromPath()
@@ -23,13 +23,13 @@ test('can retrieve resources from YAML schema', async () => {
   for (const resourceClass of ResourceConstructors) {
     const classResources = config.getResources(resourceClass)
     expect(classResources).toHaveLength(
-      global.ResourceCounts[resourceClass.name]
+      global.ConfigResourceCounts[resourceClass.name]
     )
     resources.push(...classResources)
   }
 
   expect(resources).toHaveLength(
-    Object.values(global.ResourceCounts).reduce(
+    Object.values(global.ConfigResourceCounts).reduce(
       (a: number, b: number) => a + b,
       0
     )
@@ -58,7 +58,7 @@ test('can remove members', async () => {
   }
 
   expect(config.getAllResources()).toHaveLength(
-    global.ResourcesCount - global.ResourceCounts[Member.name]
+    global.ConfigResourcesCount - global.ConfigResourceCounts[Member.name]
   )
 })
 
@@ -76,8 +76,8 @@ test('can remove repositories, including their sub-resources', async () => {
   }
 
   const count =
-    global.ResourcesCount -
-    Object.entries(global.ResourceCounts).reduce(
+    global.ConfigResourcesCount -
+    Object.entries(global.ConfigResourceCounts).reduce(
       (a: number, [key, value]) =>
         key.startsWith(Repository.name) ? a + value : a,
       0
@@ -98,12 +98,12 @@ test('can add members', async () => {
     config.addResource(member)
     expect(config.someResource(member)).toBeTruthy()
     expect(config.getResources(Member)).toHaveLength(
-      global.ResourceCounts[Member.name] + index + 1
+      global.ConfigResourceCounts[Member.name] + index + 1
     )
   }
 
   expect(config.getAllResources()).toHaveLength(
-    global.ResourcesCount + members.length
+    global.ConfigResourcesCount + members.length
   )
 })
 
@@ -124,7 +124,7 @@ test('can add files, including their parent resources', async () => {
   }
 
   const count =
-    global.ResourcesCount +
+    global.ConfigResourcesCount +
     files.filter(f => !config.someResource(f)).length +
     repositories.filter(r => !config.someResource(r)).length
 
@@ -132,7 +132,7 @@ test('can add files, including their parent resources', async () => {
     config.addResource(file)
     expect(config.someResource(file)).toBeTruthy()
     expect(config.getResources(RepositoryFile)).toHaveLength(
-      global.ResourceCounts[RepositoryFile.name] + index + 1
+      global.ConfigResourceCounts[RepositoryFile.name] + index + 1
     )
   }
 
@@ -365,7 +365,7 @@ repositories:
 
 test('can add and remove resources through sync', async () => {
   const config = new Config('{}')
-  let desiredResources: Resource[] = []
+  const desiredResources: Resource[] = []
   let resources = config.getAllResources()
 
   config.sync(desiredResources)
@@ -389,41 +389,37 @@ test('can add and remove resources through sync', async () => {
 })
 
 test('clears and re-adds repository fields when archiving/unarchiving', async () => {
-  let config = Config.FromPath()
+  const config = Config.FromPath()
+  const state = await State.New()
 
-  const unarchivedRepo = config.getResources(Repository).find(r => !r.archived)!
-
-  expect(unarchivedRepo.visibility).toBeDefined()
-
-  unarchivedRepo.archived = true
-  config.addResource(unarchivedRepo)
-
-  await toggleArchivedRepos(config)
-
-  const archivedRepo = config
+  const archivedRepository = config
     .getResources(Repository)
-    .find(r => r.getStateAddress() == unarchivedRepo.getStateAddress())!
-
-  expect(archivedRepo.archived).toBe(true)
-  expect(archivedRepo.visibility).not.toBeDefined()
-
-  archivedRepo.archived = false
-  config.addResource(archivedRepo)
-
-  const newState = JSON.parse(await state.loadState())
-  newState.values.root_module.resources.find(
-    (r: any) => r.address == unarchivedRepo.getStateAddress()
-  )!.values.archived = true
-
-  const loadStateMock = jest.spyOn(state, 'loadState')
-  loadStateMock.mockImplementation(async () => JSON.stringify(newState))
-
-  await toggleArchivedRepos(config)
-
-  const toggledRepo = config
+    .find(r => r.archived)!
+  const unarchivedRepository = config
     .getResources(Repository)
-    .find(r => r.getStateAddress() == unarchivedRepo.getStateAddress())!
+    .find(r => !r.archived)!
 
-  expect(toggledRepo.archived).toBe(false)
-  expect(toggledRepo.visibility).toBeDefined()
+  expect(archivedRepository.archived).toBe(true)
+  expect(archivedRepository.visibility).not.toBeDefined()
+
+  expect(unarchivedRepository.archived).toBe(false)
+  expect(unarchivedRepository.visibility).toBeDefined()
+
+  archivedRepository.archived = false
+  unarchivedRepository.archived = true
+
+  config.addResource(archivedRepository)
+  config.addResource(unarchivedRepository)
+
+  await toggleArchivedRepos(state, config)
+
+  const previouslyArchivedRepository = config.findResource(archivedRepository)!
+  const previouslyUnarchivedRepository =
+    config.findResource(unarchivedRepository)!
+
+  expect(previouslyArchivedRepository.archived).toBe(false)
+  expect(previouslyArchivedRepository.visibility).toBeDefined()
+
+  expect(previouslyUnarchivedRepository.archived).toBe(true)
+  expect(previouslyUnarchivedRepository.visibility).not.toBeDefined()
 })

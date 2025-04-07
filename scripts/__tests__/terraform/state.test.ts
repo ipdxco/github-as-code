@@ -12,12 +12,12 @@ test('can retrieve resources from tf state', async () => {
   for (const resourceClass of ResourceConstructors) {
     const classResources = config.getResources(resourceClass)
     expect(classResources).toHaveLength(
-      global.ResourceCounts[resourceClass.name]
+      global.StateResourceCounts[resourceClass.name]
     )
     resources.push(...classResources)
   }
 
-  expect(resources).toHaveLength(global.ResourcesCount)
+  expect(resources).toHaveLength(global.StateResourcesCount)
 })
 
 test('can ignore resource types', async () => {

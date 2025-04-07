@@ -2,9 +2,19 @@ import {Config} from '../../yaml/config'
 import {Repository} from '../../resources/repository'
 import {State} from '../../terraform/state'
 
-export async function toggleArchivedRepos(config: Config): Promise<void> {
+export async function runToggleArchivedRepos(): Promise<void> {
   const state = await State.New()
+  const config = Config.FromPath()
 
+  await toggleArchivedRepos(state, config)
+
+  config.save()
+}
+
+export async function toggleArchivedRepos(
+  state: State,
+  config: Config
+): Promise<void> {
   const resources = state.getAllResources()
   const stateRepositories = state.getResources(Repository)
   const configRepositories = config.getResources(Repository)

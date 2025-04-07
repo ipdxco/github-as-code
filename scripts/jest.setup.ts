@@ -58,7 +58,22 @@ GitHub.github = {
   }
 } as GitHub
 
-global.ResourceCounts = {
+global.ConfigResourceCounts = {
+  [Member.name]: 2,
+  [Repository.name]: 7,
+  [Team.name]: 2,
+  [RepositoryCollaborator.name]: 1,
+  [RepositoryBranchProtectionRule.name]: 1,
+  [RepositoryTeam.name]: 6,
+  [TeamMember.name]: 2,
+  [RepositoryFile.name]: 1,
+  [RepositoryLabel.name]: 3
+}
+global.ConfigResourcesCount = Object.values(global.ConfigResourceCounts).reduce(
+  (a, b) => a + b,
+  0
+)
+global.StateResourceCounts = {
   [Member.name]: 2,
   [Repository.name]: 7,
   [Team.name]: 2,
@@ -69,7 +84,7 @@ global.ResourceCounts = {
   [RepositoryFile.name]: 1,
   [RepositoryLabel.name]: 3
 }
-global.ResourcesCount = Object.values(global.ResourceCounts).reduce(
+global.StateResourcesCount = Object.values(global.StateResourceCounts).reduce(
   (a, b) => a + b,
   0
 )

@@ -118,7 +118,7 @@ I want to ensure that all the public repositories in my organization have their 
 To do that, I ensure the following content is present in `scripts/src/actions/fix-yaml-config.ts`:
 ```ts
 import 'reflect-metadata'
-import { protectDefaultBranches } from './shared/protect-default-branches'
+import { runProtectDefaultBranches } from './shared/protect-default-branches'
 
-protectDefaultBranches()
+runProtectDefaultBranches()
 ```
