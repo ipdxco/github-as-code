@@ -1,14 +1,14 @@
 import 'reflect-metadata'
 
-import {toggleArchivedRepos} from './shared/toggle-archived-repos'
-import {describeAccessChanges} from './shared/describe-access-changes'
+import {runToggleArchivedRepos} from './shared/toggle-archived-repos'
+import {runDescribeAccessChanges} from './shared/describe-access-changes'
 
 import * as core from '@actions/core'
 
 async function run(): Promise<void> {
-  await toggleArchivedRepos()
+  await runToggleArchivedRepos()
 
-  const accessChangesDescription = await describeAccessChanges()
+  const accessChangesDescription = await runDescribeAccessChanges()
 
   core.setOutput(
     'comment',

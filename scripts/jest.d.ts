@@ -1,6 +1,8 @@
 declare global {
-  var ResourceCounts: Record<string, number>
-  var ResourcesCount: number
+  var StateResourceCounts: Record<string, number>
+  var StateResourcesCount: number
+  var ConfigResourceCounts: Record<string, number>
+  var ConfigResourcesCount: number
 }
 
 export {}

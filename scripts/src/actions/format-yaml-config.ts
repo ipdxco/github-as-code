@@ -1,4 +1,9 @@
 import 'reflect-metadata'
-import {format} from './shared/format'
+import {Config} from '../yaml/config'
 
-format()
+async function run(): Promise<void> {
+  const config = Config.FromPath()
+  config.save()
+}
+
+run()

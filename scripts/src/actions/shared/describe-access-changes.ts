@@ -110,10 +110,17 @@ function deepSort(obj: any): any {
   }
 }
 
-export async function describeAccessChanges(): Promise<string> {
+export async function runDescribeAccessChanges(): Promise<string> {
   const state = await State.New()
   const config = Config.FromPath()
 
+  return await describeAccessChanges(state, config)
+}
+
+export async function describeAccessChanges(
+  state: State,
+  config: Config
+): Promise<string> {
   const before = getAccessSummaryFrom(state)
   const after = getAccessSummaryFrom(config)
 
