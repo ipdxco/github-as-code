@@ -3,7 +3,7 @@ import {Repository} from '../../resources/repository'
 import {RepositoryFile} from '../../resources/repository-file'
 import * as core from '@actions/core'
 
-async function runAddFileToAllRepos(
+export async function runAddFileToAllRepos(
   name: string,
   content: string = name,
   repositoryFilter: (repository: Repository) => boolean = () => true
