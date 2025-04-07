@@ -27,6 +27,9 @@
           "additionalProperties": {
             "additionalProperties": false,
             "properties": {
+              "advanced_security": {
+                "type": "boolean"
+              },
               "allow_auto_merge": {
                 "type": "boolean"
               },
@@ -37,6 +40,9 @@
                 "type": "boolean"
               },
               "allow_squash_merge": {
+                "type": "boolean"
+              },
+              "allow_update_branch": {
                 "type": "boolean"
               },
               "archive_on_destroy": {
@@ -108,6 +114,9 @@
               "gitignore_template": {
                 "type": "string"
               },
+              "has_discussions": {
+                "type": "boolean"
+              },
               "has_downloads": {
                 "type": "boolean"
               },
@@ -129,7 +138,19 @@
               "is_template": {
                 "type": "boolean"
               },
+              "labels": {
+                "additionalProperties": {
+                  "$ref": "#/definitions/RepositoryLabel"
+                },
+                "type": "object"
+              },
               "license_template": {
+                "type": "string"
+              },
+              "merge_commit_message": {
+                "type": "string"
+              },
+              "merge_commit_title": {
                 "type": "string"
               },
               "pages": {
@@ -152,6 +173,18 @@
                   }
                 },
                 "type": "object"
+              },
+              "secret_scanning": {
+                "type": "boolean"
+              },
+              "secret_scanning_push_protection": {
+                "type": "boolean"
+              },
+              "squash_merge_commit_message": {
+                "type": "string"
+              },
+              "squash_merge_commit_title": {
+                "type": "string"
               },
               "teams": {
                 "additionalProperties": false,
@@ -276,7 +309,13 @@
         "allows_force_pushes": {
           "type": "boolean"
         },
+        "blocks_creations": {
+          "type": "boolean"
+        },
         "enforce_admins": {
+          "type": "boolean"
+        },
+        "lock_branch": {
           "type": "boolean"
         },
         "push_restrictions": {
@@ -350,6 +389,18 @@
         },
         "overwrite_on_create": {
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "RepositoryLabel": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
         }
       },
       "type": "object"
