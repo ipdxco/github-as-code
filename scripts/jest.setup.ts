@@ -21,40 +21,40 @@ jest.mock('./src/env', () => ({
 
 GitHub.github = {
   listMembers: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listRepositories: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listTeams: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listRepositoryCollaborators: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listRepositoryBranchProtectionRules: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listTeamRepositories: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listTeamMembers: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   getRepositoryFile: async (_repository: string, _path: string) => {
     return undefined
   },
   listInvitations: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listRepositoryInvitations: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listTeamInvitations: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   },
   listRepositoryLabels: async () => {
-    return [] as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    return [] as any
   }
 } as GitHub
 

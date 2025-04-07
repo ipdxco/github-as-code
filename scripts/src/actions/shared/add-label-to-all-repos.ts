@@ -7,7 +7,7 @@ export async function runAddLabelToAllRepos(
   name: string,
   color: string | undefined = undefined,
   description: string | undefined = undefined,
-  repositoryFilter: (repository: Repository) => boolean = () => true
+  repositoryFilter: (repository: Repository) => boolean = (): boolean => true
 ): Promise<void> {
   const config = Config.FromPath()
 

@@ -3,7 +3,7 @@ import {Repository, Visibility} from '../../resources/repository'
 import {RepositoryBranchProtectionRule} from '../../resources/repository-branch-protection-rule'
 
 export async function runProtectDefaultBranches(
-  includePrivate: boolean = false
+  includePrivate = false
 ): Promise<void> {
   const config = Config.FromPath()
 
@@ -14,7 +14,7 @@ export async function runProtectDefaultBranches(
 
 export async function protectDefaultBranches(
   config: Config,
-  includePrivate: boolean = false
+  includePrivate = false
 ): Promise<void> {
   const repositories = config.getResources(Repository).filter(r => !r.archived)
 

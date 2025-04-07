@@ -2,7 +2,7 @@ import {GitHub} from '../github'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
 
-async function findShaForPlan() {
+async function findShaForPlan(): Promise<string> {
   const github = await GitHub.getGitHub()
 
   if (context.eventName !== 'push') {
@@ -37,6 +37,9 @@ async function findShaForPlan() {
   return commits[commits.length - 1].sha
 }
 
-findShaForPlan().then(sha => {
+async function run(): Promise<void> {
+  const sha = await findShaForPlan()
   core.setOutput('result', sha)
-})
+}
+
+run()

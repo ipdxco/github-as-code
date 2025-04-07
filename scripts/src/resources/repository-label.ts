@@ -6,7 +6,7 @@ import {Id, StateSchema} from '../terraform/schema'
 
 @Exclude()
 export class RepositoryLabel implements Resource {
-  static StateType: string = 'github_issue_label'
+  static StateType = 'github_issue_label' as const
   static async FromGitHub(
     _labels: RepositoryLabel[]
   ): Promise<[Id, RepositoryLabel][]> {

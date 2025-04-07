@@ -32,7 +32,7 @@ export function findFileByContent(
 
 @Exclude()
 export class RepositoryFile implements Resource {
-  static StateType: string = 'github_repository_file'
+  static StateType = 'github_repository_file' as const
   static async FromGitHub(
     files: RepositoryFile[]
   ): Promise<[Id, RepositoryFile][]> {

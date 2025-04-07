@@ -4,6 +4,7 @@ import {Path, ConfigSchema} from '../yaml/schema'
 import {Resource} from './resource'
 import {Team} from './team'
 
+// eslint-disable-next-line no-shadow
 export enum Permission {
   Admin = 'admin',
   Maintain = 'maintain',
@@ -13,7 +14,7 @@ export enum Permission {
 }
 
 export class RepositoryTeam extends String implements Resource {
-  static StateType: string = 'github_team_repository'
+  static StateType = 'github_team_repository' as const
   static async FromGitHub(
     _teams: RepositoryTeam[]
   ): Promise<[Id, RepositoryTeam][]> {
@@ -42,16 +43,15 @@ export class RepositoryTeam extends String implements Resource {
         ) {
           const teamIndex = resource.index.split(`:`).slice(0, -1).join(`:`)
           const team = state.values.root_module.resources.find(
-            (r: any) =>
-              r.type === Team.StateType &&
-              resource.mode === 'managed' &&
-              r.index === teamIndex
+            r => resource.mode === 'managed' && r.index === teamIndex
           )
           teams.push(
             new RepositoryTeam(
               resource.values.repository,
-              team.values.name || teamIndex,
-              resource.values.permission
+              team !== undefined && team.type === Team.StateType
+                ? team.values.name
+                : teamIndex,
+              resource.values.permission as Permission
             )
           )
         }

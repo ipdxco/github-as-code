@@ -30,7 +30,7 @@
       "@typescript-eslint/no-inferrable-types": "error",
       "@typescript-eslint/no-misused-new": "error",
       "@typescript-eslint/no-namespace": "error",
-      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unnecessary-qualifier": "error",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
       "@typescript-eslint/no-useless-constructor": "error",
@@ -46,7 +46,8 @@
       "@typescript-eslint/semi": ["error", "never"],
       "@typescript-eslint/type-annotation-spacing": "error",
       "@typescript-eslint/unbound-method": "error",
-      "filenames/match-regex": ["error", "^([a-z0-9]+)([A-Z][a-z0-9]+)*(\\.test)?$"]
+      "filenames/match-regex": "off",
+      "no-console": "off"
     },
     "env": {
       "node": true,

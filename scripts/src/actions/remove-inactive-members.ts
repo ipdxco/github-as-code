@@ -89,10 +89,11 @@ async function run(): Promise<void> {
       actor: comment.user?.login
     }))
   ]
-    .filter(({actor}) => actor)
-    .reduce<any>((acc, {repository, actor}) => {
+    .filter(({actor}) => actor !== undefined)
+    .reduce<Record<string, string[]>>((acc, {repository, actor}) => {
       acc[repository] = acc[repository] ?? []
-      acc[repository].push(actor)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      acc[repository].push(actor!)
       return acc
     }, {})
   const activeActors = Array.from(
