@@ -17,7 +17,7 @@ export async function runSetPropertyInAllRepos(
 export async function setPropertyInAllRepos(
   config: Config,
   name: keyof Repository,
-  value: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  value: unknown,
   repositoryFilter: (repository: Repository) => boolean = () => true
 ): Promise<void> {
   const repositories = config
