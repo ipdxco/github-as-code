@@ -27,7 +27,7 @@
     "deep-diff": "^1.0.2",
     "hcl2-parser": "^1.0.3",
     "reflect-metadata": "^0.2.2",
-    "yaml": "^2.7.0"
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@octokit/types": "^13.10.0",
