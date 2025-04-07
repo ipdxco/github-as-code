@@ -12,7 +12,8 @@ async function findShaForPlan() {
   const pulls = await github.client.paginate(
     github.client.search.issuesAndPullRequests,
     {
-      q: `repository:${context.repo.owner}/${context.repo.repo} ${context.sha} type:pr is:merged`
+      q: `repository:${context.repo.owner}/${context.repo.repo} ${context.sha} type:pr is:merged`,
+      advanced_search: true
     }
   )
 
