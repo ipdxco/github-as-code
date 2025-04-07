@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import {runToggleArchivedRepos} from './shared/toggle-archived-repos'
-import {runDescribeAccessChanges} from './shared/describe-access-changes'
+import {runToggleArchivedRepos} from './shared/toggle-archived-repos.js'
+import {runDescribeAccessChanges} from './shared/describe-access-changes.js'
 
 import * as core from '@actions/core'
 

@@ -1,6 +1,6 @@
-import {Config} from '../../yaml/config'
-import {Repository} from '../../resources/repository'
-import {RepositoryLabel} from '../../resources/repository-label'
+import {Config} from '../../yaml/config.js'
+import {Repository} from '../../resources/repository.js'
+import {RepositoryLabel} from '../../resources/repository-label.js'
 import * as core from '@actions/core'
 
 export async function runAddLabelToAllRepos(

@@ -1,6 +1,6 @@
-import {Config} from '../../yaml/config'
-import {Repository} from '../../resources/repository'
-import {State} from '../../terraform/state'
+import {Config} from '../../yaml/config.js'
+import {Repository} from '../../resources/repository.js'
+import {State} from '../../terraform/state.js'
 
 export async function runToggleArchivedRepos(): Promise<void> {
   const state = await State.New()

@@ -1,9 +1,8 @@
-import {GitHub} from '../github'
-import {Id, StateSchema} from '../terraform/schema'
-import {Path, ConfigSchema} from '../yaml/schema'
-import {Resource} from './resource'
+import {GitHub} from '../github.js'
+import {Id, StateSchema} from '../terraform/schema.js'
+import {Path, ConfigSchema} from '../yaml/schema.js'
+import {Resource} from './resource.js'
 
-// eslint-disable-next-line no-shadow
 export enum Permission {
   Admin = 'admin',
   Maintain = 'maintain',

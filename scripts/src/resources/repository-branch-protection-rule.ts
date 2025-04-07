@@ -1,9 +1,9 @@
 import {Exclude, Expose, plainToClassFromExist, Type} from 'class-transformer'
-import {GitHub} from '../github'
-import {Id, StateSchema} from '../terraform/schema'
-import {Path, ConfigSchema} from '../yaml/schema'
-import {Repository} from './repository'
-import {Resource} from './resource'
+import {GitHub} from '../github.js'
+import {Id, StateSchema} from '../terraform/schema.js'
+import {Path, ConfigSchema} from '../yaml/schema.js'
+import {Repository} from './repository.js'
+import {Resource} from './resource.js'
 
 @Exclude()
 class RequiredPullRequestReviews {

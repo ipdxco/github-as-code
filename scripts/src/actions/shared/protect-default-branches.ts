@@ -1,6 +1,6 @@
-import {Config} from '../../yaml/config'
-import {Repository, Visibility} from '../../resources/repository'
-import {RepositoryBranchProtectionRule} from '../../resources/repository-branch-protection-rule'
+import {Config} from '../../yaml/config.js'
+import {Repository, Visibility} from '../../resources/repository.js'
+import {RepositoryBranchProtectionRule} from '../../resources/repository-branch-protection-rule.js'
 
 export async function runProtectDefaultBranches(
   includePrivate = false

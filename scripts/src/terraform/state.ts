@@ -1,15 +1,14 @@
-import {Id, StateSchema} from './schema'
+import {Id, StateSchema} from './schema.js'
 import {
   Resource,
   ResourceConstructors,
   ResourceConstructor
-} from '../resources/resource'
-import env from '../env'
+} from '../resources/resource.js'
+import env from '../env.js'
 import * as cli from '@actions/exec'
 import * as fs from 'fs'
 import * as core from '@actions/core'
-import * as HCL from 'hcl2-parser'
-import * as thisModule from './state'
+import HCL from 'hcl2-parser'
 
 export async function loadState(): Promise<string> {
   let source = ''
@@ -46,7 +45,8 @@ type HCLObject = {
 
 export class State {
   static async New(): Promise<State> {
-    return new State(await thisModule.loadState())
+    const state = await import('./state.js')
+    return new State(await state.loadState())
   }
 
   private _ignoredProperties: Record<string, string[]> = {}
@@ -115,7 +115,8 @@ export class State {
   }
 
   async reset(): Promise<void> {
-    this._state = this.getState(await thisModule.loadState())
+    const state = await import('./state.js')
+    this._state = this.getState(await state.loadState())
   }
 
   async refresh(): Promise<void> {

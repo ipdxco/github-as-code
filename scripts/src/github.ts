@@ -1,35 +1,33 @@
 import * as core from '@actions/core'
 import {Octokit as Core} from '@octokit/core'
-import {Octokit} from '@octokit/rest'
+import {Octokit as Client} from '@octokit/rest'
 import {retry} from '@octokit/plugin-retry'
 import {throttling} from '@octokit/plugin-throttling'
-import {createAppAuth} from '@octokit/auth-app'
-import env from './env'
+import env from './env.js'
 import type {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
 
-const Client = Octokit.plugin(retry, throttling)
-const Endpoints = new Octokit()
+type Endpoints = InstanceType<typeof Client>
 
 type Members = GetResponseDataTypeFromEndpointMethod<
-  typeof Endpoints.orgs.getMembershipForUser
+  Endpoints['orgs']['getMembershipForUser']
 >[]
 type Repositories = GetResponseDataTypeFromEndpointMethod<
-  typeof Endpoints.repos.listForOrg
+  Endpoints['repos']['listForOrg']
 >
-type Teams = GetResponseDataTypeFromEndpointMethod<typeof Endpoints.teams.list>
+type Teams = GetResponseDataTypeFromEndpointMethod<Endpoints['teams']['list']>
 type RepositoryCollaborators = {
   repository: Repositories[number]
   collaborator: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.repos.listCollaborators
+    Endpoints['repos']['listCollaborators']
   >[number]
 }[]
 type TeamMembers = {
   team: Teams[number]
   member: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.teams.listMembersInOrg
+    Endpoints['teams']['listMembersInOrg']
   >[number]
   membership: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.teams.getMembershipForUserInOrg
+    Endpoints['teams']['getMembershipForUserInOrg']
   >
 }[]
 type TeamRepositories = {
@@ -48,51 +46,51 @@ type RepositoryFile = {
   ref: string
 }
 type Invitations = GetResponseDataTypeFromEndpointMethod<
-  typeof Endpoints.orgs.listPendingInvitations
+  Endpoints['orgs']['listPendingInvitations']
 >
 type RepositoryInvitations = GetResponseDataTypeFromEndpointMethod<
-  typeof Endpoints.repos.listInvitations
+  Endpoints['repos']['listInvitations']
 >
 type TeamInvitations = {
   team: Teams[number]
   invitation: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.teams.listPendingInvitationsInOrg
+    Endpoints['teams']['listPendingInvitationsInOrg']
   >[number]
 }[]
 type RepositoryLabels = {
   repository: Repositories[number]
   label: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.issues.listLabelsForRepo
+    Endpoints['issues']['listLabelsForRepo']
   >[number]
 }[]
 type RepositoryActivities = {
   repository: Repositories[number]
   activity: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.repos.listActivities
+    Endpoints['repos']['listActivities']
   >[number]
 }[]
 type RepositoryIssues = {
   repository: Repositories[number]
   issue: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.issues.listForRepo
+    Endpoints['issues']['listForRepo']
   >[number]
 }[]
 type RepositoryPullRequestReviewComments = {
   repository: Repositories[number]
   comment: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.pulls.listReviewCommentsForRepo
+    Endpoints['pulls']['listReviewCommentsForRepo']
   >[number]
 }[]
 type RepositoryIssueComments = {
   repository: Repositories[number]
   comment: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.issues.listCommentsForRepo
+    Endpoints['issues']['listCommentsForRepo']
   >[number]
 }[]
 type RepositoryCommitComments = {
   repository: Repositories[number]
   comment: GetResponseDataTypeFromEndpointMethod<
-    typeof Endpoints.repos.listCommitCommentsForRepo
+    Endpoints['repos']['listCommitCommentsForRepo']
   >[number]
 }[]
 
@@ -100,6 +98,9 @@ export class GitHub {
   static github: GitHub
   static async getGitHub(): Promise<GitHub> {
     if (GitHub.github === undefined) {
+      // NOTE: We import these dynamically so that they can be mocked
+      const {createAppAuth} = await import('@octokit/auth-app')
+      const {Octokit} = await import('@octokit/rest')
       const auth = createAppAuth({
         appId: env.GITHUB_APP_ID,
         privateKey: env.GITHUB_APP_PEM_FILE
@@ -108,55 +109,56 @@ export class GitHub {
         type: 'installation',
         installationId: env.GITHUB_APP_INSTALLATION_ID
       })
-      GitHub.github = new GitHub(installationAuth.token)
+      const client = new (Octokit.plugin(retry, throttling))({
+        auth: installationAuth.token,
+        throttle: {
+          onRateLimit: (
+            retryAfter: number,
+            options: {method: string; url: string},
+            octokit: Core,
+            retryCount: number
+          ): boolean => {
+            core.warning(
+              `Request quota exhausted for request ${options.method} ${options.url}`
+            )
+
+            if (retryCount === 0) {
+              // only retries once
+              core.info(`Retrying after ${retryAfter} seconds!`)
+              return true
+            }
+
+            return false
+          },
+          onSecondaryRateLimit: (
+            retryAfter: number,
+            options: {method: string; url: string},
+            octokit: Core,
+            retryCount: number
+          ): boolean => {
+            core.warning(
+              `SecondaryRateLimit detected for request ${options.method} ${options.url}`
+            )
+
+            if (retryCount === 0) {
+              // only retries once
+              core.info(`Retrying after ${retryAfter} seconds!`)
+              return true
+            }
+
+            return false
+          }
+        }
+      })
+      GitHub.github = new GitHub(client)
     }
     return GitHub.github
   }
 
-  client: InstanceType<typeof Client>
+  client: Client
 
-  private constructor(token: string) {
-    this.client = new Client({
-      auth: token,
-      throttle: {
-        onRateLimit: (
-          retryAfter: number,
-          options: {method: string; url: string},
-          octokit: Core,
-          retryCount: number
-        ): boolean => {
-          core.warning(
-            `Request quota exhausted for request ${options.method} ${options.url}`
-          )
-
-          if (retryCount === 0) {
-            // only retries once
-            core.info(`Retrying after ${retryAfter} seconds!`)
-            return true
-          }
-
-          return false
-        },
-        onSecondaryRateLimit: (
-          retryAfter: number,
-          options: {method: string; url: string},
-          octokit: Core,
-          retryCount: number
-        ): boolean => {
-          core.warning(
-            `SecondaryRateLimit detected for request ${options.method} ${options.url}`
-          )
-
-          if (retryCount === 0) {
-            // only retries once
-            core.info(`Retrying after ${retryAfter} seconds!`)
-            return true
-          }
-
-          return false
-        }
-      }
-    })
+  private constructor(client: Client) {
+    this.client = client
   }
 
   private members?: Members
@@ -372,7 +374,6 @@ export class GitHub {
   }
 
   async listTeamInvitations(): Promise<TeamInvitations> {
-    this.client.orgs.listInvitationTeams
     const teamInvitations = []
     const teams = await this.listTeams()
     for (const team of teams) {

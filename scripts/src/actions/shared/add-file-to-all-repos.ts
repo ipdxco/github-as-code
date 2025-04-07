@@ -1,6 +1,6 @@
-import {Config} from '../../yaml/config'
-import {Repository} from '../../resources/repository'
-import {RepositoryFile} from '../../resources/repository-file'
+import {Config} from '../../yaml/config.js'
+import {Repository} from '../../resources/repository.js'
+import {RepositoryFile} from '../../resources/repository-file.js'
 import * as core from '@actions/core'
 
 export async function runAddFileToAllRepos(

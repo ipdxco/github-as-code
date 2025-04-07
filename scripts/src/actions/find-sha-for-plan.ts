@@ -1,4 +1,4 @@
-import {GitHub} from '../github'
+import {GitHub} from '../github.js'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
 
@@ -13,7 +13,7 @@ async function findShaForPlan(): Promise<string> {
     github.client.search.issuesAndPullRequests,
     {
       q: `repository:${context.repo.owner}/${context.repo.repo} ${context.sha} type:pr is:merged`,
-      advanced_search: true
+      advanced_search: 'true'
     }
   )
 
