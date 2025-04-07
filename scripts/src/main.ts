@@ -14,7 +14,11 @@ async function runSync(): Promise<void> {
 }
 
 async function runToggleArchivedRepos(): Promise<void> {
-  await toggleArchivedRepos()
+  const config = Config.FromPath()
+
+  await toggleArchivedRepos(config)
+
+  config.save()
 }
 
 async function run(): Promise<void> {
