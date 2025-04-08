@@ -1,5 +1,5 @@
-import {Config} from '../../yaml/config'
-import {Repository} from '../../resources/repository'
+import {Config} from '../../yaml/config.js'
+import {Repository} from '../../resources/repository.js'
 import * as core from '@actions/core'
 
 export async function runSetPropertyInAllRepos(

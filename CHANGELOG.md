@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - new args for repositories and branch protection rules
 
 ### Changed
-- Updated the signatures of all the shared actions; now the runAction function will persist the changes to disk while action functions will operate on the in-memory state
+- **BREAKING**: turned scripts into an ESM project (please ensure you remove the following files during the upgrade: `scripts/.eslintignore`, `scripts/.eslintrc.json`, `scripts/jest.config.js`, `jest.d.ts`, `jest.setup.ts`; please update your imports in the `scripts/src/actions/fix-yaml-config.ts` file to include the `.js` extension)
+- **BREAKING**: Updated the signatures of all the shared actions; now the runAction function will persist the changes to disk while action functions will operate on the in-memory state (please update your imports in the `scripts/src/actions/fix-yaml-config.ts` file accordingly)
 - Synchronization script: to use GitHub API directly instead of relying on TF GH Provider's Data Sources
 - Configuration: replaced multiple JSONs with a single, unified YAML
 - Synchronization script: rewrote the script in JS

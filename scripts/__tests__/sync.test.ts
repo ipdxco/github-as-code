@@ -2,87 +2,86 @@ import 'reflect-metadata'
 
 import * as YAML from 'yaml'
 
-import * as config from '../src/yaml/config'
-import * as state from '../src/terraform/state'
-import {sync} from '../src/sync'
-import {GitHub} from '../src/github'
-import env from '../src/env'
-import {Resource} from '../src/resources/resource'
-import {RepositoryFile} from '../src/resources/repository-file'
-import {StateSchema} from '../src/terraform/schema'
-import {toggleArchivedRepos} from '../src/actions/shared/toggle-archived-repos'
+import {Config} from '../src/yaml/config.js'
+import {State} from '../src/terraform/state.js'
+import {sync} from '../src/sync.js'
+import {Resource} from '../src/resources/resource.js'
+import {RepositoryFile} from '../src/resources/repository-file.js'
+import {StateSchema} from '../src/terraform/schema.js'
+import {toggleArchivedRepos} from '../src/actions/shared/toggle-archived-repos.js'
+import {before, describe, it, mock} from 'node:test'
+import assert from 'node:assert'
+import {mockGitHub} from './github.js'
 
-test('sync', async () => {
-  const yamlConfig = new config.Config('{}')
-  const tfConfig = await state.State.New()
+describe('sync', () => {
+  before(() => {
+    mockGitHub()
+  })
 
-  const expectedYamlConfig = config.Config.FromPath()
+  it('sync', async () => {
+    const yamlConfig = new Config('{}')
+    const tfConfig = await State.New()
 
-  await sync(tfConfig, yamlConfig)
-  await toggleArchivedRepos(tfConfig, yamlConfig)
+    const expectedYamlConfig = Config.FromPath()
 
-  yamlConfig.format()
+    await sync(tfConfig, yamlConfig)
+    await toggleArchivedRepos(tfConfig, yamlConfig)
 
-  expect(yamlConfig.toString()).toEqual(expectedYamlConfig.toString())
-})
+    yamlConfig.format()
 
-test('sync new repository file', async () => {
-  const yamlSource = {
-    repositories: {
-      blog: {
-        files: {
-          'README.md': {
-            content: 'Hello, world!'
+    assert.equal(yamlConfig.toString(), expectedYamlConfig.toString())
+  })
+
+  it('sync new repository file', async () => {
+    const yamlSource = {
+      repositories: {
+        blog: {
+          files: {
+            'README.md': {
+              content: 'Hello, world!'
+            }
           }
         }
       }
     }
-  }
-  const tfSource: StateSchema = {
-    values: {
-      root_module: {
-        resources: []
+    const tfSource: StateSchema = {
+      values: {
+        root_module: {
+          resources: []
+        }
       }
     }
-  }
 
-  const loadStateMock = jest.spyOn(state, 'loadState')
-  const getRepositoryFileMock = jest.spyOn(GitHub.github, 'getRepositoryFile')
+    const yamlConfig = new Config(YAML.stringify(yamlSource))
+    const tfConfig = new State(JSON.stringify(tfSource))
 
-  loadStateMock.mockImplementation(async () => JSON.stringify(tfSource))
-  getRepositoryFileMock.mockImplementation(
-    async (repository: string, path: string) => ({
-      path,
-      url: `https://github.com/${env.GITHUB_ORG}/${repository}/blob/main/${path}`,
-      ref: 'main'
-    })
-  )
-
-  const yamlConfig = new config.Config(YAML.stringify(yamlSource))
-  const tfConfig = await state.State.New()
-
-  const addResourceMock = jest.spyOn(tfConfig, 'addResource')
-
-  addResourceMock.mockImplementation(async (id: string, resource: Resource) => {
-    tfSource?.values?.root_module?.resources?.push({
-      mode: 'managed',
-      index: id,
-      address: resource.getStateAddress(),
-      type: RepositoryFile.StateType,
-      values: {
-        repository: (resource as RepositoryFile).repository,
-        file: (resource as RepositoryFile).file,
-        content: (resource as RepositoryFile).content ?? '',
-        ...resource
+    mock.module('../src/terraform/state.js', {
+      namedExports: {
+        loadState: async () => JSON.stringify(tfSource)
       }
     })
+
+    tfConfig.addResource = async (id: string, resource: Resource) => {
+      tfSource?.values?.root_module?.resources?.push({
+        mode: 'managed',
+        index: id,
+        address: resource.getStateAddress(),
+        type: RepositoryFile.StateType,
+        values: {
+          repository: (resource as RepositoryFile).repository,
+          file: (resource as RepositoryFile).file,
+          content: (resource as RepositoryFile).content ?? '',
+          ...resource
+        }
+      })
+    }
+
+    const expectedYamlConfig = new Config(YAML.stringify(yamlSource))
+
+    await sync(tfConfig, yamlConfig)
+
+    yamlConfig.format()
+
+    assert.equal(yamlConfig.toString(), expectedYamlConfig.toString())
   })
-
-  const expectedYamlConfig = new config.Config(YAML.stringify(yamlSource))
-
-  await sync(tfConfig, yamlConfig)
-
-  yamlConfig.format()
-
-  expect(yamlConfig.toString()).toEqual(expectedYamlConfig.toString())
 })

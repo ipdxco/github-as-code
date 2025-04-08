@@ -1,13 +1,12 @@
 import 'reflect-metadata'
-import {RepositoryTeam} from '../resources/repository-team'
-import {Team} from '../resources/team'
-import {Config} from '../yaml/config'
-import {Member} from '../resources/member'
-import {NodeBase} from 'yaml/dist/nodes/Node'
-import {RepositoryCollaborator} from '../resources/repository-collaborator'
-import {Resource, ResourceConstructor} from '../resources/resource'
-import {Role, TeamMember} from '../resources/team-member'
-import {GitHub} from '../github'
+import {RepositoryTeam} from '../resources/repository-team.js'
+import {Team} from '../resources/team.js'
+import {Config} from '../yaml/config.js'
+import {Member} from '../resources/member.js'
+import {RepositoryCollaborator} from '../resources/repository-collaborator.js'
+import {Resource, ResourceConstructor} from '../resources/resource.js'
+import {Role, TeamMember} from '../resources/team-member.js'
+import {GitHub} from '../github.js'
 
 function getResources<T extends Resource>(
   config: Config,
@@ -18,7 +17,7 @@ function getResources<T extends Resource>(
     const node = config.document.getIn(
       resource.getSchemaPath(schema),
       true
-    ) as NodeBase
+    ) as {comment?: string}
     return !node.comment?.includes('KEEP:')
   })
 }
@@ -92,7 +91,6 @@ async function run(): Promise<void> {
     .filter(({actor}) => actor !== undefined)
     .reduce<Record<string, string[]>>((acc, {repository, actor}) => {
       acc[repository] = acc[repository] ?? []
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       acc[repository].push(actor!)
       return acc
     }, {})

@@ -1,10 +1,9 @@
-import {Resource} from './resource'
-import {Path, ConfigSchema} from '../yaml/schema'
+import {Resource} from './resource.js'
+import {Path, ConfigSchema} from '../yaml/schema.js'
 import {Exclude, Expose, plainToClassFromExist} from 'class-transformer'
-import {GitHub} from '../github'
-import {Id, StateSchema} from '../terraform/schema'
+import {GitHub} from '../github.js'
+import {Id, StateSchema} from '../terraform/schema.js'
 
-// eslint-disable-next-line no-shadow
 export enum Privacy {
   PUBLIC = 'closed',
   PRIVATE = 'secret'

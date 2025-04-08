@@ -1,12 +1,12 @@
-import {Config} from '../../yaml/config'
-import {State} from '../../terraform/state'
-import {RepositoryCollaborator} from '../../resources/repository-collaborator'
-import {Member} from '../../resources/member'
-import {TeamMember} from '../../resources/team-member'
-import {RepositoryTeam} from '../../resources/repository-team'
-import {diff} from 'deep-diff'
+import {Config} from '../../yaml/config.js'
+import {State} from '../../terraform/state.js'
+import {RepositoryCollaborator} from '../../resources/repository-collaborator.js'
+import {Member} from '../../resources/member.js'
+import {TeamMember} from '../../resources/team-member.js'
+import {RepositoryTeam} from '../../resources/repository-team.js'
+import diff from 'deep-diff'
 import * as core from '@actions/core'
-import {Repository} from '../../resources/repository'
+import {Repository} from '../../resources/repository.js'
 
 type AccessSummary = Record<
   string,

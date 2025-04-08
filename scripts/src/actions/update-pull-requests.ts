@@ -1,4 +1,4 @@
-import {GitHub} from '../github'
+import {GitHub} from '../github.js'
 import {context} from '@actions/github'
 
 async function updatePullRequests(): Promise<void> {

@@ -1,13 +1,14 @@
 import 'reflect-metadata'
 import {Octokit} from '@octokit/rest'
-import {GitHub} from '../github'
-import env from '../env'
+import {GitHub} from '../github.js'
+import env from '../env.js'
 import * as core from '@actions/core'
 import type {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
 
-const Endpoints = new Octokit()
+type Endpoints = InstanceType<typeof Octokit>
+
 type Labels = GetResponseDataTypeFromEndpointMethod<
-  typeof Endpoints.issues.getLabel
+  Endpoints['issues']['getLabel']
 >[]
 
 async function getLabels(repo: string): Promise<Labels> {

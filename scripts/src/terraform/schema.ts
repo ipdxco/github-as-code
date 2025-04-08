@@ -11,8 +11,8 @@ type ResourceSchema = {
       type: 'github_branch_protection'
       values: {
         pattern: string
-        required_pull_request_reviews?: {}[]
-        required_status_checks?: {}[]
+        required_pull_request_reviews?: object[]
+        required_status_checks?: object[]
       }
     }
   | {
@@ -50,7 +50,7 @@ type ResourceSchema = {
       values: {
         name: string
         pages?: {
-          source?: {}[]
+          source?: object[]
         }[]
         security_and_analysis?: {
           advanced_security?: {
@@ -63,7 +63,7 @@ type ResourceSchema = {
             status: string
           }[]
         }[]
-        template?: {}[]
+        template?: object[]
       }
     }
   | {

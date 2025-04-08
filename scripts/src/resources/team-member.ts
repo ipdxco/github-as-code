@@ -1,10 +1,9 @@
-import {GitHub} from '../github'
-import {Id, StateSchema} from '../terraform/schema'
-import {Path, ConfigSchema} from '../yaml/schema'
-import {Resource} from './resource'
-import {Team} from './team'
+import {GitHub} from '../github.js'
+import {Id, StateSchema} from '../terraform/schema.js'
+import {Path, ConfigSchema} from '../yaml/schema.js'
+import {Resource} from './resource.js'
+import {Team} from './team.js'
 
-// eslint-disable-next-line no-shadow
 export enum Role {
   Maintainer = 'maintainer',
   Member = 'member'

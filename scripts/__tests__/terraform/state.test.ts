@@ -1,83 +1,96 @@
 import 'reflect-metadata'
 
-import {State} from '../../src/terraform/state'
-import {Resource, ResourceConstructors} from '../../src/resources/resource'
-import {Repository} from '../../src/resources/repository'
-import {Id} from '../../src/terraform/schema'
+import {State} from '../../src/terraform/state.js'
+import {Resource, ResourceConstructors} from '../../src/resources/resource.js'
+import {Repository} from '../../src/resources/repository.js'
+import {Id} from '../../src/terraform/schema.js'
+import {describe, it, mock} from 'node:test'
+import assert from 'node:assert'
+import {StateResourceCounts, StateResourcesCount} from '../resources/counts.js'
 
-test('can retrieve resources from tf state', async () => {
-  const config = await State.New()
+describe('state', () => {
+  it('can retrieve resources from tf state', async () => {
+    const config = await State.New()
 
-  const resources = []
-  for (const resourceClass of ResourceConstructors) {
-    const classResources = config.getResources(resourceClass)
-    expect(classResources).toHaveLength(
-      global.StateResourceCounts[resourceClass.name]
+    const resources = []
+    for (const resourceClass of ResourceConstructors) {
+      const classResources = config.getResources(resourceClass)
+      assert.equal(
+        classResources.length,
+        StateResourceCounts[resourceClass.name]
+      )
+      resources.push(...classResources)
+    }
+
+    assert.equal(resources.length, StateResourcesCount)
+  })
+
+  it('can ignore resource types', async () => {
+    const config = await State.New()
+
+    assert.equal(config.isIgnored(Repository), false)
+
+    config['_ignoredTypes'] = ['github_repository']
+    await config.refresh()
+
+    assert.equal(config.isIgnored(Repository), true)
+  })
+
+  it('can ignore resource properties', async () => {
+    const config = await State.New()
+
+    const resource = config.getResources(Repository)[0]
+    assert.notEqual(resource.description, undefined)
+
+    config['_ignoredProperties'] = {github_repository: ['description']}
+    await config.refresh()
+
+    const refreshedResource = config.getResources(Repository)[0]
+    assert.equal(refreshedResource.description, undefined)
+  })
+
+  it('can add and remove resources through sync', async () => {
+    const config = await State.New()
+
+    const addResourceMock = mock.fn(config.addResource.bind(config))
+    const removeResourceAtMock = mock.fn(config.removeResourceAt.bind(config))
+
+    config.addResource = addResourceMock
+    config.removeResourceAt = removeResourceAtMock
+
+    const desiredResources: [Id, Resource][] = []
+    const resources = config.getAllResources()
+
+    await config.sync(desiredResources)
+
+    assert.equal(addResourceMock.mock.calls.length, 0)
+    assert.equal(removeResourceAtMock.mock.calls.length, resources.length)
+
+    addResourceMock.mock.resetCalls()
+    removeResourceAtMock.mock.resetCalls()
+
+    for (const resource of resources) {
+      desiredResources.push(['id', resource])
+    }
+
+    await config.sync(desiredResources)
+    assert.equal(addResourceMock.mock.calls.length, 1) // adding github-mgmt/readme.md
+    assert.equal(removeResourceAtMock.mock.calls.length, 1) // removing github-mgmt/README.md
+
+    addResourceMock.mock.resetCalls()
+    removeResourceAtMock.mock.resetCalls()
+
+    desiredResources.push(['id', new Repository('test')])
+    desiredResources.push(['id', new Repository('test2')])
+    desiredResources.push(['id', new Repository('test3')])
+    desiredResources.push(['id', new Repository('test4')])
+
+    await config.sync(desiredResources)
+
+    assert.equal(
+      addResourceMock.mock.calls.length,
+      1 + desiredResources.length - resources.length
     )
-    resources.push(...classResources)
-  }
-
-  expect(resources).toHaveLength(global.StateResourcesCount)
-})
-
-test('can ignore resource types', async () => {
-  const config = await State.New()
-
-  expect(config.isIgnored(Repository)).toBe(false)
-
-  config['_ignoredTypes'] = ['github_repository']
-  await config.refresh()
-
-  expect(config.isIgnored(Repository)).toBe(true)
-})
-
-test('can ignore resource properties', async () => {
-  const config = await State.New()
-
-  const resource = config.getResources(Repository)[0]
-  expect(resource.description).toBeDefined()
-
-  config['_ignoredProperties'] = {github_repository: ['description']}
-  await config.refresh()
-
-  const refreshedResource = config.getResources(Repository)[0]
-  expect(refreshedResource.description).toBeUndefined()
-})
-
-test('can add and remove resources through sync', async () => {
-  const config = await State.New()
-
-  const addResourceSpy = jest.spyOn(config, 'addResource')
-  const removeResourceAtSpy = jest.spyOn(config, 'removeResourceAt')
-
-  const desiredResources: [Id, Resource][] = []
-  const resources = config.getAllResources()
-
-  await config.sync(desiredResources)
-
-  expect(addResourceSpy).not.toHaveBeenCalled()
-  expect(removeResourceAtSpy).toHaveBeenCalledTimes(resources.length)
-  addResourceSpy.mockReset()
-  removeResourceAtSpy.mockReset()
-
-  for (const resource of resources) {
-    desiredResources.push(['id', resource])
-  }
-
-  await config.sync(desiredResources)
-  expect(addResourceSpy).toHaveBeenCalledTimes(1) // adding github-mgmt/readme.md
-  expect(removeResourceAtSpy).toHaveBeenCalledTimes(1) // removing github-mgmt/README.md
-  addResourceSpy.mockReset()
-  removeResourceAtSpy.mockReset()
-
-  desiredResources.push(['id', new Repository('test')])
-  desiredResources.push(['id', new Repository('test2')])
-  desiredResources.push(['id', new Repository('test3')])
-  desiredResources.push(['id', new Repository('test4')])
-
-  await config.sync(desiredResources)
-  expect(addResourceSpy).toHaveBeenCalledTimes(
-    1 + desiredResources.length - resources.length
-  )
-  expect(removeResourceAtSpy).toHaveBeenCalledTimes(1)
+    assert.equal(removeResourceAtMock.mock.calls.length, 1)
+  })
 })
