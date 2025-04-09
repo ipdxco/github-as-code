@@ -15,7 +15,8 @@ export async function runSync(): Promise<void> {
 export async function sync(state: State, config: Config): Promise<void> {
   const resources: [Id, Resource][] = []
   for (const resourceClass of ResourceConstructors) {
-    if (!state.isIgnored(resourceClass)) {
+    const isIgnored = await state.isIgnored(resourceClass)
+    if (!isIgnored) {
       const oldResources = config.getResources(resourceClass)
       const newResources = await resourceClass.FromGitHub(oldResources)
       resources.push(...newResources)

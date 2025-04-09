@@ -50,7 +50,6 @@ export class State {
   }
 
   private _ignoredProperties: Record<string, string[]> = {}
-  private _ignoredTypes: string[] = []
   private _state: StateSchema
 
   private updateIgnoredPropertiesFrom(path: string): void {
@@ -69,18 +68,6 @@ export class State {
             v.substring(2, v.length - 1)
           ) // '${v}' -> 'v'
         }
-      }
-    }
-  }
-
-  private updateIgnoredTypesFrom(path: string): void {
-    if (fs.existsSync(path)) {
-      const hcl = HCL.parseToObject(fs.readFileSync(path))?.at(0)
-      const types = hcl?.locals?.at(0)?.resource_types
-      if (types !== undefined) {
-        this._ignoredTypes = ResourceConstructors.map(c => c.StateType).filter(
-          t => !types.includes(t)
-        )
       }
     }
   }
@@ -109,8 +96,6 @@ export class State {
     this.updateIgnoredPropertiesFrom(
       `${env.TF_WORKING_DIR}/resources_override.tf`
     )
-    this.updateIgnoredTypesFrom(`${env.TF_WORKING_DIR}/locals.tf`)
-    this.updateIgnoredTypesFrom(`${env.TF_WORKING_DIR}/locals_override.tf`)
     this._state = this.getState(source)
   }
 
@@ -170,10 +155,11 @@ export class State {
     }
   }
 
-  isIgnored<T extends Resource>(
+  async isIgnored<T extends Resource>(
     resourceClass: ResourceConstructor<T>
-  ): boolean {
-    return this._ignoredTypes.includes(resourceClass.StateType)
+  ): Promise<boolean> {
+    const {Locals} = await import('./locals.js')
+    return !Locals.getLocals().resource_types.includes(resourceClass.StateType)
   }
 
   async addResource(id: Id, resource: Resource): Promise<void> {
