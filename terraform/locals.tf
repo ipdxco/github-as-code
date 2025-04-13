@@ -4,6 +4,11 @@ locals {
   advanced_security = false
   config            = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
   state             = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
+  ignore = {
+    "repositories" = []
+    "teams" = []
+    "users" = []
+  }
   sources = {
     "config" = {
       "github_membership" = {

@@ -5,6 +5,7 @@ import {retry} from '@octokit/plugin-retry'
 import {throttling} from '@octokit/plugin-throttling'
 import env from './env.js'
 import type {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
+import {Locals} from './terraform/locals.js'
 
 type Endpoints = InstanceType<typeof Client>
 
@@ -177,7 +178,12 @@ export class GitHub {
             })
         )
       )
-      this.members = memberships.map(m => m.data)
+      const locals = Locals.getLocals()
+      this.members = memberships
+        .map(m => m.data)
+        .filter(m => {
+          return m.user === null || !locals.ignore.users.includes(m.user.login)
+        })
     }
     return this.members
   }
@@ -186,12 +192,16 @@ export class GitHub {
   async listRepositories(): Promise<Repositories> {
     if (!this.repositories) {
       core.info('Listing repositories...')
-      this.repositories = await this.client.paginate(
+      const repositories = await this.client.paginate(
         this.client.repos.listForOrg,
         {
           org: env.GITHUB_ORG
         }
       )
+      const locals = Locals.getLocals()
+      this.repositories = repositories.filter(r => {
+        return !locals.ignore.repositories.includes(r.name)
+      })
     }
     return this.repositories
   }
@@ -200,8 +210,12 @@ export class GitHub {
   async listTeams(): Promise<Teams> {
     if (!this.teams) {
       core.info('Listing teams...')
-      this.teams = await this.client.paginate(this.client.teams.list, {
+      const teams = await this.client.paginate(this.client.teams.list, {
         org: env.GITHUB_ORG
+      })
+      const locals = Locals.getLocals()
+      this.teams = teams.filter(t => {
+        return !locals.ignore.teams.includes(t.name)
       })
     }
     return this.teams
@@ -216,8 +230,11 @@ export class GitHub {
         this.client.repos.listCollaborators,
         {owner: env.GITHUB_ORG, repo: repository.name, affiliation: 'direct'}
       )
+      const locals = Locals.getLocals()
       repositoryCollaborators.push(
-        ...collaborators.map(collaborator => ({repository, collaborator}))
+        ...collaborators
+          .filter(c => !locals.ignore.users.includes(c.login))
+          .map(collaborator => ({repository, collaborator}))
       )
     }
     return repositoryCollaborators
@@ -259,10 +276,14 @@ export class GitHub {
     const teams = await this.listTeams()
     for (const team of teams) {
       core.info(`Listing ${team.name} members...`)
-      const members = await this.client.paginate(
+      const unfilteredMembers = await this.client.paginate(
         this.client.teams.listMembersInOrg,
         {org: env.GITHUB_ORG, team_slug: team.slug}
       )
+      const locals = Locals.getLocals()
+      const members = unfilteredMembers.filter(m => {
+        return !locals.ignore.users.includes(m.login)
+      })
       const memberships = await Promise.all(
         members.map(async member => {
           const membership = (
@@ -295,8 +316,11 @@ export class GitHub {
         this.client.teams.listReposInOrg,
         {org: env.GITHUB_ORG, team_slug: team.slug}
       )
+      const locals = Locals.getLocals()
       teamRepositories.push(
-        ...repositories.map(repository => ({team, repository}))
+        ...repositories
+          .filter(r => !locals.ignore.repositories.includes(r.name))
+          .map(repository => ({team, repository}))
       )
     }
     return teamRepositories
@@ -307,6 +331,10 @@ export class GitHub {
     path: string
   ): Promise<RepositoryFile | undefined> {
     core.info(`Checking if ${repository}/${path} exists...`)
+    const locals = Locals.getLocals()
+    if (locals.ignore.repositories.includes(repository)) {
+      return undefined
+    }
     try {
       const repo = (
         await this.client.repos.get({
@@ -347,9 +375,10 @@ export class GitHub {
         org: env.GITHUB_ORG
       }
     )
-    return invitations.filter(
-      i => i.failed_at === null || i.failed_at === undefined
-    )
+    const locals = Locals.getLocals()
+    return invitations
+      .filter(i => i.failed_at === null || i.failed_at === undefined)
+      .filter(i => i.login === null || !locals.ignore.users.includes(i.login))
   }
 
   async listRepositoryInvitations(): Promise<RepositoryInvitations> {
@@ -364,10 +393,15 @@ export class GitHub {
           repo: repository.name
         }
       )
+      const locals = Locals.getLocals()
       repositoryInvitations.push(
-        ...invitations.filter(
-          i => i.expired === false || i.expired === undefined
-        )
+        ...invitations
+          .filter(i => i.expired === false || i.expired === undefined)
+          .filter(
+            i =>
+              i.invitee === null ||
+              !locals.ignore.users.includes(i.invitee.login)
+          )
       )
     }
     return repositoryInvitations
@@ -385,9 +419,13 @@ export class GitHub {
           team_slug: team.slug
         }
       )
+      const locals = Locals.getLocals()
       teamInvitations.push(
         ...invitations
           .filter(i => i.failed_at === null || i.failed_at === undefined)
+          .filter(
+            i => i.login === null || !locals.ignore.users.includes(i.login)
+          )
           .map(invitation => ({team, invitation}))
       )
     }
