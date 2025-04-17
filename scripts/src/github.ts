@@ -169,21 +169,19 @@ export class GitHub {
       const members = await this.client.paginate(this.client.orgs.listMembers, {
         org: env.GITHUB_ORG
       })
-      const memberships = await Promise.all(
-        members.map(
-          async member =>
-            await this.client.orgs.getMembershipForUser({
-              org: env.GITHUB_ORG,
-              username: member.login
-            })
-        )
-      )
       const locals = Locals.getLocals()
-      this.members = memberships
-        .map(m => m.data)
-        .filter(m => {
-          return m.user === null || !locals.ignore.users.includes(m.user.login)
-        })
+      const memberships = await Promise.all(
+        members
+          .filter(m => !locals.ignore.users.includes(m.login))
+          .map(
+            async member =>
+              await this.client.orgs.getMembershipForUser({
+                org: env.GITHUB_ORG,
+                username: member.login
+              })
+          )
+      )
+      this.members = memberships.map(m => m.data)
     }
     return this.members
   }
