@@ -274,25 +274,26 @@ export class GitHub {
     const teams = await this.listTeams()
     for (const team of teams) {
       core.info(`Listing ${team.name} members...`)
-      const unfilteredMembers = await this.client.paginate(
+      const members = await this.client.paginate(
         this.client.teams.listMembersInOrg,
         {org: env.GITHUB_ORG, team_slug: team.slug}
       )
       const locals = Locals.getLocals()
-      const members = unfilteredMembers.filter(m => {
-        return !locals.ignore.users.includes(m.login)
-      })
       const memberships = await Promise.all(
-        members.map(async member => {
-          const membership = (
-            await this.client.teams.getMembershipForUserInOrg({
-              org: env.GITHUB_ORG,
-              team_slug: team.slug,
-              username: member.login
-            })
-          ).data
-          return {member, membership}
-        })
+        members
+          .filter(m => {
+            return !locals.ignore.users.includes(m.login)
+          })
+          .map(async member => {
+            const membership = (
+              await this.client.teams.getMembershipForUserInOrg({
+                org: env.GITHUB_ORG,
+                team_slug: team.slug,
+                username: member.login
+              })
+            ).data
+            return {member, membership}
+          })
       )
       teamMembers.push(
         ...memberships.map(({member, membership}) => ({
