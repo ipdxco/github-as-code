@@ -10,4 +10,9 @@ locals {
     "github_repository_file",
     "github_issue_label"
   ]
+  ignore = {
+    "repositories" = ["ignored"]
+    "teams" = ["ignored"]
+    "users" = ["ignored"]
+  }
 }

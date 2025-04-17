@@ -26,14 +26,25 @@ describe('state', () => {
   })
 
   it('can ignore resource types', async () => {
-    const config = await State.New()
+    const state = await State.New()
 
-    assert.equal(config.isIgnored(Repository), false)
+    assert.equal(await state.isIgnored(Repository), false)
 
-    config['_ignoredTypes'] = ['github_repository']
-    await config.refresh()
+    mock.module('../../src/terraform/locals.js', {
+      namedExports: {
+        Locals: {
+          getLocals: () => {
+            return {
+              resource_types: []
+            }
+          }
+        }
+      }
+    })
 
-    assert.equal(config.isIgnored(Repository), true)
+    await state.refresh()
+
+    assert.equal(await state.isIgnored(Repository), true)
   })
 
   it('can ignore resource properties', async () => {
