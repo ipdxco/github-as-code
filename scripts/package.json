@@ -11,6 +11,7 @@
     "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "test": "TF_EXEC=false TF_LOCK=false TF_WORKING_DIR=__tests__/__resources__/terraform GITHUB_DIR=__tests__/__resources__/github FILES_DIR=__tests__/__resources__/files GITHUB_ORG=default node --import tsx/esm --test --experimental-test-module-mocks \"__tests__/**/*.test.ts\"",
+    "test:only": "TF_EXEC=false TF_LOCK=false TF_WORKING_DIR=__tests__/__resources__/terraform GITHUB_DIR=__tests__/__resources__/github FILES_DIR=__tests__/__resources__/files GITHUB_ORG=default node --import tsx/esm --test --test-only --experimental-test-module-mocks \"__tests__/**/*.test.ts\"",
     "all": "npm run build && npm run format && npm run lint && npm test",
     "schema": "ts-json-schema-generator --tsconfig tsconfig.json --path src/yaml/schema.ts --type ConfigSchema --out ../github/.schema.json",
     "main": "node lib/main.js"

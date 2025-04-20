@@ -86,7 +86,8 @@ export class Config {
   toString(): string {
     return this._document.toString({
       collectionStyle: 'block',
-      singleQuote: false
+      singleQuote: false,
+      lineWidth: 0
     })
   }
 

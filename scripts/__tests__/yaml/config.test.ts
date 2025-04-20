@@ -477,4 +477,25 @@ repositories:
     assert.equal(previouslyUnarchivedRepository.archived, true)
     assert.equal(previouslyUnarchivedRepository.visibility, undefined)
   })
+
+  it("doesn't break long lines on format or toString", async () => {
+    const lines = [
+      '# This is a very long comment that should NOT be broken down - this is a very long comment that should NOT be broken down - this is a very long comment that should NOT be broken down',
+      'repositories:',
+      '  test:',
+      '    files:',
+      '      test:',
+      '        content: >',
+      '          This is a very long content that should NOT be broken down - this is a very long content that should NOT be broken down - this is a very long content that should NOT be broken down',
+      ''
+    ]
+    const source = lines.join('\n')
+    const config = new Config(source)
+
+    assert.equal(config.toString(), source)
+
+    config.format()
+
+    assert.equal(config.toString(), source)
+  })
 })
