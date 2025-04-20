@@ -56,8 +56,12 @@ export class TeamMember extends String implements Resource {
         ) {
           const teamIndex = resource.index.split(`:`).slice(0, -1).join(`:`)
           const team = state.values.root_module.resources.find(
-            r => resource.mode === 'managed' && r.index === teamIndex
+            r =>
+              r.mode === 'managed' &&
+              r.type === Team.StateType &&
+              r.index === teamIndex
           )
+          console.log(teamIndex, team)
           members.push(
             new TeamMember(
               team !== undefined && team.type === Team.StateType

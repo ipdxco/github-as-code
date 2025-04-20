@@ -51,7 +51,10 @@ export class RepositoryBranchProtectionRule implements Resource {
         ) {
           const repositoryIndex: string = resource.index.split(':')[0]
           const repository = state.values.root_module.resources.find(
-            r => resource.mode === 'managed' && r.index === repositoryIndex
+            r =>
+              r.mode === 'managed' &&
+              r.type === Repository.StateType &&
+              r.index === repositoryIndex
           )
           const required_pull_request_reviews =
             resource.values.required_pull_request_reviews?.at(0)
