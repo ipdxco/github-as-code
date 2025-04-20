@@ -1,5 +1,6 @@
 import fs from 'fs'
 import HCL from 'hcl2-parser'
+import env from '../env.js'
 
 type LocalsSchema = {
   resource_types: string[]
@@ -23,8 +24,8 @@ export class Locals {
         }
       }
       for (const path of [
-        `${process.env.TF_WORKING_DIR}/locals.tf`,
-        `${process.env.TF_WORKING_DIR}/locals_override.tf`
+        `${env.TF_WORKING_DIR}/locals.tf`,
+        `${env.TF_WORKING_DIR}/locals_override.tf`
       ]) {
         if (fs.existsSync(path)) {
           const hcl =
