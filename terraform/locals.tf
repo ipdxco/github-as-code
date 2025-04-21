@@ -97,7 +97,7 @@ locals {
                 }
               ]
             ])
-          ]) : lower("${item.team}:${item.repository}") => item
+          ]) : lower("${item.repository}:${item.team}") => item
         }
       }
       "github_team_membership" = {

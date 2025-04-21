@@ -22,7 +22,7 @@ export class RepositoryTeam extends String implements Resource {
     const result: [Id, RepositoryTeam][] = []
     for (const team of teams) {
       result.push([
-        `${team.team.id}:${team.repository.name}`,
+        `${team.repository.name}:${team.team.id}`,
         new RepositoryTeam(
           team.repository.name,
           team.team.name,
@@ -40,7 +40,7 @@ export class RepositoryTeam extends String implements Resource {
           resource.type === RepositoryTeam.StateType &&
           resource.mode === 'managed'
         ) {
-          const teamIndex = resource.index.split(`:`).slice(0, -1).join(`:`)
+          const teamIndex = resource.index.split(`:`).slice(1).join(`:`)
           const team = state.values.root_module.resources.find(
             r =>
               r.mode === 'managed' &&
@@ -120,6 +120,6 @@ export class RepositoryTeam extends String implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryTeam.StateType}.this["${this.team}:${this.repository}"]`
+    return `${RepositoryTeam.StateType}.this["${this.repository}:${this.team}"]`
   }
 }
