@@ -181,9 +181,11 @@ export async function describeAccessChanges(
                 string,
                 {permission: string}
               >
-              for (const [repository, config] of Object.entries(repositories)) {
+              for (const [repository, {permission}] of Object.entries(
+                repositories
+              )) {
                 lines.push(
-                  `  - will gain ${config} permission to ${repository}`
+                  `  - will gain ${permission} permission to ${repository}`
                 )
               }
             }
