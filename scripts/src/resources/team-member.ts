@@ -61,7 +61,6 @@ export class TeamMember extends String implements Resource {
               r.type === Team.StateType &&
               r.index === teamIndex
           )
-          console.log(teamIndex, team)
           members.push(
             new TeamMember(
               team !== undefined && team.type === Team.StateType

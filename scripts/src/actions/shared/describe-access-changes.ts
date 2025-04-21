@@ -177,11 +177,13 @@ export async function describeAccessChanges(
               )
             }
             if (change.rhs.repositories) {
-              for (const [repository, {permission}] of Object.entries(
-                change.rhs.repositories.repositories
-              )) {
+              const repositories = change.rhs.repositories as unknown as Record<
+                string,
+                {permission: string}
+              >
+              for (const [repository, config] of Object.entries(repositories)) {
                 lines.push(
-                  `  - will gain ${permission} permission to ${repository}`
+                  `  - will gain ${config} permission to ${repository}`
                 )
               }
             }
@@ -197,8 +199,12 @@ export async function describeAccessChanges(
               lines.push(`  - will leave the organization`)
             }
             if (change.lhs.repositories) {
+              const repositories = change.lhs.repositories as unknown as Record<
+                string,
+                {permission: string}
+              >
               for (const [repository, {permission}] of Object.entries(
-                change.lhs.repositories.repositories
+                repositories
               )) {
                 lines.push(
                   `  - will lose ${permission} permission to ${repository}`
