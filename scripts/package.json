@@ -24,7 +24,7 @@
     "@octokit/graphql": "^8.2.2",
     "@octokit/plugin-paginate-rest": "^11.6.0",
     "@octokit/plugin-retry": "^7.2.1",
-    "@octokit/plugin-throttling": "^9.6.1",
+    "@octokit/plugin-throttling": "^10.0.0",
     "@octokit/rest": "^21.1.1",
     "class-transformer": "^0.5.1",
     "deep-diff": "^1.0.2",
