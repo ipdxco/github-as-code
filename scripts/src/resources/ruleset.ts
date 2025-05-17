@@ -128,8 +128,8 @@ class BypassActors {
 
 @Exclude()
 class Filter {
-  @Expose() exclude?: boolean
-  @Expose() include?: string
+  @Expose() exclude?: string[]
+  @Expose() include?: string[]
 }
 
 @Exclude()
