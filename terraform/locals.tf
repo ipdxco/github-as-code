@@ -175,7 +175,6 @@ locals {
           for item in [
             for name, config in lookup(local.config, "rulesets", {}) : merge(config, {
               name       = name
-              repository = repository
               rules = try([merge(config.rules, {
                 branch_name_pattern         = try([config.rules.branch_name_pattern], [])
                 commit_author_email_pattern = try([config.rules.commit_author_email_pattern], [])
