@@ -389,8 +389,8 @@ resource "github_repository_ruleset" "this" {
       dynamic "ref_name" {
         for_each = try(conditions.value.ref_name, [])
         content {
-          exclude = ref_name.value.exclude
-          include = ref_name.value.include
+          exclude = try(ref_name.value.exclude, [])
+          include = try(ref_name.value.include, [])
         }
       }
     }
@@ -531,8 +531,8 @@ resource "github_organization_ruleset" "this" {
       dynamic "repository_name" {
         for_each = try(conditions.repository_name, [])
         content {
-          exclude = repository_name.value.exclude
-          include = repository_name.value.include
+          exclude = try(repository_name.value.exclude, [])
+          include = try(repository_name.value.include, [])
         }
       }
 
