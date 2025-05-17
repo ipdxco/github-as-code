@@ -167,7 +167,7 @@ locals {
                 })], [])
               })
             ]
-          ]) : lower("${item.repository}:${item.pattern}") => item
+          ]) : lower("${item.repository}:${item.name}") => item
         }
       }
       "github_organization_ruleset" = {
@@ -194,7 +194,7 @@ locals {
                 })], [])
               })
             ]
-          ]) : lower("${item.repository}:${item.pattern}") => item
+          ]) : lower("${item.repository}:${item.name}") => item
         }
       }
     }
