@@ -47,7 +47,7 @@ Running the `Sync` GitHub Action workflows refreshes the underlying terraform st
 - [github_team_repository](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository)
 - [github_team_membership](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership)
 - [github_repository_file](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file)
-- [github_issue_label](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/issue_label)
+- [github_issue_labels](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/issue_labels)
 
 # Config Fix Rules
 

@@ -13,6 +13,7 @@ class PageSource {
 @Exclude()
 class Pages {
   @Expose() source?: PageSource
+  @Expose() build_type?: 'legacy' | 'workflow'
   @Expose() cname?: string
 }
 
@@ -20,6 +21,7 @@ class Pages {
 class Template {
   @Expose() owner?: string
   @Expose() repository?: string
+  @Expose() include_all_branches?: boolean
 }
 
 export enum Visibility {
@@ -138,6 +140,7 @@ export class Repository implements Resource {
   @Expose() topics?: string[]
   @Expose() visibility?: Visibility
   @Expose() vulnerability_alerts?: boolean
+  @Expose() web_commit_signoff_required?: boolean
 
   getSchemaPath(_schema: ConfigSchema): Path {
     return ['repositories', this.name]

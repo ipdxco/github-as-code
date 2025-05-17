@@ -156,6 +156,13 @@
               "pages": {
                 "additionalProperties": false,
                 "properties": {
+                  "build_type": {
+                    "enum": [
+                      "legacy",
+                      "workflow"
+                    ],
+                    "type": "string"
+                  },
                   "cname": {
                     "type": "string"
                   },
@@ -225,6 +232,9 @@
               "template": {
                 "additionalProperties": false,
                 "properties": {
+                  "include_all_branches": {
+                    "type": "boolean"
+                  },
                   "owner": {
                     "type": "string"
                   },
@@ -244,6 +254,9 @@
                 "$ref": "#/definitions/Visibility"
               },
               "vulnerability_alerts": {
+                "type": "boolean"
+              },
+              "web_commit_signoff_required": {
                 "type": "boolean"
               }
             },
@@ -309,20 +322,17 @@
         "allows_force_pushes": {
           "type": "boolean"
         },
-        "blocks_creations": {
-          "type": "boolean"
-        },
         "enforce_admins": {
           "type": "boolean"
         },
-        "lock_branch": {
-          "type": "boolean"
-        },
-        "push_restrictions": {
+        "force_push_bypassers": {
           "items": {
             "type": "string"
           },
           "type": "array"
+        },
+        "lock_branch": {
+          "type": "boolean"
         },
         "require_conversation_resolution": {
           "type": "boolean"
@@ -354,6 +364,9 @@
             "require_code_owner_reviews": {
               "type": "boolean"
             },
+            "require_last_push_approval": {
+              "type": "boolean"
+            },
             "required_approving_review_count": {
               "type": "number"
             },
@@ -374,6 +387,21 @@
             },
             "strict": {
               "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "restrict_pushes": {
+          "additionalProperties": false,
+          "properties": {
+            "blocks_creations": {
+              "type": "boolean"
+            },
+            "push_allowances": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             }
           },
           "type": "object"

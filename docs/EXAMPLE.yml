@@ -32,7 +32,6 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
         require_conversation_resolution: false
         require_signed_commits: false
         required_linear_history: false
-        push_restrictions: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
         required_pull_request_reviews:
           dismiss_stale_reviews: false
           dismissal_restrictions: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)

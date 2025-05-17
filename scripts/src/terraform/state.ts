@@ -162,25 +162,21 @@ export class State {
     return !Locals.getLocals().resource_types.includes(resourceClass.StateType)
   }
 
-  async addResource(id: Id, resource: Resource): Promise<void> {
-    await this.addResourceAt(id, resource.getStateAddress().toLowerCase())
-  }
-
   async addResourceAt(id: Id, address: string): Promise<void> {
     if (env.TF_EXEC === 'true') {
+      const [, key, value] = address.match(/^([^.]+)\.this\["([^"]+)"\]$/)!
+      const resources = JSON.stringify({
+        [key]: {
+          [value]: {}
+        }
+      }).replaceAll('"', '\\"')
+      const addr = address.replaceAll('"', '\\"')
       await cli.exec(
-        `terraform import -lock=${env.TF_LOCK} "${address.replaceAll(
-          '"',
-          '\\"'
-        )}" "${id}"`,
+        `terraform import -lock=${env.TF_LOCK} -var "resources=${resources}" "${addr}" "${id}"`,
         undefined,
         {cwd: env.TF_WORKING_DIR}
       )
     }
-  }
-
-  async removeResource(resource: Resource): Promise<void> {
-    await this.removeResourceAt(resource.getStateAddress().toLowerCase())
   }
 
   async removeResourceAt(address: string): Promise<void> {
@@ -197,21 +193,19 @@ export class State {
   }
 
   async sync(resources: [Id, Resource][]): Promise<void> {
-    const addresses = this.getAllAddresses()
+    const addresses = new Set(this.getAllAddresses())
+    const addressToId = new Map<string, Id>()
+    for (const [id, resource] of resources) {
+      addressToId.set(resource.getStateAddress().toLowerCase(), id)
+    }
     for (const address of addresses) {
-      if (
-        !resources.some(
-          ([_, r]) => r.getStateAddress().toLowerCase() === address
-        )
-      ) {
+      if (!addressToId.has(address)) {
         await this.removeResourceAt(address)
       }
     }
-    for (const [id, resource] of resources) {
-      if (
-        !addresses.some(a => a === resource.getStateAddress().toLowerCase())
-      ) {
-        await this.addResource(id, resource)
+    for (const [address, id] of addressToId) {
+      if (!addresses.has(address)) {
+        await this.addResourceAt(id, address)
       }
     }
   }
