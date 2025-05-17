@@ -10,6 +10,7 @@ type LocalsSchema = {
     users: string[]
     rulesets: string[]
   }
+  github_pro: boolean
 }
 
 export class Locals {
@@ -23,7 +24,8 @@ export class Locals {
           teams: [],
           users: [],
           rulesets: []
-        }
+        },
+        github_pro: false
       }
       for (const path of [
         `${env.TF_WORKING_DIR}/locals.tf`,
@@ -39,6 +41,7 @@ export class Locals {
           locals.ignore.users = hcl.ignore?.users ?? locals.ignore.users
           locals.ignore.rulesets =
             hcl.ignore?.rulesets ?? locals.ignore.rulesets
+          locals.github_pro = hcl.github_pro ?? locals.github_pro
         }
       }
       this.locals = locals

@@ -1,7 +1,7 @@
 locals {
   organization      = terraform.workspace
   resource_types    = []
-  advanced_security = false
+  github_pro        = false
   config            = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
   state             = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
   ignore = {
@@ -29,9 +29,9 @@ locals {
           for item in [
             for repository, config in lookup(local.config, "repositories", {}) : merge(config, {
               name = repository
-              security_and_analysis = (try(config.visibility, "private") == "public" || local.advanced_security) ? [
+              security_and_analysis = (try(config.visibility, "private") == "public" || local.github_pro) ? [
                 {
-                  advanced_security               = try(config.visibility, "private") == "public" || !local.advanced_security ? [] : [{ "status" : try(config.advanced_security, false) ? "enabled" : "disabled" }]
+                  advanced_security               = try(config.visibility, "private") == "public" || !local.github_pro ? [] : [{ "status" : try(config.advanced_security, false) ? "enabled" : "disabled" }]
                   secret_scanning                 = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning, false) ? "enabled" : "disabled" }]
                   secret_scanning_push_protection = try(config.visibility, "private") != "public" ? [] : [{ "status" : try(config.secret_scanning_push_protection, false) ? "enabled" : "disabled" }]
               }] : []

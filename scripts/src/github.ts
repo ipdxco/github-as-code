@@ -291,12 +291,18 @@ export class GitHub {
     const repositoryRulesets = []
     const repositories = await this.listRepositories()
     for (const repository of repositories) {
+      const locals = Locals.getLocals()
+      if (repository.visibility !== 'public' && !locals.github_pro) {
+        core.info(
+          `Skipping ${repository.name} rulesets because it is not public and GitHub Pro is not enabled`
+        )
+        continue
+      }
       core.info(`Listing ${repository.name} rulesets...`)
       const rulesets = await this.client.paginate(
         this.client.repos.getRepoRulesets,
         {owner: env.GITHUB_ORG, repo: repository.name}
       )
-      const locals = Locals.getLocals()
       repositoryRulesets.push(
         ...rulesets
           .filter(r => !locals.ignore.repositories.includes(r.name))
