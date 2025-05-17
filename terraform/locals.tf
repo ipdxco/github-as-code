@@ -172,29 +172,27 @@ locals {
       }
       "github_organization_ruleset" = {
         "this" = {
-          for item in flatten([
-            for repository, config in lookup(local.config, "repositories", {}) : [
-              for name, config in lookup(config, "rulesets", {}) : merge(config, {
-                name       = name
-                repository = repository
-                rules = try([merge(config.rules, {
-                  branch_name_pattern         = try([config.rules.branch_name_pattern], [])
-                  commit_author_email_pattern = try([config.rules.commit_author_email_pattern], [])
-                  commit_message_pattern      = try([config.rules.commit_message_pattern], [])
-                  committer_email_pattern     = try([config.rules.committer_email_pattern], [])
-                  pull_request                = try([config.rules.pull_request], [])
-                  required_status_checks      = try([config.rules.required_status_checks], [])
-                  required_workflows          = try([config.rules.required_workflows], [])
-                  tag_name_pattern            = try([config.rules.tag_name_pattern], [])
-                  required_code_scanning      = try([config.rules.required_code_scanning], [])
-                })], [])
-                conditions = try([merge(config.conditions, {
-                  repository_name = try([config.conditions.ref_name], [])
-                  ref_name        = try([config.conditions.ref_name], [])
-                })], [])
-              })
-            ]
-          ]) : lower("${item.repository}:${item.name}") => item
+          for item in [
+            for name, config in lookup(local.config, "rulesets", {}) : merge(config, {
+              name       = name
+              repository = repository
+              rules = try([merge(config.rules, {
+                branch_name_pattern         = try([config.rules.branch_name_pattern], [])
+                commit_author_email_pattern = try([config.rules.commit_author_email_pattern], [])
+                commit_message_pattern      = try([config.rules.commit_message_pattern], [])
+                committer_email_pattern     = try([config.rules.committer_email_pattern], [])
+                pull_request                = try([config.rules.pull_request], [])
+                required_status_checks      = try([config.rules.required_status_checks], [])
+                required_workflows          = try([config.rules.required_workflows], [])
+                tag_name_pattern            = try([config.rules.tag_name_pattern], [])
+                required_code_scanning      = try([config.rules.required_code_scanning], [])
+              })], [])
+              conditions = try([merge(config.conditions, {
+                repository_name = try([config.conditions.ref_name], [])
+                ref_name        = try([config.conditions.ref_name], [])
+              })], [])
+            })
+          ] : lower("${item.name}") => item
         }
       }
     }
