@@ -3,8 +3,10 @@ import {RepositoryBranchProtectionRule} from '../../src/resources/repository-bra
 import {RepositoryCollaborator} from '../../src/resources/repository-collaborator.js'
 import {RepositoryFile} from '../../src/resources/repository-file.js'
 import {RepositoryLabel} from '../../src/resources/repository-label.js'
+import {RepositoryRuleset} from '../../src/resources/repository-ruleset.js'
 import {RepositoryTeam} from '../../src/resources/repository-team.js'
 import {Repository} from '../../src/resources/repository.js'
+import {Ruleset} from '../../src/resources/ruleset.js'
 import {TeamMember} from '../../src/resources/team-member.js'
 import {Team} from '../../src/resources/team.js'
 
@@ -17,7 +19,9 @@ export const ConfigResourceCounts = {
   [RepositoryTeam.name]: 6,
   [TeamMember.name]: 2,
   [RepositoryFile.name]: 1,
-  [RepositoryLabel.name]: 3
+  [RepositoryLabel.name]: 3,
+  [RepositoryRuleset.name]: 0,
+  [Ruleset.name]: 0
 }
 export const ConfigResourcesCount = Object.values(ConfigResourceCounts).reduce(
   (a, b) => a + b,
@@ -32,7 +36,9 @@ export const StateResourceCounts = {
   [RepositoryTeam.name]: 7,
   [TeamMember.name]: 2,
   [RepositoryFile.name]: 1,
-  [RepositoryLabel.name]: 3
+  [RepositoryLabel.name]: 3,
+  [RepositoryRuleset.name]: 0,
+  [Ruleset.name]: 0
 }
 export const StateResourcesCount = Object.values(StateResourceCounts).reduce(
   (a, b) => a + b,

@@ -85,6 +85,48 @@ type ResourceSchema = {
         parent_team_id?: string
       }
     }
+  | {
+      type: 'github_repository_ruleset'
+      values: {
+        name: string
+        rules?: {
+          branch_name_pattern?: object[]
+          commit_author_email_pattern?: object[]
+          commit_message_pattern?: object[]
+          committer_email_pattern?: object[]
+          merge_queue?: object[]
+          pull_request?: object[]
+          required_deployments?: object[]
+          required_status_checks?: object[]
+          tag_name_pattern?: object[]
+          required_code_scanning?: object[]
+        }[]
+        conditions?: {
+          ref_name?: object[]
+        }[]
+      }
+    }
+  | {
+      type: 'github_organization_ruleset'
+      values: {
+        name: string
+        rules?: {
+          branch_name_pattern?: object[]
+          commit_author_email_pattern?: object[]
+          commit_message_pattern?: object[]
+          committer_email_pattern?: object[]
+          pull_request?: object[]
+          required_status_checks?: object[]
+          required_workflows?: object[]
+          tag_name_pattern?: object[]
+          required_code_scanning?: object[]
+        }[]
+        conditions?: {
+          repository_name?: object[]
+          ref_name?: object[]
+        }[]
+      }
+    }
 )
 
 export type StateSchema = {

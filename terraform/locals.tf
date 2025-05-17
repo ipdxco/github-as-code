@@ -8,6 +8,7 @@ locals {
     "repositories" = []
     "teams"        = []
     "users"        = []
+    "rulesets"     = []
   }
   sources = {
     "config" = {
@@ -140,6 +141,60 @@ locals {
               ]
             }
           ] : lower("${item.repository}") => item
+        }
+      }
+      "github_repository_ruleset" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}) : [
+              for name, config in lookup(config, "ruleset", {}) : merge(config, {
+                name       = name
+                repository = repository
+                rules = try([merge(config.rules, {
+                  branch_name_pattern         = try([config.rules.branch_name_pattern], [])
+                  commit_author_email_pattern = try([config.rules.commit_author_email_pattern], [])
+                  commit_message_pattern      = try([config.rules.commit_message_pattern], [])
+                  committer_email_pattern     = try([config.rules.committer_email_pattern], [])
+                  merge_queue                 = try([config.rules.merge_queue], [])
+                  pull_request                = try([config.rules.pull_request], [])
+                  required_deployments        = try([config.rules.required_deployments], [])
+                  required_status_checks      = try([config.rules.required_status_checks], [])
+                  tag_name_pattern            = try([config.rules.tag_name_pattern], [])
+                  required_code_scanning      = try([config.rules.required_code_scanning], [])
+                })], [])
+                conditions = try([merge(config.conditions, {
+                  ref_name = try([config.conditions.ref_name], [])
+                })], [])
+              })
+            ]
+          ]) : lower("${item.repository}:${item.pattern}") => item
+        }
+      }
+      "github_organization_ruleset" = {
+        "this" = {
+          for item in flatten([
+            for repository, config in lookup(local.config, "repositories", {}) : [
+              for name, config in lookup(config, "ruleset", {}) : merge(config, {
+                name       = name
+                repository = repository
+                rules = try([merge(config.rules, {
+                  branch_name_pattern         = try([config.rules.branch_name_pattern], [])
+                  commit_author_email_pattern = try([config.rules.commit_author_email_pattern], [])
+                  commit_message_pattern      = try([config.rules.commit_message_pattern], [])
+                  committer_email_pattern     = try([config.rules.committer_email_pattern], [])
+                  pull_request                = try([config.rules.pull_request], [])
+                  required_status_checks      = try([config.rules.required_status_checks], [])
+                  required_workflows          = try([config.rules.required_workflows], [])
+                  tag_name_pattern            = try([config.rules.tag_name_pattern], [])
+                  required_code_scanning      = try([config.rules.required_code_scanning], [])
+                })], [])
+                conditions = try([merge(config.conditions, {
+                  repository_name = try([config.conditions.ref_name], [])
+                  ref_name        = try([config.conditions.ref_name], [])
+                })], [])
+              })
+            ]
+          ]) : lower("${item.repository}:${item.pattern}") => item
         }
       }
     }
@@ -284,6 +339,31 @@ locals {
           ]
         ])
       ]) : item.index => local.sources[item.source].github_issue_labels.this[item.index]
+    }
+    "github_repository_ruleset" = {
+      for item in flatten([
+        for repository, config in local.sources.config.github_repository.this : flatten([
+          try(config.archived, false) ? [
+            for ruleset, config in try(local.sources.state.github_repository_ruleset.this, {}) : {
+              source = "state"
+              index  = ruleset
+            } if split(":", ruleset)[0] == repository
+            ] : [
+            for ruleset, config in local.sources.config.github_repository_ruleset.this : {
+              source = "config"
+              index  = ruleset
+            } if lower(config.repository) == repository
+          ]
+        ])
+      ]) : item.index => local.sources[item.source].github_repository_ruleset.this[item.index]
+    }
+    "github_organization_ruleset" = {
+      for item in [
+        for name, config in local.sources.config.github_organization_ruleset.this : {
+          source = "config"
+          index  = name
+        }
+      ] : item.index => local.sources[item.source].github_organization_ruleset.this[item.index]
     }
   }
 }

@@ -64,3 +64,57 @@ resource "github_repository_file" "this" {
     ]
   }
 }
+
+resource "github_repository_ruleset" "this" {
+  lifecycle {
+    ignore_changes = [
+      target,
+      enforcement,
+      rules.0.creation,
+      rules.0.deletion,
+      rules.0.non_fast_forward,
+      rules.0.required_linear_history,
+      rules.0.required_signatures,
+      rules.0.update,
+      rules.0.update_allows_fetch_and_merge,
+      rules.0.branch_name_pattern,
+      rules.0.commit_author_email_pattern,
+      rules.0.commit_message_pattern,
+      rules.0.committer_email_pattern,
+      rules.0.merge_queue,
+      rules.0.pull_request,
+      rules.0.required_deployments,
+      rules.0.required_status_checks,
+      rules.0.tag_name_pattern,
+      rules.0.required_code_scanning,
+      bypass_actors,
+      conditions,
+    ]
+  }
+}
+
+resource "github_organization_ruleset" "this" {
+  lifecycle {
+    ignore_changes = [
+      target,
+      enforcement,
+      rules.0.creation,
+      rules.0.deletion,
+      rules.0.non_fast_forward,
+      rules.0.required_linear_history,
+      rules.0.required_signatures,
+      rules.0.update,
+      rules.0.branch_name_pattern,
+      rules.0.commit_author_email_pattern,
+      rules.0.commit_message_pattern,
+      rules.0.committer_email_pattern,
+      rules.0.pull_request,
+      rules.0.required_status_checks,
+      rules.0.required_workflows,
+      rules.0.tag_name_pattern,
+      rules.0.required_code_scanning,
+      bypass_actors,
+      conditions,
+    ]
+  }
+}

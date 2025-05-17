@@ -8,6 +8,7 @@ type LocalsSchema = {
     repositories: string[]
     teams: string[]
     users: string[]
+    rulesets: string[]
   }
 }
 
@@ -20,7 +21,8 @@ export class Locals {
         ignore: {
           repositories: [],
           teams: [],
-          users: []
+          users: [],
+          rulesets: []
         }
       }
       for (const path of [
@@ -35,6 +37,8 @@ export class Locals {
             hcl.ignore?.repositories ?? locals.ignore.repositories
           locals.ignore.teams = hcl.ignore?.teams ?? locals.ignore.teams
           locals.ignore.users = hcl.ignore?.users ?? locals.ignore.users
+          locals.ignore.rulesets =
+            hcl.ignore?.rulesets ?? locals.ignore.rulesets
         }
       }
       this.locals = locals

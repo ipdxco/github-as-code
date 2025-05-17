@@ -9,6 +9,8 @@ import {Role as TeamRole} from '../resources/team-member.js'
 import {Team} from '../resources/team.js'
 import * as YAML from 'yaml'
 import {yamlify} from '../utils.js'
+import {RepositoryRuleset} from '../resources/repository-ruleset.js'
+import {Ruleset} from '../resources/ruleset.js'
 
 type TeamMember = string
 type RepositoryCollaborator = string
@@ -25,6 +27,7 @@ interface RepositoryExtension {
   }
   branch_protection?: Record<string, RepositoryBranchProtectionRule>
   labels?: Record<string, RepositoryLabel>
+  rulesets?: Record<string, RepositoryRuleset>
 }
 
 interface TeamExtension {
@@ -41,6 +44,7 @@ export class ConfigSchema {
   }
   repositories?: Record<string, Repository & RepositoryExtension>
   teams?: Record<string, Team & TeamExtension>
+  rulesets?: Record<string, Ruleset>
 }
 
 export function pathToYAML(path: Path): (YAML.ParsedNode | number)[] {

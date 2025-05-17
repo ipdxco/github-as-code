@@ -10,6 +10,8 @@ import {RepositoryLabel} from './repository-label.js'
 import {RepositoryTeam} from './repository-team.js'
 import {Team} from './team.js'
 import {TeamMember} from './team-member.js'
+import {RepositoryRuleset} from './repository-ruleset.js'
+import {Ruleset} from './ruleset.js'
 
 export interface Resource {
   // returns YAML config path under which the resource can be found
@@ -37,6 +39,7 @@ export interface ResourceConstructor<T extends Resource> {
 
 export const ResourceConstructors: ResourceConstructor<Resource>[] = [
   Member,
+  RepositoryRuleset,
   RepositoryBranchProtectionRule,
   RepositoryCollaborator,
   RepositoryFile,
@@ -44,7 +47,8 @@ export const ResourceConstructors: ResourceConstructor<Resource>[] = [
   RepositoryTeam,
   Repository,
   TeamMember,
-  Team
+  Team,
+  Ruleset
 ]
 
 export function resourceToPlain<T extends Resource>(

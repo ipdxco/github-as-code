@@ -35,11 +35,20 @@ type TeamRepositories = {
   team: Teams[number]
   repository: Repositories[number]
 }[]
+type Rulesets = GetResponseDataTypeFromEndpointMethod<
+  Endpoints['repos']['getOrgRulesets']
+>
 type RepositoryBranchProtectionRules = {
   repository: Repositories[number]
   branchProtectionRule: {
     pattern: string
   }
+}[]
+type RepositoryRulesets = {
+  repository: Repositories[number]
+  ruleset: GetResponseDataTypeFromEndpointMethod<
+    Endpoints['repos']['getRepoRulesets']
+  >[number]
 }[]
 type RepositoryFile = {
   path: string
@@ -219,6 +228,15 @@ export class GitHub {
     return this.teams
   }
 
+  async listRulesets(): Promise<Rulesets> {
+    const rulesets = await this.client.paginate(
+      this.client.repos.getOrgRulesets,
+      {org: env.GITHUB_ORG}
+    )
+    const locals = Locals.getLocals()
+    return rulesets.filter(r => !locals.ignore.rulesets.includes(r.name))
+  }
+
   async listRepositoryCollaborators(): Promise<RepositoryCollaborators> {
     const repositoryCollaborators = []
     const repositories = await this.listRepositories()
@@ -267,6 +285,25 @@ export class GitHub {
       )
     }
     return repositoryBranchProtectionRules
+  }
+
+  async listRepositoryRulesets(): Promise<RepositoryRulesets> {
+    const repositoryRulesets = []
+    const repositories = await this.listRepositories()
+    for (const repository of repositories) {
+      core.info(`Listing ${repository.name} rulesets...`)
+      const rulesets = await this.client.paginate(
+        this.client.repos.getRepoRulesets,
+        {owner: env.GITHUB_ORG, repo: repository.name}
+      )
+      const locals = Locals.getLocals()
+      repositoryRulesets.push(
+        ...rulesets
+          .filter(r => !locals.ignore.repositories.includes(r.name))
+          .map(ruleset => ({repository, ruleset}))
+      )
+    }
+    return repositoryRulesets
   }
 
   async listTeamMembers(): Promise<TeamMembers> {

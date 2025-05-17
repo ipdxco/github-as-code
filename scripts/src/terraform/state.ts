@@ -79,13 +79,22 @@ export class State {
         .filter(r => r.mode === 'managed')
         // .filter(r => !this._ignoredTypes.includes(r.type))
         .map(r => {
-          // TODO: remove nested values
-          r.values = Object.fromEntries(
-            Object.entries(r.values).filter(
-              ([k, _v]) => !this._ignoredProperties[r.type]?.includes(k)
-            )
-          ) as typeof r.values
-          return r
+          const values = JSON.parse(JSON.stringify(r.values))
+          for (const property of this._ignoredProperties[r.type] ?? []) {
+            const parts = property.split('.')
+            let current = values
+            for (
+              let i = 0;
+              i < parts.length - 1 && current !== undefined;
+              i++
+            ) {
+              current = current[parts[i]]
+            }
+            if (current !== undefined) {
+              delete current[parts[parts.length - 1]]
+            }
+          }
+          return {...r, values} as typeof r
         })
     }
     return state
