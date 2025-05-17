@@ -343,13 +343,11 @@ resource "github_repository_ruleset" "this" {
         strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
         do_not_enforce_on_create             = try(required_status_checks.do_not_enforce_on_create, null)
 
-        dynamic "required_check" {
-          for_each = try(required_status_checks.required_check, [])
-          content {
-            context        = required_check.context
-            integration_id = try(required_check.integration_id, null)
-          }
+        required_check {
+          context        = required_status_checks[0].required_check.context
+          integration_id = try(required_status_checks[0].required_check.integration_id, null)
         }
+        # TODO: set the rest of the required_checks via a dynamic block
       }
     }
 
@@ -363,13 +361,13 @@ resource "github_repository_ruleset" "this" {
       }
     }
 
-    required_code_scanning {
-      dynamic "required_code_scanning_tool" {
-        for_each = try(each.value.rules[0].required_code_scanning[0].required_code_scanning_tool, [])
-        content {
-          alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-          security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-          tool                      = required_code_scanning_tool.tool
+    dynamic "required_code_scanning" {
+      for_each = try(each.value.rules[0].required_code_scanning, [])
+      content {
+        required_code_scanning_tool { # Min 1
+          alerts_threshold          = try(required_code_scanning.required_code_scanning_tool[0].alerts_threshold, "errors")
+          security_alerts_threshold = try(required_code_scanning.required_code_scanning_tool[0].security_alerts_threshold, "critical")
+          tool                      = required_code_scanning.required_code_scanning_tool[0].tool
         }
       }
     }
@@ -475,23 +473,20 @@ resource "github_organization_ruleset" "this" {
       content {
         strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
 
-        dynamic "required_check" {
-          for_each = try(required_status_checks.required_check, [])
-          content {
-            context        = required_check.context
-            integration_id = try(required_check.integration_id, null)
-          }
+        required_check {
+          context        = required_status_checks[0].required_check.context
+          integration_id = try(required_status_checks[0].required_check.integration_id, null)
         }
       }
     }
 
-    required_workflows {
-      dynamic "required_workflow" {
-        for_each = try(each.value.rules[0].required_workflows[0].required_workflow, [])
-        content {
-          repository_id = required_workflow.repository_id
-          path          = required_workflow.path
-          ref           = try(required_workflow.ref, null)
+    dynamic "required_workflows" {
+      for_each = try(each.value.rules[0].required_workflows, [])
+      content {
+        required_workflow { # Min 1
+          repository_id = required_workflows.required_workflow[0].repository_id
+          path          = required_workflows.required_workflow[0].path
+          ref           = try(required_workflows.required_workflow[0].ref, null)
         }
       }
     }
@@ -506,13 +501,13 @@ resource "github_organization_ruleset" "this" {
       }
     }
 
-    required_code_scanning {
-      dynamic "required_code_scanning_tool" {
-        for_each = try(each.value.rules[0].required_code_scanning[0].required_code_scanning_tool, [])
-        content {
-          alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-          security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-          tool                      = required_code_scanning_tool.tool
+    dynamic "required_code_scanning" {
+      for_each = try(each.value.rules[0].required_code_scanning, [])
+      content {
+        required_code_scanning_tool { # Min 1
+          alerts_threshold          = try(required_code_scanning.required_code_scanning_tool[0].alerts_threshold, "errors")
+          security_alerts_threshold = try(required_code_scanning.required_code_scanning_tool[0].security_alerts_threshold, "critical")
+          tool                      = required_code_scanning.required_code_scanning_tool[0].tool
         }
       }
     }
