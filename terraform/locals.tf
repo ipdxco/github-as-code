@@ -1,9 +1,9 @@
 locals {
-  organization      = terraform.workspace
-  resource_types    = []
-  github_pro        = false
-  config            = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
-  state             = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
+  organization   = terraform.workspace
+  resource_types = []
+  github_pro     = false
+  config         = yamldecode(file("${path.module}/../github/${local.organization}.yml"))
+  state          = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
   ignore = {
     "repositories" = []
     "teams"        = []

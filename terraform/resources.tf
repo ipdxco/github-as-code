@@ -339,18 +339,15 @@ resource "github_repository_ruleset" "this" {
         }
       }
 
-      dynamic "required_status_checks" {
-        for_each = try(rules.value.required_status_checks, [])
-        content {
-          strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
-          do_not_enforce_on_create             = try(required_status_checks.do_not_enforce_on_create, null)
+      required_status_checks {
+        strict_required_status_checks_policy = try(rules.value.required_status_checks[0].strict_required_status_checks_policy, null)
+        do_not_enforce_on_create             = try(rules.value.required_status_checks[0].do_not_enforce_on_create, null)
 
-          dynamic "required_check" {
-            for_each = try(required_status_checks.required_check, [])
-            content {
-              context        = required_check.context
-              integration_id = try(required_check.integration_id, null)
-            }
+        dynamic "required_check" {
+          for_each = try(rules.value.required_status_checks[0].required_check, [])
+          content {
+            context        = required_check.context
+            integration_id = try(required_check.integration_id, null)
           }
         }
       }
@@ -365,17 +362,13 @@ resource "github_repository_ruleset" "this" {
         }
       }
 
-      dynamic "required_code_scanning" {
-        for_each = try(rules.value.required_code_scanning, [])
-
-        content {
-          dynamic "required_code_scanning_tool" {
-            for_each = try(required_code_scanning.required_code_scanning_tool, [])
-            content {
-              alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-              security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-              tool                      = required_code_scanning_tool.tool
-            }
+      required_code_scanning {
+        dynamic "required_code_scanning_tool" {
+          for_each = try(rules.value.required_code_scanning[0].required_code_scanning_tool, [])
+          content {
+            alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
+            security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
+            tool                      = required_code_scanning_tool.tool
           }
         }
       }
@@ -411,7 +404,7 @@ resource "github_repository_ruleset" "this" {
 }
 
 resource "github_organization_ruleset" "this" {
-  for_each = try(var.resources.github_repository_ruleset, local.resources.github_repository_ruleset)
+  for_each = try(var.resources.github_organization_ruleset, local.resources.github_organization_ruleset)
 
   name = each.value.name
 
@@ -479,31 +472,25 @@ resource "github_organization_ruleset" "this" {
         }
       }
 
-      dynamic "required_status_checks" {
-        for_each = try(rules.value.required_status_checks, [])
-        content {
-          strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
+      required_status_checks {
+        strict_required_status_checks_policy = try(rules.value.required_status_checks[0].strict_required_status_checks_policy, null)
 
-          dynamic "required_check" {
-            for_each = try(required_status_checks.required_check, [])
-            content {
-              context        = required_check.context
-              integration_id = try(required_check.integration_id, null)
-            }
+        dynamic "required_check" {
+          for_each = try(rules.value.required_status_checks[0].required_check, [])
+          content {
+            context        = required_check.context
+            integration_id = try(required_check.integration_id, null)
           }
         }
       }
 
-      dynamic "required_workflows" {
-        for_each = try(rules.value.required_workflows, [])
-        content {
-          dynamic "required_workflow" {
-            for_each = try(required_workflows.required_workflow, [])
-            content {
-              repository_id = required_workflow.repository_id
-              path          = required_workflow.path
-              ref           = try(required_workflow.ref, null)
-            }
+      required_workflows {
+        dynamic "required_workflow" {
+          for_each = try(rules.value.required_workflows[0].required_workflow, [])
+          content {
+            repository_id = required_workflow.repository_id
+            path          = required_workflow.path
+            ref           = try(required_workflow.ref, null)
           }
         }
       }
@@ -518,17 +505,13 @@ resource "github_organization_ruleset" "this" {
         }
       }
 
-      dynamic "required_code_scanning" {
-        for_each = try(rules.value.required_code_scanning, [])
-
-        content {
-          dynamic "required_code_scanning_tool" {
-            for_each = try(required_code_scanning.required_code_scanning_tool, [])
-            content {
-              alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-              security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-              tool                      = required_code_scanning_tool.tool
-            }
+      required_code_scanning {
+        dynamic "required_code_scanning_tool" {
+          for_each = try(rules.value.required_code_scanning[0].required_code_scanning_tool, [])
+          content {
+            alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
+            security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
+            tool                      = required_code_scanning_tool.tool
           }
         }
       }
