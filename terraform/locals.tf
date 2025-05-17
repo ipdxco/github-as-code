@@ -147,7 +147,7 @@ locals {
         "this" = {
           for item in flatten([
             for repository, config in lookup(local.config, "repositories", {}) : [
-              for name, config in lookup(config, "ruleset", {}) : merge(config, {
+              for name, config in lookup(config, "rulesets", {}) : merge(config, {
                 name       = name
                 repository = repository
                 rules = try([merge(config.rules, {
@@ -174,7 +174,7 @@ locals {
         "this" = {
           for item in flatten([
             for repository, config in lookup(local.config, "repositories", {}) : [
-              for name, config in lookup(config, "ruleset", {}) : merge(config, {
+              for name, config in lookup(config, "rulesets", {}) : merge(config, {
                 name       = name
                 repository = repository
                 rules = try([merge(config.rules, {
