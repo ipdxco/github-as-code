@@ -63,10 +63,10 @@ describe('state', () => {
   it('can add and remove resources through sync', async () => {
     const config = await State.New()
 
-    const addResourceMock = mock.fn(config.addResource.bind(config))
+    const addResourceAtMock = mock.fn(config.addResourceAt.bind(config))
     const removeResourceAtMock = mock.fn(config.removeResourceAt.bind(config))
 
-    config.addResource = addResourceMock
+    config.addResourceAt = addResourceAtMock
     config.removeResourceAt = removeResourceAtMock
 
     const desiredResources: [Id, Resource][] = []
@@ -74,10 +74,13 @@ describe('state', () => {
 
     await config.sync(desiredResources)
 
-    assert.equal(addResourceMock.mock.calls.length, 0)
-    assert.equal(removeResourceAtMock.mock.calls.length, resources.length)
+    assert.equal(addResourceAtMock.mock.calls.length, 0)
+    assert.equal(
+      removeResourceAtMock.mock.calls.length,
+      new Set(resources.map(r => r.getStateAddress().toLowerCase())).size
+    )
 
-    addResourceMock.mock.resetCalls()
+    addResourceAtMock.mock.resetCalls()
     removeResourceAtMock.mock.resetCalls()
 
     for (const resource of resources) {
@@ -85,10 +88,10 @@ describe('state', () => {
     }
 
     await config.sync(desiredResources)
-    assert.equal(addResourceMock.mock.calls.length, 1) // adding github-mgmt/readme.md
+    assert.equal(addResourceAtMock.mock.calls.length, 1) // adding github-mgmt/readme.md
     assert.equal(removeResourceAtMock.mock.calls.length, 1) // removing github-mgmt/README.md
 
-    addResourceMock.mock.resetCalls()
+    addResourceAtMock.mock.resetCalls()
     removeResourceAtMock.mock.resetCalls()
 
     desiredResources.push(['id', new Repository('test')])
@@ -99,7 +102,7 @@ describe('state', () => {
     await config.sync(desiredResources)
 
     assert.equal(
-      addResourceMock.mock.calls.length,
+      addResourceAtMock.mock.calls.length,
       1 + desiredResources.length - resources.length
     )
     assert.equal(removeResourceAtMock.mock.calls.length, 1)

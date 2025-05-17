@@ -32,10 +32,14 @@ type ResourceSchema = {
       }
     }
   | {
-      type: 'github_issue_label'
+      type: 'github_issue_labels'
       values: {
-        name: string
         repository: string
+        label?: {
+          name: string
+          color: string
+          description: string
+        }[]
       }
     }
   | {

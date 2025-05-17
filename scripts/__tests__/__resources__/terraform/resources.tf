@@ -38,7 +38,7 @@ resource "github_repository_file" "this" {
     ignore_changes = []
   }
 }
-resource "github_issue_label" "this" {
+resource "github_issue_labels" "this" {
   lifecycle {
     ignore_changes = []
   }

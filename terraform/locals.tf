@@ -6,8 +6,8 @@ locals {
   state             = jsondecode(file("${path.module}/${local.organization}.tfstate.json"))
   ignore = {
     "repositories" = []
-    "teams" = []
-    "users" = []
+    "teams"        = []
+    "users"        = []
   }
   sources = {
     "config" = {
@@ -128,23 +128,25 @@ locals {
           ]) : lower("${item.repository}/${item.file}") => item
         }
       }
-      "github_issue_label" = {
+      "github_issue_labels" = {
         "this" = {
-          for item in flatten([
-            for repository, config in lookup(local.config, "repositories", {}) : [
-              for name, config in lookup(config, "labels", {}) : merge(config, {
-                repository = repository
-                name       = name
-              })
-            ]
-          ]) : lower("${item.repository}:${item.name}") => item
+          for item in [
+            for repository, config in lookup(local.config, "repositories", {}) : {
+              repository = repository
+              label = [
+                for name, config in lookup(config, "labels", {}) : merge(config, {
+                  name = name
+                })
+              ]
+            }
+          ] : lower("${item.repository}") => item
         }
       }
     }
     "state" = lookup({
       for mode, item in {
         for item in try(local.state.values.root_module.resources, []) : item.mode => item...
-      } : mode => {
+        } : mode => {
         for type, item in {
           for item in item : item.type => item...
           } : type => {
@@ -172,12 +174,12 @@ locals {
       for item in [
         for repository, config in local.sources.config.github_repository.this :
         try(config.archived, false) ? {
-          source = "state"
-          index  = repository
+          source   = "state"
+          index    = repository
           archived = config.archived
           } : {
-          source = "config"
-          index  = repository
+          source   = "config"
+          index    = repository
           archived = try(config.archived, false)
         }
       ] : item.index => merge(local.sources[item.source].github_repository.this[item.index], { archived = item.archived })
@@ -266,22 +268,22 @@ locals {
         ])
       ]) : item.index => local.sources[item.source].github_repository_file.this[item.index]
     }
-    "github_issue_label" = {
+    "github_issue_labels" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
           try(config.archived, false) ? [
-            for label, config in try(local.sources.state.github_issue_label.this, {}) : {
+            for labelsRepository, config in try(local.sources.state.github_issue_labels.this, {}) : {
               source = "state"
-              index  = label
+              index  = labelsRepository
             } if lower(config.repository) == repository
             ] : [
-            for label, config in local.sources.config.github_issue_label.this : {
+            for labelsRepository, config in local.sources.config.github_issue_labels.this : {
               source = "config"
-              index  = label
+              index  = labelsRepository
             } if lower(config.repository) == repository
           ]
         ])
-      ]) : item.index => local.sources[item.source].github_issue_label.this[item.index]
+      ]) : item.index => local.sources[item.source].github_issue_labels.this[item.index]
     }
   }
 }
