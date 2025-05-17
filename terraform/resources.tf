@@ -337,15 +337,18 @@ resource "github_repository_ruleset" "this" {
       }
     }
 
-    required_status_checks {
-      strict_required_status_checks_policy = try(each.value.rules[0].required_status_checks[0].strict_required_status_checks_policy, null)
-      do_not_enforce_on_create             = try(each.value.rules[0].required_status_checks[0].do_not_enforce_on_create, null)
+    dynamic "required_status_checks" {
+      for_each = try(each.value.rules[0].required_status_checks, [])
+      content {
+        strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
+        do_not_enforce_on_create             = try(required_status_checks.do_not_enforce_on_create, null)
 
-      dynamic "required_check" {
-        for_each = try(each.value.rules[0].required_status_checks[0].required_check, [])
-        content {
-          context        = required_check.context
-          integration_id = try(required_check.integration_id, null)
+        dynamic "required_check" {
+          for_each = try(required_status_checks.required_check, [])
+          content {
+            context        = required_check.context
+            integration_id = try(required_check.integration_id, null)
+          }
         }
       }
     }
@@ -467,14 +470,17 @@ resource "github_organization_ruleset" "this" {
       }
     }
 
-    required_status_checks {
-      strict_required_status_checks_policy = try(each.value.rules[0].required_status_checks[0].strict_required_status_checks_policy, null)
+    dynamic "required_status_checks" {
+      for_each = try(each.value.rules[0].required_status_checks, [])
+      content {
+        strict_required_status_checks_policy = try(required_status_checks.strict_required_status_checks_policy, null)
 
-      dynamic "required_check" {
-        for_each = try(each.value.rules[0].required_status_checks[0].required_check, [])
-        content {
-          context        = required_check.context
-          integration_id = try(required_check.integration_id, null)
+        dynamic "required_check" {
+          for_each = try(required_status_checks.required_check, [])
+          content {
+            context        = required_check.context
+            integration_id = try(required_check.integration_id, null)
+          }
         }
       }
     }
