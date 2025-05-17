@@ -11,6 +11,7 @@ class RequiredPullRequestReviews {
   @Expose() dismissal_restrictions?: string[]
   @Expose() pull_request_bypassers?: string[]
   @Expose() require_code_owner_reviews?: boolean
+  @Expose() require_last_push_approval?: boolean
   @Expose() required_approving_review_count?: number
   @Expose() restrict_dismissals?: boolean
 }
@@ -19,6 +20,12 @@ class RequiredPullRequestReviews {
 class RequiredStatusChecks {
   @Expose() contexts?: string[]
   @Expose() strict?: boolean
+}
+
+@Exclude()
+class RestrictPushes {
+  @Expose() blocks_creations?: boolean
+  @Expose() push_allowances?: string[]
 }
 
 @Exclude()
@@ -120,10 +127,9 @@ export class RepositoryBranchProtectionRule implements Resource {
 
   @Expose() allows_deletions?: boolean
   @Expose() allows_force_pushes?: boolean
-  @Expose() blocks_creations?: boolean
   @Expose() enforce_admins?: boolean
+  @Expose() force_push_bypassers?: string[]
   @Expose() lock_branch?: boolean
-  @Expose() push_restrictions?: string[]
   @Expose() require_conversation_resolution?: boolean
   @Expose() require_signed_commits?: boolean
   @Expose() required_linear_history?: boolean
@@ -133,6 +139,9 @@ export class RepositoryBranchProtectionRule implements Resource {
   @Expose()
   @Type(() => RequiredStatusChecks)
   required_status_checks?: RequiredStatusChecks
+  @Expose()
+  @Type(() => RestrictPushes)
+  restrict_pushes?: RestrictPushes
 
   getSchemaPath(_schema: ConfigSchema): Path {
     return ['repositories', this.repository, 'branch_protection', this.pattern]

@@ -24,7 +24,8 @@ resource "github_repository" "this" {
       template,
       topics,
       visibility,
-      vulnerability_alerts
+      vulnerability_alerts,
+      web_commit_signoff_required,
     ]
   }
 }
@@ -35,12 +36,13 @@ resource "github_branch_protection" "this" {
       allows_deletions,
       allows_force_pushes,
       enforce_admins,
-      push_restrictions,
+      force_push_bypassers,
       require_conversation_resolution,
       require_signed_commits,
       required_linear_history,
       # required_pull_request_reviews,
-      # required_status_checks
+      # required_status_checks,
+      restrict_pushes,
     ]
   }
 }
