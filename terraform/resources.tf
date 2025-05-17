@@ -257,119 +257,116 @@ resource "github_repository_ruleset" "this" {
   target      = try(each.value.target, "branch")
   enforcement = try(each.value.enforcement, "active")
 
-  dynamic "rules" {
-    for_each = try(each.value.rules, [])
-    content {
-      creation                      = try(rules.value.creation, null)
-      deletion                      = try(rules.value.deletion, null)
-      non_fast_forward              = try(rules.value.non_fast_forward, null)
-      required_linear_history       = try(rules.value.required_linear_history, null)
-      required_signatures           = try(rules.value.required_signatures, null)
-      update                        = try(rules.value.update, null)
-      update_allows_fetch_and_merge = try(rules.value.update_allows_fetch_and_merge, null)
+  rules {
+    creation                      = try(each.value.rules[0].creation, null)
+    deletion                      = try(each.value.rules[0].deletion, null)
+    non_fast_forward              = try(each.value.rules[0].non_fast_forward, null)
+    required_linear_history       = try(each.value.rules[0].required_linear_history, null)
+    required_signatures           = try(each.value.rules[0].required_signatures, null)
+    update                        = try(each.value.rules[0].update, null)
+    update_allows_fetch_and_merge = try(each.value.rules[0].update_allows_fetch_and_merge, null)
 
-      dynamic "branch_name_pattern" {
-        for_each = try(rules.value.branch_name_pattern, [])
+    dynamic "branch_name_pattern" {
+      for_each = try(each.value.rules[0].branch_name_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "commit_author_email_pattern" {
+      for_each = try(each.value.rules[0].commit_author_email_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "commit_message_pattern" {
+      for_each = try(each.value.rules[0].commit_message_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "committer_email_pattern" {
+      for_each = try(each.value.rules[0].committer_email_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "merge_queue" {
+      for_each = try(each.value.rules[0].merge_queue, [])
+      content {
+        check_response_timeout_minutes    = try(merge_queue.value.check_response_timeout_minutes, 60)
+        grouping_strategy                 = try(merge_queue.value.grouping_strategy, "ALLGREEN")
+        max_entries_to_build              = try(merge_queue.value.max_entries_to_build, 5)
+        max_entries_to_merge              = try(merge_queue.value.max_entries_to_merge, 5)
+        merge_method                      = try(merge_queue.value.merge_method, "MERGE")
+        min_entries_to_merge              = try(merge_queue.value.min_entries_to_merge, 1)
+        min_entries_to_merge_wait_minutes = try(merge_queue.value.min_entries_to_merge_wait_minutes, 5)
+      }
+    }
+
+    dynamic "pull_request" {
+      for_each = try(each.value.rules[0].pull_request, [])
+      content {
+        dismiss_stale_reviews_on_push     = try(pull_request.dismiss_stale_reviews_on_push, null)
+        require_code_owner_review         = try(pull_request.require_code_owner_review, null)
+        require_last_push_approval        = try(pull_request.require_last_push_approval, null)
+        required_approving_review_count   = try(pull_request.required_approving_review_count, null)
+        required_review_thread_resolution = try(pull_request.required_review_thread_resolution, null)
+      }
+    }
+
+    dynamic "required_deployments" {
+      for_each = try(each.value.rules[0].required_deployments, [])
+      content {
+        required_deployment_environments = try(required_deployments.required_deployment_environments, [])
+      }
+    }
+
+    required_status_checks {
+      strict_required_status_checks_policy = try(each.value.rules[0].required_status_checks[0].strict_required_status_checks_policy, null)
+      do_not_enforce_on_create             = try(each.value.rules[0].required_status_checks[0].do_not_enforce_on_create, null)
+
+      dynamic "required_check" {
+        for_each = try(each.value.rules[0].required_status_checks[0].required_check, [])
         content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
+          context        = required_check.context
+          integration_id = try(required_check.integration_id, null)
         }
       }
+    }
 
-      dynamic "commit_author_email_pattern" {
-        for_each = try(rules.value.commit_author_email_pattern, [])
+    dynamic "tag_name_pattern" {
+      for_each = try(each.value.rules[0].tag_name_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    required_code_scanning {
+      dynamic "required_code_scanning_tool" {
+        for_each = try(each.value.rules[0].required_code_scanning[0].required_code_scanning_tool, [])
         content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      dynamic "commit_message_pattern" {
-        for_each = try(rules.value.commit_message_pattern, [])
-        content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      dynamic "committer_email_pattern" {
-        for_each = try(rules.value.committer_email_pattern, [])
-        content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      dynamic "merge_queue" {
-        for_each = try(rules.value.merge_queue, [])
-        content {
-          check_response_timeout_minutes    = try(merge_queue.value.check_response_timeout_minutes, 60)
-          grouping_strategy                 = try(merge_queue.value.grouping_strategy, "ALLGREEN")
-          max_entries_to_build              = try(merge_queue.value.max_entries_to_build, 5)
-          max_entries_to_merge              = try(merge_queue.value.max_entries_to_merge, 5)
-          merge_method                      = try(merge_queue.value.merge_method, "MERGE")
-          min_entries_to_merge              = try(merge_queue.value.min_entries_to_merge, 1)
-          min_entries_to_merge_wait_minutes = try(merge_queue.value.min_entries_to_merge_wait_minutes, 5)
-        }
-      }
-
-      dynamic "pull_request" {
-        for_each = try(rules.value.pull_request, [])
-        content {
-          dismiss_stale_reviews_on_push     = try(pull_request.dismiss_stale_reviews_on_push, null)
-          require_code_owner_review         = try(pull_request.require_code_owner_review, null)
-          require_last_push_approval        = try(pull_request.require_last_push_approval, null)
-          required_approving_review_count   = try(pull_request.required_approving_review_count, null)
-          required_review_thread_resolution = try(pull_request.required_review_thread_resolution, null)
-        }
-      }
-
-      dynamic "required_deployments" {
-        for_each = try(rules.value.required_deployments, [])
-        content {
-          required_deployment_environments = try(required_deployments.required_deployment_environments, [])
-        }
-      }
-
-      required_status_checks {
-        strict_required_status_checks_policy = try(rules.value.required_status_checks[0].strict_required_status_checks_policy, null)
-        do_not_enforce_on_create             = try(rules.value.required_status_checks[0].do_not_enforce_on_create, null)
-
-        dynamic "required_check" {
-          for_each = try(rules.value.required_status_checks[0].required_check, [])
-          content {
-            context        = required_check.context
-            integration_id = try(required_check.integration_id, null)
-          }
-        }
-      }
-
-      dynamic "tag_name_pattern" {
-        for_each = try(rules.value.tag_name_pattern, [])
-        content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      required_code_scanning {
-        dynamic "required_code_scanning_tool" {
-          for_each = try(rules.value.required_code_scanning[0].required_code_scanning_tool, [])
-          content {
-            alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-            security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-            tool                      = required_code_scanning_tool.tool
-          }
+          alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
+          security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
+          tool                      = required_code_scanning_tool.tool
         }
       }
     }
@@ -411,108 +408,105 @@ resource "github_organization_ruleset" "this" {
   target      = try(each.value.target, "branch")
   enforcement = try(each.value.enforcement, "active")
 
-  dynamic "rules" {
-    for_each = try(each.value.rules, [])
-    content {
-      creation                = try(rules.value.creation, null)
-      deletion                = try(rules.value.deletion, null)
-      non_fast_forward        = try(rules.value.non_fast_forward, null)
-      required_linear_history = try(rules.value.required_linear_history, null)
-      required_signatures     = try(rules.value.required_signatures, null)
-      update                  = try(rules.value.update, null)
+  rules {
+    creation                = try(each.value.rules[0].creation, null)
+    deletion                = try(each.value.rules[0].deletion, null)
+    non_fast_forward        = try(each.value.rules[0].non_fast_forward, null)
+    required_linear_history = try(each.value.rules[0].required_linear_history, null)
+    required_signatures     = try(each.value.rules[0].required_signatures, null)
+    update                  = try(each.value.rules[0].update, null)
 
-      dynamic "branch_name_pattern" {
-        for_each = try(rules.value.branch_name_pattern, [])
+    dynamic "branch_name_pattern" {
+      for_each = try(each.value.rules[0].branch_name_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "commit_author_email_pattern" {
+      for_each = try(each.value.rules[0].commit_author_email_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "commit_message_pattern" {
+      for_each = try(each.value.rules[0].commit_message_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "committer_email_pattern" {
+      for_each = try(each.value.rules[0].committer_email_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    dynamic "pull_request" {
+      for_each = try(each.value.rules[0].pull_request, [])
+      content {
+        dismiss_stale_reviews_on_push     = try(pull_request.dismiss_stale_reviews_on_push, null)
+        require_code_owner_review         = try(pull_request.require_code_owner_review, null)
+        require_last_push_approval        = try(pull_request.require_last_push_approval, null)
+        required_approving_review_count   = try(pull_request.required_approving_review_count, null)
+        required_review_thread_resolution = try(pull_request.required_review_thread_resolution, null)
+      }
+    }
+
+    required_status_checks {
+      strict_required_status_checks_policy = try(each.value.rules[0].required_status_checks[0].strict_required_status_checks_policy, null)
+
+      dynamic "required_check" {
+        for_each = try(each.value.rules[0].required_status_checks[0].required_check, [])
         content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
+          context        = required_check.context
+          integration_id = try(required_check.integration_id, null)
         }
       }
+    }
 
-      dynamic "commit_author_email_pattern" {
-        for_each = try(rules.value.commit_author_email_pattern, [])
+    required_workflows {
+      dynamic "required_workflow" {
+        for_each = try(each.value.rules[0].required_workflows[0].required_workflow, [])
         content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
+          repository_id = required_workflow.repository_id
+          path          = required_workflow.path
+          ref           = try(required_workflow.ref, null)
         }
       }
+    }
 
-      dynamic "commit_message_pattern" {
-        for_each = try(rules.value.commit_message_pattern, [])
+    dynamic "tag_name_pattern" {
+      for_each = try(each.value.rules[0].tag_name_pattern, [])
+      content {
+        name     = try(branch_name_pattern.value.name, null)
+        negate   = try(branch_name_pattern.value.negate, null)
+        operator = try(branch_name_pattern.value.operator, "regex")
+        pattern  = branch_name_pattern.value.pattern
+      }
+    }
+
+    required_code_scanning {
+      dynamic "required_code_scanning_tool" {
+        for_each = try(each.value.rules[0].required_code_scanning[0].required_code_scanning_tool, [])
         content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      dynamic "committer_email_pattern" {
-        for_each = try(rules.value.committer_email_pattern, [])
-        content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      dynamic "pull_request" {
-        for_each = try(rules.value.pull_request, [])
-        content {
-          dismiss_stale_reviews_on_push     = try(pull_request.dismiss_stale_reviews_on_push, null)
-          require_code_owner_review         = try(pull_request.require_code_owner_review, null)
-          require_last_push_approval        = try(pull_request.require_last_push_approval, null)
-          required_approving_review_count   = try(pull_request.required_approving_review_count, null)
-          required_review_thread_resolution = try(pull_request.required_review_thread_resolution, null)
-        }
-      }
-
-      required_status_checks {
-        strict_required_status_checks_policy = try(rules.value.required_status_checks[0].strict_required_status_checks_policy, null)
-
-        dynamic "required_check" {
-          for_each = try(rules.value.required_status_checks[0].required_check, [])
-          content {
-            context        = required_check.context
-            integration_id = try(required_check.integration_id, null)
-          }
-        }
-      }
-
-      required_workflows {
-        dynamic "required_workflow" {
-          for_each = try(rules.value.required_workflows[0].required_workflow, [])
-          content {
-            repository_id = required_workflow.repository_id
-            path          = required_workflow.path
-            ref           = try(required_workflow.ref, null)
-          }
-        }
-      }
-
-      dynamic "tag_name_pattern" {
-        for_each = try(rules.value.tag_name_pattern, [])
-        content {
-          name     = try(branch_name_pattern.value.name, null)
-          negate   = try(branch_name_pattern.value.negate, null)
-          operator = try(branch_name_pattern.value.operator, "regex")
-          pattern  = branch_name_pattern.value.pattern
-        }
-      }
-
-      required_code_scanning {
-        dynamic "required_code_scanning_tool" {
-          for_each = try(rules.value.required_code_scanning[0].required_code_scanning_tool, [])
-          content {
-            alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
-            security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
-            tool                      = required_code_scanning_tool.tool
-          }
+          alerts_threshold          = try(required_code_scanning_tool.alerts_threshold, "errors")
+          security_alerts_threshold = try(required_code_scanning_tool.security_alerts_threshold, "critical")
+          tool                      = required_code_scanning_tool.tool
         }
       }
     }
