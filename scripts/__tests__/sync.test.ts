@@ -5,7 +5,6 @@ import * as YAML from 'yaml'
 import {Config} from '../src/yaml/config.js'
 import {State} from '../src/terraform/state.js'
 import {sync} from '../src/sync.js'
-import {Resource} from '../src/resources/resource.js'
 import {RepositoryFile} from '../src/resources/repository-file.js'
 import {StateSchema} from '../src/terraform/schema.js'
 import {toggleArchivedRepos} from '../src/actions/shared/toggle-archived-repos.js'
@@ -61,19 +60,25 @@ describe('sync', () => {
       }
     })
 
-    tfConfig.addResource = async (id: string, resource: Resource) => {
-      tfSource?.values?.root_module?.resources?.push({
+    const resources = [
+      {
         mode: 'managed',
-        index: id,
-        address: resource.getStateAddress(),
+        index: 'blog:README.md',
+        address: 'github_repository_file.this["blog/readme.md"]',
         type: RepositoryFile.StateType,
         values: {
-          repository: (resource as RepositoryFile).repository,
-          file: (resource as RepositoryFile).file,
-          content: (resource as RepositoryFile).content ?? '',
-          ...resource
+          repository: 'blog',
+          file: 'README.md',
+          content: 'Hello, world!'
         }
-      })
+      }
+    ]
+
+    tfConfig.addResourceAt = async (_id: string, address: string) => {
+      const resource = resources.find(r => r.address === address)
+      if (resource !== undefined) {
+        tfSource?.values?.root_module?.resources?.push(resource)
+      }
     }
 
     const expectedYamlConfig = new Config(YAML.stringify(yamlSource))

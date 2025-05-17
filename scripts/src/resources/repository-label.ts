@@ -6,7 +6,7 @@ import {Id, StateSchema} from '../terraform/schema.js'
 
 @Exclude()
 export class RepositoryLabel implements Resource {
-  static StateType = 'github_issue_label' as const
+  static StateType = 'github_issue_labels' as const
   static async FromGitHub(
     _labels: RepositoryLabel[]
   ): Promise<[Id, RepositoryLabel][]> {
@@ -15,7 +15,7 @@ export class RepositoryLabel implements Resource {
     const result: [Id, RepositoryLabel][] = []
     for (const label of labels) {
       result.push([
-        `${label.repository.name}:${label.label.name}`,
+        label.repository.name,
         new RepositoryLabel(label.repository.name, label.label.name)
       ])
     }
@@ -29,15 +29,14 @@ export class RepositoryLabel implements Resource {
           resource.type === RepositoryLabel.StateType &&
           resource.mode === 'managed'
         ) {
-          labels.push(
-            plainToClassFromExist(
-              new RepositoryLabel(
-                resource.values.repository,
-                resource.values.name
-              ),
-              resource.values
+          for (const label of resource.values.label ?? []) {
+            labels.push(
+              plainToClassFromExist(
+                new RepositoryLabel(resource.values.repository, label.name),
+                label
+              )
             )
-          )
+          }
         }
       }
     }
@@ -85,6 +84,6 @@ export class RepositoryLabel implements Resource {
   }
 
   getStateAddress(): string {
-    return `${RepositoryLabel.StateType}.this["${this.repository}:${this.name}"]`
+    return `${RepositoryLabel.StateType}.this["${this.repository}"]`
   }
 }
