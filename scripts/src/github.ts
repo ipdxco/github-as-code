@@ -102,16 +102,21 @@ export class GitHub {
       // NOTE: We import these dynamically so that they can be mocked
       const {createAppAuth} = await import('@octokit/auth-app')
       const {Octokit} = await import('@octokit/rest')
-      const auth = createAppAuth({
-        appId: env.GITHUB_APP_ID,
-        privateKey: env.GITHUB_APP_PEM_FILE
-      })
-      const installationAuth = await auth({
-        type: 'installation',
-        installationId: env.GITHUB_APP_INSTALLATION_ID
-      })
+      let token = env.GITHUB_TOKEN;
+      if (token == '') {
+        const auth = createAppAuth({
+          appId: env.GITHUB_APP_ID,
+          privateKey: env.GITHUB_APP_PEM_FILE
+        })
+        const installationAuth = await auth({
+          type: 'installation',
+          installationId: env.GITHUB_APP_INSTALLATION_ID
+        })
+        token = installationAuth.token;
+      }
+
       const client = new (Octokit.plugin(retry, throttling))({
-        auth: installationAuth.token,
+        auth: token,
         throttle: {
           onRateLimit: (
             retryAfter: number,
