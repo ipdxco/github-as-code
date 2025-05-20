@@ -54,6 +54,7 @@ jobs:
       TF_WORKSPACE_OPT: ${{ matrix.workspace }}
       AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
       GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
@@ -107,6 +108,9 @@ jobs:
     steps:
       - name: Generate app token
         id: token
+        env:
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
+        if: ${{ ! env.GITHUB_TOKEN }}
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.RW_GITHUB_APP_ID }}
@@ -116,7 +120,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ steps.token.outputs.token }}
+          token: ${{ secrets.RW_GITHUB_TOKEN || steps.token.outputs.token }}
       - uses: ./.github/actions/git-config-user
       - env:
           WORKSPACES: ${{ needs.prepare.outputs.workspaces }}

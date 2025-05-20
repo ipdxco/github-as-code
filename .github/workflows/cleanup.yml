@@ -31,6 +31,7 @@ jobs:
     name: Clean Up
     runs-on: ubuntu-latest
     env:
+      GITHUB_TOKEN: ${{ secrets.RO_GITHUB_TOKEN }}
       GITHUB_APP_ID: ${{ secrets.RO_GITHUB_APP_ID }}
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
       GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
