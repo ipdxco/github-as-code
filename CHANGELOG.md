@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updated upload and download artifacts actions to v4
 
 ### Fixed
+- include labels in the config resources only if they are explicitly defined in the config
 - always assert state type when creating resources from state
 - do not break long file content lines
 - source TF_WORKING_DIR from env helper instead of process.env in locals helper

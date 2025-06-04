@@ -138,7 +138,7 @@ locals {
                   name = name
                 })
               ]
-            }
+            } if contains(keys(config), "labels")
           ] : lower("${item.repository}") => item
         }
       }
