@@ -25,6 +25,7 @@ jobs:
         working-directory: scripts
       - name: Update PRs
         env:
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
           GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
           GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
           GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
