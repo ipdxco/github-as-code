@@ -37,7 +37,7 @@ jobs:
       TF_WORKSPACE: ${{ github.repository_owner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Initialize scripts
         run: npm install && npm run build
         working-directory: scripts
