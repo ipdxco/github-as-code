@@ -108,7 +108,7 @@ jobs:
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
       - name: Upload YAML config
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.TF_WORKSPACE }}.yml
           path: github/${{ env.TF_WORKSPACE }}.yml
