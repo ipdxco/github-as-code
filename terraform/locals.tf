@@ -173,7 +173,7 @@ locals {
     "github_repository" = {
       for item in [
         for repository, config in local.sources.config.github_repository.this :
-        try(config.archived, false) ? {
+        try(config.archived, false) && contains(keys(local.sources), item.source) ? {
           source   = "state"
           index    = repository
           archived = config.archived
@@ -187,7 +187,7 @@ locals {
     "github_repository_collaborator" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
-          try(config.archived, false) ? [
+          try(config.archived, false) && contains(keys(local.sources), item.source) ? [
             for member, config in try(local.sources.state.github_repository_collaborator.this, {}) : {
               source = "state"
               index  = member
@@ -204,7 +204,7 @@ locals {
     "github_branch_protection" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
-          try(config.archived, false) ? [
+          try(config.archived, false) && contains(keys(local.sources), item.source) ? [
             for branch_protection, config in try(local.sources.state.github_branch_protection.this, {}) : {
               source = "state"
               index  = branch_protection
@@ -229,7 +229,7 @@ locals {
     "github_team_repository" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
-          try(config.archived, false) ? [
+          try(config.archived, false) && contains(keys(local.sources), item.source) ? [
             for team, config in try(local.sources.state.github_team_repository.this, {}) : {
               source = "state"
               index  = team
@@ -254,7 +254,7 @@ locals {
     "github_repository_file" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
-          try(config.archived, false) ? [
+          try(config.archived, false) && contains(keys(local.sources), item.source) ? [
             for file, config in try(local.sources.state.github_repository_file.this, {}) : {
               source = "state"
               index  = file
@@ -271,7 +271,7 @@ locals {
     "github_issue_labels" = {
       for item in flatten([
         for repository, config in local.sources.config.github_repository.this : flatten([
-          try(config.archived, false) ? [
+          try(config.archived, false) && contains(keys(local.sources), item.source) ? [
             for labelsRepository, config in try(local.sources.state.github_issue_labels.this, {}) : {
               source = "state"
               index  = labelsRepository
