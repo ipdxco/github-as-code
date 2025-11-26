@@ -20,6 +20,9 @@ importers:
       '@octokit/auth-app':
         specifier: ^7.2.0
         version: 7.2.0
+      '@octokit/core':
+        specifier: ^6.1.5
+        version: 6.1.5
       '@octokit/graphql':
         specifier: ^8.2.2
         version: 8.2.2
