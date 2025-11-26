@@ -81,11 +81,20 @@ jobs:
         run: |
           terraform show -json > $TF_WORKSPACE.tfstate.json
         working-directory: terraform
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js lts/*
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: false
       - name: Sync
         run: |
-          npm ci
-          npm run build
-          npm run main
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run main
         working-directory: scripts
       - uses: ./.github/actions/git-config-user
       - env:

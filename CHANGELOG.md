@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - tf: to prevent destroy of membership and repository resources
 - apply: find sha for plan using proper credentials
 - updated upload and download artifacts actions to v4
+- switched from npm to pnpm
 
 ### Fixed
 - include labels in the config resources only if they are explicitly defined in the config
