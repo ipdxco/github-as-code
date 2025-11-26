@@ -130,7 +130,7 @@ jobs:
         run: terraform init
         working-directory: terraform
       - name: Download terraform plans
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: terraform
       - name: Show terraform plans
