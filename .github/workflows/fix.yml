@@ -35,7 +35,7 @@ jobs:
       skip-fix: ${{ steps.skip-fix.outputs.this }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -82,7 +82,7 @@ jobs:
       TF_VAR_write_delay_ms: 300
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - if: github.event_name == 'pull_request_target'
         env:
           NUMBER: ${{ github.event.pull_request.number }}
@@ -151,14 +151,14 @@ jobs:
           installation_retrieval_payload: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           token: ${{ steps.token.outputs.token }}
           path: head
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: base
       - name: Download YAML configs
