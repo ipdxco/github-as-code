@@ -12,6 +12,10 @@ on:
         description: Whether to acquire terraform state lock during sync
         required: false
         default: "true"
+      refresh:
+        description: Refresh terraform state before sync
+        required: false
+        default: "false"
 
 jobs:
   prepare:
@@ -77,6 +81,11 @@ jobs:
           terraform workspace select "${TF_WORKSPACE_OPT}" || terraform workspace new "${TF_WORKSPACE_OPT}"
           echo "TF_WORKSPACE=${TF_WORKSPACE_OPT}" >> $GITHUB_ENV
         working-directory: terraform
+      - name: Refresh terraform state
+        if: ${{ github.event.inputs.refresh == 'true' }}
+        run:
+          echo "{}" > $TF_WORKSPACE.tfstate.json
+          terraform apply -refresh-only -auto-approve -lock=$TF_LOCK
       - name: Pull terraform state
         run: |
           terraform show -json > $TF_WORKSPACE.tfstate.json
