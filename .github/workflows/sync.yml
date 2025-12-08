@@ -85,7 +85,7 @@ jobs:
         if: ${{ github.event.inputs.refresh == 'true' }}
         run:
           echo "{}" > $TF_WORKSPACE.tfstate.json
-          terraform apply -refresh-only -auto-approve -lock=$TF_LOCK
+          terraform refresh -lock=$TF_LOCK
       - name: Pull terraform state
         run: |
           terraform show -json > $TF_WORKSPACE.tfstate.json
