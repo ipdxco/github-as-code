@@ -166,7 +166,9 @@ jobs:
         with:
           path: artifacts
       - name: Copy YAML configs
-        run: cp artifacts/**/*.yml head/github
+        run: |
+          shopt -s globstar
+          cp artifacts/**/*.yml head/github
       - name: Check if github was modified
         id: github-modified
         run: |
