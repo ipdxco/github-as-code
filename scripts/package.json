@@ -46,5 +46,11 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "glob": "^11.1.0",
+      "js-yaml": "^4.1.1"
+    }
   }
 }

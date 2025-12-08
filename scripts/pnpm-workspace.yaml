@@ -1,1 +1,4 @@
 minimumReleaseAge: 40320
+minimumReleaseAgeExclude:
+  - glob
+  - js-yaml
