@@ -74,7 +74,7 @@ resource "github_repository" "this" {
   dynamic "pages" {
     for_each = try(each.value.pages, [])
     content {
-      build_type = try(pages.value["build_type"], null)
+      build_type = trimspace(try(pages.value["build_type"], "")) != "" ? pages.value["build_type"] : null
       cname      = try(pages.value["cname"], null)
       dynamic "source" {
         for_each = pages.value["source"]

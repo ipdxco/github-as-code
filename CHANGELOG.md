@@ -73,3 +73,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - how sync handles pending invitations (now it does not ignore them)
 - removed references to other resources from for_each expressions
 - downgraded terraform to 1.2.9 to fix an import bug affecting for_each expressions
+- refactored pages build_type assignment to trim whitespace
