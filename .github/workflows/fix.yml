@@ -144,6 +144,9 @@ jobs:
     steps:
       - name: Generate app token
         id: token
+        env:
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
+        if: ${{ ! env.GITHUB_TOKEN }}
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.RW_GITHUB_APP_ID }}
@@ -155,7 +158,7 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          token: ${{ steps.token.outputs.token }}
+          token: ${{ secrets.RW_GITHUB_TOKEN || steps.token.outputs.token }}
           path: head
       - name: Checkout
         uses: actions/checkout@v5
@@ -195,7 +198,7 @@ jobs:
       - if: steps.github-modified.outputs.this == 'true' && github.event_name != 'pull_request_target'
         uses: ./base/.github/actions/git-push
         env:
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN || steps.token.outputs.token }}
         with:
           suffix: fix
           working-directory: head

@@ -87,7 +87,15 @@
     - [ ] one with read & write policy attached
 - [ ] Modify [terraform/terraform_override.tf](terraform/terraform_override.tf) to reflect your AWS setup
 
-## GitHub App
+## GitHub API access
+
+There are two possible ways for GitHub API access:
+- With GitHub Apps, which has the benefit of not being tied to a GitHub user
+- [experimental] With personal access tokens for a GitHub user, which has the benefit of more granular permissions, but is limited in functionality and requires more manual work:
+  - Only teams and team memberships are supported right now
+  - The GitHub user must be a team maintainer for any teams it should manage
+
+### GitHub App
 
 *NOTE*: If you already have a GitHub App with required permissions you can skip the app creation step.
 
@@ -114,18 +122,50 @@
     </details>
 - [ ] [Install the GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organization for `All repositories`
 
+### Personal access token
+
+- [ ] Create a separate dedicated GitHub account for GitHub Management. It is not recommended to use your personal account.
+- [ ] [Create two fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) for the dedicated GitHub account - *they are going to be used by terraform and GitHub Actions to authenticate with GitHub*:
+  - Resource owner: The GitHub Organization
+  - Expiration: 366 days (you can also [remove the limit](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/setting-a-personal-access-token-policy-for-your-organization#enforcing-a-maximum-lifetime-policy-for-personal-access-tokens)
+  - Repository access:
+    - Only select repositories: Select the GitHub Management repository
+  - Permissions:
+    <details><summary>read-only</summary>
+
+    - `Repository permissions`
+        - `Contents`: `Read-only`
+        - `Metadata`: `Read-only`
+    - `Organization permissions`
+        - `Members`: `Read-only`
+    </details>
+    <details><summary>read & write</summary>
+
+    - `Repository permissions`
+        - `Contents`: `Read & Write`
+        - `Metadata`: `Read-only`
+    - `Organization permissions`
+        - `Members`: `Read & Write`
+    </details>
+- [ ] Switch to an organization owner account and approve the tokens in the organizations settings, under "Personal access tokens > Pending requests"
+- [ ] Give the dedicated GitHub account write access to the GitHub Management Repository
+
 ## GitHub Repository Secrets
 
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organization and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organization name) - *these secrets are read by the GitHub Action workflows*
-    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
-       - [ ] `RO_GITHUB_APP_ID`
-       - [ ] `RW_GITHUB_APP_ID`
-    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
-       - [ ] `RO_GITHUB_APP_INSTALLATION_ID` (or `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
-       - [ ] `RW_GITHUB_APP_INSTALLATION_ID` (or `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
-    - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
-       - [ ] `RO_GITHUB_APP_PEM_FILE`
-       - [ ] `RW_GITHUB_APP_PEM_FILE`
+    - If you use a GitHub App:
+      - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
+         - [ ] `RO_GITHUB_APP_ID`
+         - [ ] `RW_GITHUB_APP_ID`
+      - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/installations`, click `Configure` next to the `$GITHUB_APP_NAME` and copy the numeric suffix from the URL
+         - [ ] `RO_GITHUB_APP_INSTALLATION_ID` (or `RO_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
+         - [ ] `RW_GITHUB_APP_INSTALLATION_ID` (or `RW_GITHUB_APP_INSTALLATION_ID_$GITHUB_ORGANIZATION_NAME` for organizations other than the repository owner)
+      - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME`, click `Generate a private key` and copy the contents of the downloaded PEM file
+         - [ ] `RO_GITHUB_APP_PEM_FILE`
+         - [ ] `RW_GITHUB_APP_PEM_FILE`
+    - If you use personal access tokens
+      - [ ] `RO_GITHUB_TOKEN`
+      - [ ] `RW_GITHUB_TOKEN`
     - [ ] Use the values generated during [AWS](#aws) setup
        - [ ] `RO_AWS_ACCESS_KEY_ID`
        - [ ] `RW_AWS_ACCESS_KEY_ID`
