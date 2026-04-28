@@ -122,7 +122,13 @@ locals {
               for file, config in lookup(config, "files", {}) : merge(config, {
                 repository = repository
                 file       = file
-                content    = try(file("${path.module}/../files/${config.content}"), config.content)
+                content = (
+                  try(fileexists("${path.module}/../files/${config.content}"), false) &&
+                  try(startswith(
+                    abspath("${path.module}/../files/${config.content}"),
+                    "${abspath("${path.module}/../files")}/"
+                  ), false)
+                ) ? file("${path.module}/../files/${config.content}") : config.content
               })
             ]
           ]) : lower("${item.repository}/${item.file}") => item
