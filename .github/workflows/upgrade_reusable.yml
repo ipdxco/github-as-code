@@ -9,12 +9,14 @@ on:
         description: The github-mgmt-template ref to upgrade to
         default: master
     secrets:
+      RW_GITHUB_TOKEN:
+        required: false
       GITHUB_APP_ID:
-        required: true
+        required: false
       GITHUB_APP_INSTALLATION_ID:
-        required: true
+        required: false
       GITHUB_APP_PEM_FILE:
-        required: true
+        required: false
 
 jobs:
   upgrade:
@@ -26,6 +28,9 @@ jobs:
     steps:
       - name: Generate app token
         id: token
+        env:
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
+        if: ${{ ! env.GITHUB_TOKEN }}
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
           app_id: ${{ secrets.GITHUB_APP_ID }}
@@ -42,7 +47,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           path: github-mgmt
-          token: ${{ steps.token.outputs.token }}
+          token: ${{ secrets.RW_GITHUB_TOKEN || steps.token.outputs.token }}
       - name: Copy files from the template
         run: |
           for file in $(git ls-files ':!:github/*.yml' ':!:scripts/src/actions/fix-yaml-config.ts' ':!:terraform/*_override.tf' ':!:.github/dependabot.yml' ':!:.github/workflows/*_reusable.yml' ':!:README.md'); do
@@ -57,7 +62,7 @@ jobs:
         working-directory: github-mgmt
       - uses: ./github-mgmt-template/.github/actions/git-push
         env:
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN || steps.token.outputs.token }}
         with:
           suffix: upgrade
           working-directory: github-mgmt

@@ -41,6 +41,7 @@ jobs:
       - name: Find sha for plan
         id: sha
         env:
+          GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
           GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
           GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
           GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
@@ -64,6 +65,7 @@ jobs:
       TF_WORKSPACE: ${{ matrix.workspace }}
       AWS_ACCESS_KEY_ID: ${{ secrets.RW_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.RW_AWS_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.RW_GITHUB_TOKEN }}
       GITHUB_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', matrix.workspace)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
       GITHUB_APP_PEM_FILE: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
