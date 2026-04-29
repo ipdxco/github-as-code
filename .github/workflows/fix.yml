@@ -162,7 +162,7 @@ jobs:
         with:
           path: base
       - name: Download YAML configs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
       - name: Copy YAML configs
