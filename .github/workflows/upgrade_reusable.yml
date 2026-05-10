@@ -34,13 +34,13 @@ jobs:
           installation_retrieval_payload: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GITHUB_APP_PEM_FILE }}
       - name: Checkout GitHub Management template
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: ipdxco/github-as-code
           path: github-as-code-template
           ref: ${{ inputs.ref }}
       - name: Checkout GitHub Management
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: github-mgmt
           token: ${{ steps.token.outputs.token }}

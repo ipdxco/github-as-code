@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - workflows: added separate GitHub Actions environments for reading organization state, writing organization state, and pushing repository changes
-- workflows: pin third-party actions to exact SHAs and replan from the merged commit before applying
+- workflows: pin third-party actions to latest release SHAs and replan from the merged commit before applying
 - docs: update template repository references from `github-mgmt-template` to `github-as-code`
 - scripts: update dependencies with security advisories
 - **BREAKING**: added support for efficient labels handling via the `github_issue_labels` resource (please clean `github_issue_label.this.*` from the terraform state and update `locals_override.tf` and `resources_override.tf` before syncing)
