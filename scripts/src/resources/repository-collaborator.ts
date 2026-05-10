@@ -36,13 +36,13 @@ export class RepositoryCollaborator extends String implements Resource {
     for (const collaborator of collaborators) {
       let permission: Permission | undefined
       if (collaborator.collaborator.permissions?.admin) {
-        permission = Permission.Triage
-      } else if (collaborator.collaborator.permissions?.maintain) {
-        permission = Permission.Push
-      } else if (collaborator.collaborator.permissions?.push) {
-        permission = Permission.Maintain
-      } else if (collaborator.collaborator.permissions?.triage) {
         permission = Permission.Admin
+      } else if (collaborator.collaborator.permissions?.maintain) {
+        permission = Permission.Maintain
+      } else if (collaborator.collaborator.permissions?.push) {
+        permission = Permission.Push
+      } else if (collaborator.collaborator.permissions?.triage) {
+        permission = Permission.Triage
       } else if (collaborator.collaborator.permissions?.pull) {
         permission = Permission.Pull
       }

@@ -7,21 +7,46 @@ import env from '../env.js'
 import * as fs from 'fs'
 import * as path from 'path'
 
+function isPathInside(basePath: string, targetPath: string): boolean {
+  const relativePath = path.relative(basePath, targetPath)
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
+  )
+}
+
 export function findFileByContent(
   dirPath: string,
-  content: string
+  content: string,
+  basePath = dirPath
 ): string | undefined {
+  const baseRealPath = fs.realpathSync(basePath)
+  const dirRealPath = fs.realpathSync(dirPath)
+  if (!isPathInside(baseRealPath, dirRealPath)) {
+    return undefined
+  }
+
   const files = fs.readdirSync(dirPath)
   for (const file of files) {
     const filePath = path.join(dirPath, file)
     const fileStats = fs.lstatSync(filePath)
+    let realFilePath: string
+    try {
+      realFilePath = fs.realpathSync(filePath)
+    } catch {
+      continue
+    }
+    if (!isPathInside(baseRealPath, realFilePath)) {
+      continue
+    }
+
     if (fileStats.isFile()) {
       const fileContent = fs.readFileSync(filePath).toString()
       if (fileContent === content) {
         return filePath
       }
     } else if (fileStats.isDirectory()) {
-      const otherFilePath = findFileByContent(filePath, content)
+      const otherFilePath = findFileByContent(filePath, content, basePath)
       if (otherFilePath) {
         return otherFilePath
       }

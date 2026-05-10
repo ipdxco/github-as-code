@@ -27,7 +27,7 @@ resource "aws_s3_bucket" "this" {
 
   tags = {
     Name = "GitHub Management"
-    Url  = "https://github.com/pl-strflt/github-mgmt-template"
+    Url  = "https://github.com/ipdxco/github-as-code"
   }
 }
 
@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "this" {
 
   tags = {
     Name = "GitHub Management"
-    Url  = "https://github.com/pl-strflt/github-mgmt-template"
+    Url  = "https://github.com/ipdxco/github-as-code"
   }
 }
 
@@ -67,7 +67,7 @@ resource "aws_iam_user" "ro" {
 
   tags = {
     Name = "GitHub Management"
-    Url  = "https://github.com/pl-strflt/github-mgmt-template"
+    Url  = "https://github.com/ipdxco/github-as-code"
   }
 }
 
@@ -76,7 +76,7 @@ resource "aws_iam_user" "rw" {
 
   tags = {
     Name = "GitHub Management"
-    Url  = "https://github.com/pl-strflt/github-mgmt-template"
+    Url  = "https://github.com/ipdxco/github-as-code"
   }
 }
 

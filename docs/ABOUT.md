@@ -1,7 +1,7 @@
 # Key features
 
 - 2-way sync between GitHub Management and the actual GitHub configuration (including bootstrapping)
-- PR-based configuration change review process which guarantees the reviewed plan is the one being applied
+- PR-based configuration change review process which verifies the reviewed plan still matches the plan generated from the merged commit before applying
 - control over what resources and what properties are managed by GitHub Management
 - auto-upgrades from the template repository
 
@@ -27,7 +27,7 @@ The workflow for introducing changes to GitHub via YAML configuration file is as
 1. Review the plan.
 1. Merge the PR and wait for the GitHub Action workflow triggered on pushes to the default branch to apply it.
 
-Neither creating the terraform plan nor applying it refreshes the underlying terraform state i.e. going through this workflow does **NOT** ask GitHub if the actual GitHub configuration state has changed. This makes the workflow fast and rate limit friendly because the number of requests to GitHub is minimised. This can result in the plan failing to be applied, e.g. if the underlying resource has been deleted. This assumes that YAML configuration is the main source of truth for GitHub configuration state. The plans that are created during the PR GitHub Action workflow are applied exactly as-is after the merge.
+Neither creating the terraform plan nor applying it refreshes the underlying terraform state i.e. going through this workflow does **NOT** ask GitHub if the actual GitHub configuration state has changed. This makes the workflow fast and rate limit friendly because the number of requests to GitHub is minimised. This can result in the plan failing to be applied, e.g. if the underlying resource has been deleted. This assumes that YAML configuration is the main source of truth for GitHub configuration state. The plans that are created during the PR GitHub Action workflow are compared against plans regenerated from the merged commit before applying.
 
 The workflow for synchronising the current GitHub configuration state with YAML configuration file is as follows:
 1. Run the `Sync` GitHub Action workflow and wait for the PR to be created.

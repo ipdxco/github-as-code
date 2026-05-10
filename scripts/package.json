@@ -17,9 +17,9 @@
     "main": "node lib/main.js"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.1",
+    "@actions/core": "^3.0.0",
+    "@actions/exec": "^3.0.0",
+    "@actions/github": "^9.1.0",
     "@octokit/auth-app": "^8.1.2",
     "@octokit/core": "^7.0.6",
     "@octokit/graphql": "^9.0.3",
@@ -31,7 +31,7 @@
     "deep-diff": "^1.0.2",
     "hcl2-parser": "^1.0.3",
     "reflect-metadata": "^0.2.2",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -46,11 +46,5 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4"
-  },
-  "pnpm": {
-    "overrides": {
-      "glob": "^11.1.0",
-      "js-yaml": "^4.1.1"
-    }
   }
 }

@@ -6,7 +6,7 @@ on:
       ref:
         type: string
         required: false
-        description: The github-mgmt-template ref to upgrade to
+        description: The github-as-code ref to upgrade to
         default: master
     secrets:
       GITHUB_APP_ID:
@@ -20,6 +20,7 @@ jobs:
   upgrade:
     name: Upgrade
     runs-on: ubuntu-latest
+    environment: push
     defaults:
       run:
         shell: bash
@@ -33,13 +34,13 @@ jobs:
           installation_retrieval_payload: ${{ secrets.GITHUB_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GITHUB_APP_PEM_FILE }}
       - name: Checkout GitHub Management template
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          repository: pl-strflt/github-mgmt-template
-          path: github-mgmt-template
-          ref: ${{ github.event.inputs.ref }}
+          repository: ipdxco/github-as-code
+          path: github-as-code-template
+          ref: ${{ inputs.ref }}
       - name: Checkout GitHub Management
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: github-mgmt
           token: ${{ steps.token.outputs.token }}
@@ -49,13 +50,13 @@ jobs:
             mkdir -p "../github-mgmt/$(dirname "${file}")"
             cp -f "${file}" "../github-mgmt/${file}"
           done
-        working-directory: github-mgmt-template
-      - uses: ./github-mgmt-template/.github/actions/git-config-user
+        working-directory: github-as-code-template
+      - uses: ./github-as-code-template/.github/actions/git-config-user
       - run: |
           git add --all
           git diff-index --quiet HEAD || git commit --message="upgrade@${GITHUB_RUN_ID}"
         working-directory: github-mgmt
-      - uses: ./github-mgmt-template/.github/actions/git-push
+      - uses: ./github-as-code-template/.github/actions/git-push
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         with:

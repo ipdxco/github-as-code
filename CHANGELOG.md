@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - new args for repositories and branch protection rules
 
 ### Changed
+- workflows: added separate GitHub Actions environments for reading organization state, writing organization state, and pushing repository changes
+- workflows: pin third-party actions to latest release SHAs and replan from the merged commit before applying
+- docs: update template repository references from `github-mgmt-template` to `github-as-code`
+- scripts: update dependencies with security advisories
 - **BREAKING**: added support for efficient labels handling via the `github_issue_labels` resource (please clean `github_issue_label.this.*` from the terraform state and update `locals_override.tf` and `resources_override.tf` before syncing)
 - **BREAKING**: upgraded to terraform 1.12.0 and github provider 6.6.0 (please clean `github_branch_protection.this.*` from the terraform state and update `resources_override.tf` before syncing the upgrade)
 - **BREAKING**: turned scripts into an ESM project (please ensure you remove the following files during the upgrade: `scripts/.eslintignore`, `scripts/.eslintrc.json`, `scripts/jest.config.js`, `jest.d.ts`, `jest.setup.ts`; please update your imports in the `scripts/src/actions/fix-yaml-config.ts` file to include the `.js` extension)
@@ -52,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - switched from npm to pnpm
 
 ### Fixed
+- repository collaborator permission detection during sync
+- GraphQL branch protection lookup now passes repository owner and name as variables
+- workflow-dispatch git user email configuration
+- repository file lookup to avoid escaping the configured files directory
+- setup documentation branch protection example
 - include labels in the config resources only if they are explicitly defined in the config
 - always assert state type when creating resources from state
 - do not break long file content lines
