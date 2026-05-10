@@ -30,13 +30,14 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
         allows_force_pushes: false
         enforce_admins: false
         require_conversation_resolution: false
-        require_signed_commits: false
+        require_signed_commits: true
         required_linear_history: false
         required_pull_request_reviews:
-          dismiss_stale_reviews: false
+          dismiss_stale_reviews: true
           dismissal_restrictions: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
           pull_request_bypassers: [] # This field accepts node IDs (TODO: make this field accept human friendly names too)
           require_code_owner_reviews: false
+          require_last_push_approval: true
           required_approving_review_count: 1
           restrict_dismissals: false
         required_status_checks:
@@ -73,7 +74,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
     default_branch: master
     delete_branch_on_merge: false
     description: GitHub Management
-    homepage_url: https://github.com/pl-strflt/github-mgmt-template
+    homepage_url: https://github.com/ipdxco/github-as-code
     is_template: false
     vulnerability_alerts: false
     archive_on_destroy: true
@@ -86,7 +87,7 @@ repositories: # This group defines repositories (https://registry.terraform.io/p
         branch: master
         path: /docs
     template:
-      owner: pl-strflt
-      repository: github-mgmt-template
+      owner: ipdxco
+      repository: github-as-code
     topics:
       - github

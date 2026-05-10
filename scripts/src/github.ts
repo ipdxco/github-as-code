@@ -251,8 +251,8 @@ export class GitHub {
       }: {repository: {branchProtectionRules: {nodes: {pattern: string}[]}}} =
         await this.client.graphql(
           `
-          {
-            repository(owner: "${env.GITHUB_ORG}", name: "${repository.name}") {
+          query($owner: String!, $name: String!) {
+            repository(owner: $owner, name: $name) {
               branchProtectionRules(first: 100) {
                 nodes {
                   pattern
@@ -260,7 +260,11 @@ export class GitHub {
               }
             }
           }
-        `
+        `,
+          {
+            owner: env.GITHUB_ORG,
+            name: repository.name
+          }
         )
       repositoryBranchProtectionRules.push(
         ...nodes.map(node => ({repository, branchProtectionRule: node}))

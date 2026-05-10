@@ -114,8 +114,9 @@
     </details>
 - [ ] [Install the GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organization for `All repositories`
 
-## GitHub Repository Secrets
+## GitHub Actions Environments and Secrets
 
+- [ ] Create GitHub Actions environments named `read`, `write`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organization and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organization name) - *these secrets are read by the GitHub Action workflows*
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
        - [ ] `RO_GITHUB_APP_ID`
@@ -160,7 +161,7 @@
 - [ ] Manually set values that are impossible to control this value via terraform currently
    - [ ] [Set read repository contents permissions for `GITHUB_TOKEN`](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#setting-the-permissions-of-the-github_token-for-your-repository)
    - [ ] If the repository is public, [require approval for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks)
-   - [ ] If the repository is private, [disable sending write tokens or secrets to worfklows from fork pull requests](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-private-repository-forks)
+   - [ ] If the repository is private, [disable sending write tokens or secrets to workflows from fork pull requests](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-private-repository-forks)
 - [ ] Pull remote changes to the default branch
 - [ ] Enable required PRs, peer reviews, status checks and branch up-to-date check on the repository by making sure [github/$ORGANIZATION_NAME.yml](github/$ORGANIZATION_NAME.yml) contains the following entry:
     ```yaml
@@ -169,11 +170,13 @@
         branch_protection:
           $GITHUB_MGMT_REPOSITORY_DEFAULT_BRANCH:
             required_pull_request_reviews:
+              dismiss_stale_reviews: true
+              require_last_push_approval: true
               required_approving_review_count: 1
             required_status_checks:
               contexts:
                 - Comment
-              strict": true
+              strict: true
     ```
 - [ ] Push the changes to a branch other than the default branch
 

@@ -5,6 +5,13 @@ export interface GitHubConfig {
     name: string
     collaborators?: {
       login: string
+      permissions?: {
+        admin?: boolean
+        maintain?: boolean
+        push?: boolean
+        triage?: boolean
+        pull?: boolean
+      }
     }[]
     branchProtectionRules?: {
       pattern: string
@@ -127,17 +134,20 @@ export function mockGitHub(config: GitHubConfig = {}): void {
             ): Promise<T> {
               return f(opts)
             }
-            async graphql(query: string): Promise<unknown> {
-              // extract owner and repo from query using repository\(owner: \"([^\"]+)\", name: \"([^\"]+)\"\)
-              const match = query.match(
-                /repository\(owner: "([^"]+)", name: "([^"]+)"\)/
-              )
-              if (match === null) {
-                throw new Error(`Could not find repository in query: ${query}`)
+            async graphql(
+              query: string,
+              variables?: {owner: string; name: string}
+            ): Promise<unknown> {
+              if (query.includes('repository(owner: "')) {
+                throw new Error(
+                  `Expected repository variables in query: ${query}`
+                )
               }
-              const [, , repo] = match
+              if (variables === undefined) {
+                throw new Error('Expected GraphQL variables')
+              }
               const nodes =
-                config.repositories?.find(r => r.name === repo)
+                config.repositories?.find(r => r.name === variables.name)
                   ?.branchProtectionRules ?? []
               return {
                 repository: {

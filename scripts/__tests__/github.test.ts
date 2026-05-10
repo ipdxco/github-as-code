@@ -4,6 +4,10 @@ import {before, describe, it} from 'node:test'
 import assert from 'node:assert'
 import {mockGitHub} from './github.js'
 import {GitHub} from '../src/github.js'
+import {
+  Permission,
+  RepositoryCollaborator
+} from '../src/resources/repository-collaborator.js'
 
 describe('github', () => {
   let github: GitHub
@@ -40,9 +44,6 @@ describe('github', () => {
           collaborators: [
             {
               login: 'ignored'
-            },
-            {
-              login: 'unignored'
             }
           ],
           invitations: [
@@ -77,7 +78,40 @@ describe('github', () => {
               login: 'ignored'
             },
             {
-              login: 'unignored'
+              login: 'admin',
+              permissions: {
+                admin: true
+              }
+            },
+            {
+              login: 'maintain',
+              permissions: {
+                maintain: true
+              }
+            },
+            {
+              login: 'push',
+              permissions: {
+                push: true
+              }
+            },
+            {
+              login: 'triage',
+              permissions: {
+                triage: true
+              }
+            },
+            {
+              login: 'pull',
+              permissions: {
+                pull: true
+              }
+            },
+            {
+              login: 'unignored',
+              permissions: {
+                pull: true
+              }
             }
           ],
           invitations: [
@@ -189,6 +223,22 @@ describe('github', () => {
     assert.ok(collaborators.length > 0)
     assert.ok(!collaborators.some(c => c.repository.name === 'ignored'))
     assert.ok(!collaborators.some(c => c.collaborator.login === 'ignored'))
+  })
+
+  it('maps repository collaborator permissions', async () => {
+    const collaborators = await RepositoryCollaborator.FromGitHub([])
+    const permissionsByUsername = new Map(
+      collaborators.map(([, collaborator]) => [
+        collaborator.username,
+        collaborator.permission
+      ])
+    )
+
+    assert.equal(permissionsByUsername.get('admin'), Permission.Admin)
+    assert.equal(permissionsByUsername.get('maintain'), Permission.Maintain)
+    assert.equal(permissionsByUsername.get('push'), Permission.Push)
+    assert.equal(permissionsByUsername.get('triage'), Permission.Triage)
+    assert.equal(permissionsByUsername.get('pull'), Permission.Pull)
   })
 
   it('listRepositoryInvitations', async () => {

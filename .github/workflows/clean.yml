@@ -30,7 +30,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Discover workspaces
         id: workspaces
         env:
@@ -53,6 +53,7 @@ jobs:
         workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
     name: Prepare
     runs-on: ubuntu-latest
+    environment: write
     env:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
@@ -69,7 +70,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Setup terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
