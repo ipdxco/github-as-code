@@ -1,3 +1,6 @@
+packages:
+  - .
+
 minimumReleaseAge: 40320
 minimumReleaseAgeExclude:
   - glob
