@@ -53,6 +53,8 @@ type ResourceSchema = {
       type: 'github_repository'
       values: {
         name: string
+        archived?: boolean
+        visibility?: 'private' | 'public'
         pages?: {
           source?: object[]
         }[]

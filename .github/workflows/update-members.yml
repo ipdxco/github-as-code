@@ -1,0 +1,130 @@
+name: Update Members
+
+on:
+  workflow_dispatch:
+    inputs:
+      organization:
+        description: Organization config to update
+        required: true
+      cutoff-date:
+        description: Inactive before this date (YYYY-MM-DD)
+        required: false
+      limit:
+        description: Remove up to this many longest-inactive members
+        required: false
+      ignore:
+        description: Comma, space, or newline separated usernames to ignore
+        required: false
+      only:
+        description: Comma, space, or newline separated usernames to target
+        required: false
+      public-repo-access:
+        description: Whether to retain effective access to public repositories
+        required: true
+        default: retain
+        type: choice
+        options:
+          - retain
+          - remove
+      organization-membership:
+        description: Whether selected users remain organization members
+        required: true
+        default: keep
+        type: choice
+        options:
+          - keep
+          - remove
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update:
+    permissions:
+      contents: write
+      pull-requests: write
+    name: Update members
+    runs-on: ubuntu-latest
+    environment: push
+    env:
+      GITHUB_APP_ID: ${{ secrets.RO_GITHUB_APP_ID }}
+      GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', github.event.inputs.organization)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
+      GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
+      TF_WORKSPACE: ${{ github.event.inputs.organization }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install pnpm
+        uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
+        with:
+          version: 10
+      - name: Use Node.js lts/*
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: lts/*
+          cache: ""
+      - name: Initialize scripts
+        run: pnpm install --frozen-lockfile && pnpm run build
+        working-directory: scripts
+      - name: Update members
+        id: update
+        run: node lib/actions/update-members.js
+        working-directory: scripts
+        env:
+          CUTOFF_DATE: ${{ github.event.inputs['cutoff-date'] }}
+          LIMIT: ${{ github.event.inputs.limit }}
+          IGNORE: ${{ github.event.inputs.ignore }}
+          ONLY: ${{ github.event.inputs.only }}
+          PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
+          ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
+      - name: Check if organization config was modified
+        id: config-modified
+        env:
+          ORGANIZATION: ${{ github.event.inputs.organization }}
+        run: |
+          if [ -z "$(git status --porcelain -- "github/${ORGANIZATION}.yml")" ]; then
+            echo "this=false" >> $GITHUB_OUTPUT
+          else
+            echo "this=true" >> $GITHUB_OUTPUT
+          fi
+      - uses: ./.github/actions/git-config-user
+        if: steps.config-modified.outputs.this == 'true'
+      - name: Create draft pull request
+        if: steps.config-modified.outputs.this == 'true'
+        env:
+          ORGANIZATION: ${{ github.event.inputs.organization }}
+          CUTOFF_DATE: ${{ github.event.inputs['cutoff-date'] }}
+          LIMIT: ${{ github.event.inputs.limit }}
+          IGNORE: ${{ github.event.inputs.ignore }}
+          ONLY: ${{ github.event.inputs.only }}
+          PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
+          ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
+          AFFECTED_USERS: ${{ steps.update.outputs.affected-users }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch="update-members-${ORGANIZATION}-${GITHUB_RUN_ID}"
+          body="$(mktemp)"
+          {
+            echo 'The changes in this PR were made by a bot. Please review carefully.'
+            echo
+            echo "Organization: ${ORGANIZATION}"
+            echo "Cutoff date: ${CUTOFF_DATE:-not set}"
+            echo "Limit: ${LIMIT:-not set}"
+            echo "Ignore: ${IGNORE:-not set}"
+            echo "Only: ${ONLY:-not set}"
+            echo "Public repo access: ${PUBLIC_REPO_ACCESS}"
+            echo "Organization membership: ${ORGANIZATION_MEMBERSHIP}"
+            echo "Affected users: ${AFFECTED_USERS:-none}"
+          } > "${body}"
+
+          git checkout -B "${branch}"
+          git add "github/${ORGANIZATION}.yml"
+          git commit -m "update-members@${GITHUB_RUN_ID} ${ORGANIZATION}"
+          git push origin "${branch}" --force
+          gh pr create \
+            --draft \
+            --title "Update members for ${ORGANIZATION}" \
+            --body-file "${body}" \
+            --head "${branch}" \
+            --base "${GITHUB_REF_NAME}"
