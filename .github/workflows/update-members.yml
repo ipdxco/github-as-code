@@ -26,6 +26,14 @@ on:
         options:
           - retain
           - remove
+      organization-membership:
+        description: Whether selected users remain organization members
+        required: true
+        default: keep
+        type: choice
+        options:
+          - keep
+          - remove
 
 defaults:
   run:
@@ -69,6 +77,7 @@ jobs:
           IGNORE: ${{ github.event.inputs.ignore }}
           ONLY: ${{ github.event.inputs.only }}
           PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
+          ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
       - name: Check if organization config was modified
         id: config-modified
         env:
@@ -90,6 +99,7 @@ jobs:
           IGNORE: ${{ github.event.inputs.ignore }}
           ONLY: ${{ github.event.inputs.only }}
           PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
+          ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
           AFFECTED_USERS: ${{ steps.update.outputs.affected-users }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -104,6 +114,7 @@ jobs:
             echo "Ignore: ${IGNORE:-not set}"
             echo "Only: ${ONLY:-not set}"
             echo "Public repo access: ${PUBLIC_REPO_ACCESS}"
+            echo "Organization membership: ${ORGANIZATION_MEMBERSHIP}"
             echo "Affected users: ${AFFECTED_USERS:-none}"
           } > "${body}"
 

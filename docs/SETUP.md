@@ -152,7 +152,7 @@
 
 ## Member Update Workflows
 
-- [ ] Use `Update Members` to create a draft PR that removes selected members from teams and repository collaborators in `github/$ORGANIZATION_NAME.yml`. The workflow requires either `cutoff-date` or `only`, supports `ignore` and `limit`, and can retain effective public repository access by converting that access to direct public repository collaborators in the YAML config.
+- [ ] Use `Update Members` to create a draft PR that removes selected members from teams and repository collaborators in `github/$ORGANIZATION_NAME.yml`. The workflow requires either `cutoff-date` or `only`, supports `ignore` and `limit`, can retain effective public repository access by converting that access to direct public repository collaborators, and can optionally remove selected users from organization membership in the YAML config.
 - [ ] Review and merge the draft PR through the normal GitHub Management PR flow.
 
 ## GitHub Management Repository Protections

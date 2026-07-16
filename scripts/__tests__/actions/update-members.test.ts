@@ -6,9 +6,11 @@ import {Config} from '../../src/yaml/config.js'
 import {
   parseCutoffDate,
   parseLimit,
+  parseOrganizationMembership,
   selectMembersForUpdate,
   updateMembersConfig
 } from '../../src/actions/update-members.js'
+import {Member} from '../../src/resources/member.js'
 import {TeamMember} from '../../src/resources/team-member.js'
 import {RepositoryCollaborator} from '../../src/resources/repository-collaborator.js'
 
@@ -20,7 +22,8 @@ describe('update members', () => {
       selectMembersForUpdate(config, [], {
         ignore: [],
         only: [],
-        publicRepoAccess: 'retain'
+        publicRepoAccess: 'retain',
+        organizationMembership: 'keep'
       })
     )
   })
@@ -31,8 +34,11 @@ describe('update members', () => {
       '2025-01-02T00:00:00.000Z'
     )
     assert.equal(parseLimit('2'), 2)
+    assert.equal(parseOrganizationMembership('keep'), 'keep')
+    assert.equal(parseOrganizationMembership('remove'), 'remove')
     assert.throws(() => parseCutoffDate('01-02-2025'))
     assert.throws(() => parseLimit('0'))
+    assert.throws(() => parseOrganizationMembership('invalid'))
   })
 
   it('selects inactive members with only, ignore, limit, and KEEP handling', () => {
@@ -58,7 +64,8 @@ members:
         limit: 2,
         ignore: ['ignored'],
         only: ['active', 'ignored', 'kept', 'manual', 'never-active', 'old'],
-        publicRepoAccess: 'retain'
+        publicRepoAccess: 'retain',
+        organizationMembership: 'keep'
       }
     )
 
@@ -94,7 +101,7 @@ teams:
         - alice
 `)
 
-    updateMembersConfig(config, ['alice'], 'retain')
+    updateMembersConfig(config, ['alice'], 'retain', 'keep')
 
     assert.equal(
       config
@@ -145,13 +152,32 @@ teams:
         - alice
 `)
 
-    updateMembersConfig(config, ['alice'], 'remove')
+    updateMembersConfig(config, ['alice'], 'remove', 'keep')
 
     assert.equal(
       config
         .getResources(RepositoryCollaborator)
         .some(collaborator => collaborator.username === 'alice'),
       false
+    )
+  })
+
+  it('removes organization membership when configured', () => {
+    const config = new Config(`
+members:
+  member:
+    - alice
+    - bob
+repositories:
+  public-repo:
+    visibility: public
+`)
+
+    updateMembersConfig(config, ['alice'], 'remove', 'remove')
+
+    assert.deepEqual(
+      config.getResources(Member).map(member => member.username),
+      ['bob']
     )
   })
 })

@@ -18,6 +18,7 @@ import {
 } from './shared/access-summary.js'
 
 export type PublicRepoAccess = 'retain' | 'remove'
+export type OrganizationMembership = 'keep' | 'remove'
 
 export type MemberActivity = {
   username: string
@@ -30,6 +31,7 @@ export type UpdateMembersOptions = {
   ignore: string[]
   only: string[]
   publicRepoAccess: PublicRepoAccess
+  organizationMembership: OrganizationMembership
 }
 
 type ActivityRecord = {
@@ -67,6 +69,15 @@ export function parsePublicRepoAccess(source?: string): PublicRepoAccess {
     return source
   }
   throw new Error('public-repo-access must be retain or remove')
+}
+
+export function parseOrganizationMembership(
+  source?: string
+): OrganizationMembership {
+  if (source === 'keep' || source === 'remove') {
+    return source
+  }
+  throw new Error('organization-membership must be keep or remove')
 }
 
 export function selectMembersForUpdate(
@@ -120,7 +131,8 @@ export function selectMembersForUpdate(
 export function updateMembersConfig(
   config: Config,
   usernames: string[],
-  publicRepoAccess: PublicRepoAccess
+  publicRepoAccess: PublicRepoAccess,
+  organizationMembership: OrganizationMembership
 ): string[] {
   const targets = new Set(usernames.map(username => username.toLowerCase()))
   const repositories = new Map(
@@ -191,6 +203,15 @@ export function updateMembersConfig(
       config.addResource(
         new RepositoryCollaborator(repository, username, permission)
       )
+    }
+  }
+
+  if (organizationMembership === 'remove') {
+    for (const member of config.getResources(Member)) {
+      if (targets.has(member.username.toLowerCase())) {
+        core.info(`Removing ${member.username} from the organization`)
+        config.removeResource(member)
+      }
     }
   }
 
@@ -269,6 +290,9 @@ async function run(): Promise<void> {
   const ignore = parseUserList(process.env.IGNORE)
   const only = parseUserList(process.env.ONLY)
   const publicRepoAccess = parsePublicRepoAccess(process.env.PUBLIC_REPO_ACCESS)
+  const organizationMembership = parseOrganizationMembership(
+    process.env.ORGANIZATION_MEMBERSHIP || 'keep'
+  )
 
   const config = Config.FromPath()
   const activities =
@@ -280,12 +304,14 @@ async function run(): Promise<void> {
     limit,
     ignore,
     only,
-    publicRepoAccess
+    publicRepoAccess,
+    organizationMembership
   })
   const affectedUsers = updateMembersConfig(
     config,
     selectedMembers,
-    publicRepoAccess
+    publicRepoAccess,
+    organizationMembership
   )
 
   config.save()
