@@ -110,14 +110,13 @@
         - `Pull requests`: `Read & Write`
         - `Workflows`: `Read & Write`
     - `Organization permissions`
-        - `Members`: `Read & Write` (required for Terraform membership management and the `Finalize Membership Changes` workflow)
+        - `Members`: `Read & Write`
     </details>
 - [ ] [Install the GitHub Apps](https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps) in the GitHub organization for `All repositories`
 
 ## GitHub Actions Environments and Secrets
 
-- [ ] Create GitHub Actions environments named `read`, `write`, `push`, and `membership-write`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`; workflows that directly convert or remove organization members through the GitHub API reference `membership-write`.
-- [ ] Configure the `membership-write` environment with required reviewers. Treat approval of this environment as approval to call the GitHub API for every user listed by the `Finalize Membership Changes` workflow preview job.
+- [ ] Create GitHub Actions environments named `read`, `write`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organization and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organization name) - *these secrets are read by the GitHub Action workflows*
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
        - [ ] `RO_GITHUB_APP_ID`
@@ -151,12 +150,10 @@
 
 - [ ] Follow [How to synchronize GitHub Management with GitHub?](HOWTOS.md#synchronize-github-management-with-github) to commit the terraform lock and initialize terraform state
 
-## Inactive Member Workflows
+## Member Update Workflows
 
-- [ ] Use `Update Inactive Members` to create a draft PR that removes selected members from teams and repository collaborators in `github/$ORGANIZATION_NAME.yml`. The workflow requires either `cutoff-date` or `only`, supports `ignore` and `limit`, and can retain effective public repository access by converting that access to direct public repository collaborators in the YAML config.
+- [ ] Use `Update Members` to create a draft PR that removes selected members from teams and repository collaborators in `github/$ORGANIZATION_NAME.yml`. The workflow requires either `cutoff-date` or `only`, supports `ignore` and `limit`, and can retain effective public repository access by converting that access to direct public repository collaborators in the YAML config.
 - [ ] Review and merge the draft PR through the normal GitHub Management PR flow.
-- [ ] Use `Finalize Membership Changes` only after the YAML PR has landed and the preview job lists the expected users. The `membership-write` environment approval gates API calls that convert potential outside collaborators or remove potential no members.
-- [ ] After `Finalize Membership Changes` completes, run `Sync` for the same organization so Terraform state and YAML config reflect the membership changes made through the GitHub API.
 
 ## GitHub Management Repository Protections
 

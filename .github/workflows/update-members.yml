@@ -1,4 +1,4 @@
-name: Update Inactive Members
+name: Update Members
 
 on:
   workflow_dispatch:
@@ -36,7 +36,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    name: Update inactive members
+    name: Update members
     runs-on: ubuntu-latest
     environment: push
     env:
@@ -55,13 +55,13 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: lts/*
-          cache: ''
+          cache: ""
       - name: Initialize scripts
         run: pnpm install --frozen-lockfile && pnpm run build
         working-directory: scripts
-      - name: Update inactive members
+      - name: Update members
         id: update
-        run: node lib/actions/update-inactive-members.js
+        run: node lib/actions/update-members.js
         working-directory: scripts
         env:
           CUTOFF_DATE: ${{ github.event.inputs['cutoff-date'] }}
@@ -93,7 +93,7 @@ jobs:
           AFFECTED_USERS: ${{ steps.update.outputs.affected-users }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          branch="inactive-members-${ORGANIZATION}-${GITHUB_RUN_ID}"
+          branch="update-members-${ORGANIZATION}-${GITHUB_RUN_ID}"
           body="$(mktemp)"
           {
             echo 'The changes in this PR were made by a bot. Please review carefully.'
@@ -109,11 +109,11 @@ jobs:
 
           git checkout -B "${branch}"
           git add "github/${ORGANIZATION}.yml"
-          git commit -m "update-inactive-members@${GITHUB_RUN_ID} ${ORGANIZATION}"
+          git commit -m "update-members@${GITHUB_RUN_ID} ${ORGANIZATION}"
           git push origin "${branch}" --force
           gh pr create \
             --draft \
-            --title "Update inactive members for ${ORGANIZATION}" \
+            --title "Update members for ${ORGANIZATION}" \
             --body-file "${body}" \
             --head "${branch}" \
             --base "${GITHUB_REF_NAME}"

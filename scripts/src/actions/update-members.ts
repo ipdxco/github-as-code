@@ -24,7 +24,7 @@ export type MemberActivity = {
   latestActivity?: Date
 }
 
-export type UpdateInactiveMembersOptions = {
+export type UpdateMembersOptions = {
   cutoffDate?: Date
   limit?: number
   ignore: string[]
@@ -69,10 +69,10 @@ export function parsePublicRepoAccess(source?: string): PublicRepoAccess {
   throw new Error('public-repo-access must be retain or remove')
 }
 
-export function selectInactiveMembers(
+export function selectMembersForUpdate(
   config: Config,
   activities: MemberActivity[],
-  options: UpdateInactiveMembersOptions
+  options: UpdateMembersOptions
 ): string[] {
   if (options.cutoffDate === undefined && options.only.length === 0) {
     throw new Error('Either cutoff-date or only must be provided')
@@ -117,7 +117,7 @@ export function selectInactiveMembers(
     : candidates.slice(0, options.limit)
 }
 
-export function updateInactiveMembersConfig(
+export function updateMembersConfig(
   config: Config,
   usernames: string[],
   publicRepoAccess: PublicRepoAccess
@@ -275,14 +275,14 @@ async function run(): Promise<void> {
     cutoffDate === undefined
       ? []
       : await collectActivities(limit === undefined ? cutoffDate : new Date(0))
-  const selectedMembers = selectInactiveMembers(config, activities, {
+  const selectedMembers = selectMembersForUpdate(config, activities, {
     cutoffDate,
     limit,
     ignore,
     only,
     publicRepoAccess
   })
-  const affectedUsers = updateInactiveMembersConfig(
+  const affectedUsers = updateMembersConfig(
     config,
     selectedMembers,
     publicRepoAccess

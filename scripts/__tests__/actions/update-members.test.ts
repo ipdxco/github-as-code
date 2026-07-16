@@ -6,18 +6,18 @@ import {Config} from '../../src/yaml/config.js'
 import {
   parseCutoffDate,
   parseLimit,
-  selectInactiveMembers,
-  updateInactiveMembersConfig
-} from '../../src/actions/update-inactive-members.js'
+  selectMembersForUpdate,
+  updateMembersConfig
+} from '../../src/actions/update-members.js'
 import {TeamMember} from '../../src/resources/team-member.js'
 import {RepositoryCollaborator} from '../../src/resources/repository-collaborator.js'
 
-describe('update inactive members', () => {
+describe('update members', () => {
   it('requires cutoff date or only list', () => {
     const config = new Config('members:\n  member:\n    - alice\n')
 
     assert.throws(() =>
-      selectInactiveMembers(config, [], {
+      selectMembersForUpdate(config, [], {
         ignore: [],
         only: [],
         publicRepoAccess: 'retain'
@@ -47,7 +47,7 @@ members:
     - old
 `)
 
-    const selected = selectInactiveMembers(
+    const selected = selectMembersForUpdate(
       config,
       [
         {username: 'active', latestActivity: new Date('2025-01-01T00:00:00Z')},
@@ -94,7 +94,7 @@ teams:
         - alice
 `)
 
-    updateInactiveMembersConfig(config, ['alice'], 'retain')
+    updateMembersConfig(config, ['alice'], 'retain')
 
     assert.equal(
       config
@@ -145,7 +145,7 @@ teams:
         - alice
 `)
 
-    updateInactiveMembersConfig(config, ['alice'], 'remove')
+    updateMembersConfig(config, ['alice'], 'remove')
 
     assert.equal(
       config

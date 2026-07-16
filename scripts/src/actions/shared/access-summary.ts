@@ -13,6 +13,8 @@ export type RepositoryAccess = {
 
 export type UserAccess = {
   role?: string
+  isMember: boolean
+  isOutsideCollaborator: boolean
   repositories: Record<string, RepositoryAccess>
   directRepositories: Record<string, RepositoryAccess>
   teams: string[]
@@ -156,13 +158,15 @@ export function getAccessSummaryFrom(source: State | Config): AccessSummary {
         ? hasKeepComment(source, member)
         : false
 
-    if (
-      role !== undefined ||
-      teams.length > 0 ||
-      Object.keys(repositories).length > 0
-    ) {
+    const isMember = role !== undefined
+    const isOutsideCollaborator =
+      !isMember && Object.keys(directRepositories).length > 0
+
+    if (isMember || isOutsideCollaborator || teams.length > 0) {
       accessSummary[username] = {
         role,
+        isMember,
+        isOutsideCollaborator,
         repositories,
         directRepositories,
         teams,
@@ -209,11 +213,11 @@ export function categorizeAccessSummary(
 
   for (const [username, access] of Object.entries(summary)) {
     const repositories = Object.values(access.repositories)
-    if (access.role === undefined) {
-      if (repositories.length > 0) {
-        categories.outsideCollaborators.push(username)
-      }
+    const directRepositories = Object.values(access.directRepositories)
+    if (access.isOutsideCollaborator) {
+      categories.outsideCollaborators.push(username)
     } else if (
+      access.isMember &&
       !access.hasKeepComment &&
       access.teams.length === 0 &&
       repositories.length > 0 &&
@@ -222,9 +226,14 @@ export function categorizeAccessSummary(
       )
     ) {
       categories.potentialOutsideCollaborators.push(username)
-    } else if (!access.hasKeepComment && repositories.length === 0) {
+    } else if (
+      access.isMember &&
+      !access.hasKeepComment &&
+      directRepositories.length === 0 &&
+      access.teams.length === 0
+    ) {
       categories.potentialNoMembers.push(username)
-    } else {
+    } else if (access.isMember) {
       categories.anyOtherMembers.push(username)
     }
   }
@@ -262,7 +271,10 @@ export function formatAccessSummarySection(
 
   for (const username of users) {
     const access = summary[username]
-    lines.push(`User ${username}:`)
+    const kind = access.isOutsideCollaborator
+      ? 'outside collaborator'
+      : 'member'
+    lines.push(`User ${username} (${kind}):`)
     const repositories = Object.entries(access.repositories)
     if (repositories.length === 0) {
       lines.push('  - has no repository access')

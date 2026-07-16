@@ -587,30 +587,4 @@ export class GitHub {
     }
     return commitComments
   }
-
-  async convertMemberToOutsideCollaborator(username: string): Promise<void> {
-    core.info(`Converting ${username} to outside collaborator...`)
-    await this.client.request(
-      'PUT /orgs/{org}/outside_collaborators/{username}',
-      {
-        org: env.GITHUB_ORG,
-        username,
-        async: false,
-        headers: {
-          'X-GitHub-Api-Version': '2026-03-10'
-        }
-      }
-    )
-  }
-
-  async removeOrganizationMembership(username: string): Promise<void> {
-    core.info(`Removing organization membership for ${username}...`)
-    await this.client.request('DELETE /orgs/{org}/memberships/{username}', {
-      org: env.GITHUB_ORG,
-      username,
-      headers: {
-        'X-GitHub-Api-Version': '2026-03-10'
-      }
-    })
-  }
 }

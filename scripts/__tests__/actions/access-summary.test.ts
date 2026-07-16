@@ -34,20 +34,34 @@ repositories:
       pull:
         - alice
     visibility: public
+  team-only-repo:
+    teams:
+      push:
+        - guests
+    visibility: public
   team-repo:
     teams:
       push:
         - maintainers
     visibility: public
 teams:
+  guests:
+    members:
+      member:
+        - team-only-non-member
   maintainers:
     members:
       member:
         - dave
 `)
 
-    const categories = categorizeAccessSummary(getAccessSummaryFrom(config))
+    const summary = getAccessSummaryFrom(config)
+    const categories = categorizeAccessSummary(summary)
 
+    assert.equal(summary.outside.isMember, false)
+    assert.equal(summary.outside.isOutsideCollaborator, true)
+    assert.equal(summary['team-only-non-member'].isMember, false)
+    assert.equal(summary['team-only-non-member'].isOutsideCollaborator, false)
     assert.deepEqual(categories.outsideCollaborators, ['outside'])
     assert.deepEqual(categories.potentialOutsideCollaborators, ['alice'])
     assert.deepEqual(categories.potentialNoMembers, ['carol'])
@@ -118,6 +132,7 @@ repositories:
     )
     assert.match(report, /<summary>Potential outside collaborators<\/summary>/)
     assert.match(report, /Affected users: alice/)
+    assert.match(report, /User alice \(member\):/)
     assert.match(report, /has push permission to public-repo \(public\)/)
   })
 })
