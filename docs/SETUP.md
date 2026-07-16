@@ -116,7 +116,12 @@
 
 ## GitHub Actions Environments and Secrets
 
-- [ ] Create GitHub Actions environments named `read`, `write`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
+- [ ] Create GitHub Actions environments named `read`, `read-allow-destroy`, `write`, `write-allow-destroy`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
+- [ ] Configure `read-allow-destroy` and `write-allow-destroy` with stricter protection rules for repository and membership deletion plans/applies:
+    - [ ] Require reviewers
+    - [ ] Prevent self-review
+    - [ ] Restrict deployment branches to `master`
+    - [ ] Disable administrator bypass where available
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organization and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organization name) - *these secrets are read by the GitHub Action workflows*
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
        - [ ] `RO_GITHUB_APP_ID`

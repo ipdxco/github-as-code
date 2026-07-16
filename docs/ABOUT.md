@@ -27,6 +27,8 @@ The workflow for introducing changes to GitHub via YAML configuration file is as
 1. Review the plan.
 1. Merge the PR and wait for the GitHub Action workflow triggered on pushes to the default branch to apply it.
 
+Plans that remove managed repositories or organization memberships are routed through the `read-allow-destroy` GitHub Actions environment before the PR plan is created. The matching apply is routed through `write-allow-destroy`. These environments must be protected separately from the normal `read` and `write` environments. Outside the allow-destroy environments, Terraform keeps `prevent_destroy` enabled for repository and membership resources.
+
 Neither creating the terraform plan nor applying it refreshes the underlying terraform state i.e. going through this workflow does **NOT** ask GitHub if the actual GitHub configuration state has changed. This makes the workflow fast and rate limit friendly because the number of requests to GitHub is minimised. This can result in the plan failing to be applied, e.g. if the underlying resource has been deleted. This assumes that YAML configuration is the main source of truth for GitHub configuration state. The plans that are created during the PR GitHub Action workflow are compared against plans regenerated from the merged commit before applying.
 
 The workflow for synchronising the current GitHub configuration state with YAML configuration file is as follows:
