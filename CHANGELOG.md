@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- allow-destroy workflow environments for guarded repository and membership deletion plans/applies
 - shared action for adding a collaborator to all repositories
 - clean workflow which removes resources from state
 - information on how to handle private GitHub Management repository

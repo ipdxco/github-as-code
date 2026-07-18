@@ -1,0 +1,11 @@
+resource "github_membership" "this" {
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+resource "github_repository" "this" {
+  lifecycle {
+    prevent_destroy = false
+  }
+}
