@@ -10,18 +10,7 @@ async function run(): Promise<void> {
 
   const accessChangesDescription = await runDescribeAccessChanges()
 
-  core.setOutput(
-    'comment',
-    `The following access changes will be introduced as a result of applying the plan:
-
-<details><summary>Access Changes</summary>
-
-\`\`\`
-${accessChangesDescription}
-\`\`\`
-
-</details>`
-  )
+  core.setOutput('comment', accessChangesDescription)
 }
 
 run()
