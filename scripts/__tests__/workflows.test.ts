@@ -48,8 +48,34 @@ describe('workflows', () => {
     assert.match(applyStep.run ?? '', /allow_destroy_override\.tf\.disabled/)
   })
 
-  it('does not provide a manual access report workflow', () => {
-    assert.equal(existsSync('../.github/workflows/access-report.yml'), false)
+  it('provides a manual access report workflow through the shared formatter helper', () => {
+    assert.equal(existsSync('../.github/workflows/access-report.yml'), true)
+
+    const accessReport = workflow('access-report.yml')
+    const reportJob = accessReport.jobs.report
+    const steps = reportJob.steps
+    const generateStep = steps.find(
+      step => step.name === 'Generate access report'
+    )
+    const publishStep = steps.find(
+      step => step.name === 'Publish access report summary'
+    )
+    const uploadStep = steps.find(step => step.name === 'Upload access report')
+
+    assert.ok(accessReport.on.workflow_dispatch)
+    assert.equal(reportJob.environment, 'read')
+    assert.ok(generateStep)
+    assert.equal(generateStep.env?.ACCESS_REPORT_PATH, '../ACCESS_REPORT.md')
+    assert.match(generateStep.run ?? '', /runDescribeAccessChanges/)
+    assert.doesNotMatch(generateStep.run ?? '', /access-report\.js/)
+    assert.ok(publishStep)
+    assert.equal(
+      publishStep.run,
+      'cat ACCESS_REPORT.md >> "$GITHUB_STEP_SUMMARY"'
+    )
+    assert.ok(uploadStep)
+    assert.equal(uploadStep.with?.name, 'access-report-${{ env.TF_WORKSPACE }}')
+    assert.equal(uploadStep.with?.path, 'ACCESS_REPORT.md')
   })
 
   it('publishes the full access report from the fix workflow', () => {
