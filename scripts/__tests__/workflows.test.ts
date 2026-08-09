@@ -85,4 +85,79 @@ describe('workflows', () => {
     assert.equal(downloadYamlStep.with?.['merge-multiple'], true)
     assert.equal(copyYamlStep.run, 'cp artifacts/*.yml head/github')
   })
+
+  it('publishes planned terraform targets and rendered plan summaries', () => {
+    const plan = workflow('plan.yml')
+    const planSteps = plan.jobs.plan.steps
+    const commentSteps = plan.jobs.comment.steps
+    const targetStep = planSteps.find(
+      step => step.name === 'Summarize plan target'
+    )
+    const publishStep = commentSteps.find(
+      step => step.name === 'Publish terraform plans summary'
+    )
+    const uploadStep = commentSteps.find(
+      step => step.name === 'Upload terraform plans summary'
+    )
+
+    assert.ok(targetStep)
+    assert.match(targetStep.run ?? '', /## Plan target/)
+    assert.match(targetStep.run ?? '', /Pull request/)
+    assert.match(targetStep.run ?? '', /Source SHA/)
+    assert.match(targetStep.run ?? '', /Terraform plan artifact/)
+    assert.ok(publishStep)
+    assert.equal(
+      publishStep.run,
+      'cat TERRAFORM_PLANS.md >> "$GITHUB_STEP_SUMMARY"'
+    )
+    assert.ok(uploadStep)
+    assert.equal(
+      uploadStep.with?.name,
+      'terraform-plans-${{ github.event.pull_request.head.sha || github.sha }}'
+    )
+    assert.equal(uploadStep.with?.path, 'terraform/TERRAFORM_PLANS.md')
+  })
+
+  it('publishes apply targets and reviewed plan summaries', () => {
+    const apply = workflow('apply.yml')
+    const steps = apply.jobs.apply.steps
+    const targetStep = steps.find(
+      step => step.name === 'Summarize apply target'
+    )
+    const reviewedStep = steps.find(
+      step => step.name === 'Show reviewed terraform plan'
+    )
+    const mergedStep = steps.find(
+      step => step.name === 'Show merged terraform plan'
+    )
+    const uploadStep = steps.find(
+      step => step.name === 'Upload apply plan summaries'
+    )
+    const compareStep = steps.find(
+      step => step.name === 'Compare reviewed and merged plans'
+    )
+
+    assert.ok(targetStep)
+    assert.match(targetStep.run ?? '', /## Apply target/)
+    assert.match(targetStep.run ?? '', /Reviewed SHA/)
+    assert.match(targetStep.run ?? '', /Reviewed plan artifact/)
+    assert.ok(reviewedStep)
+    assert.match(reviewedStep.run ?? '', /## Reviewed Terraform plan/)
+    assert.match(reviewedStep.run ?? '', /\.reviewed\.txt/)
+    assert.ok(mergedStep)
+    assert.match(mergedStep.run ?? '', /## Merged Terraform plan/)
+    assert.match(mergedStep.run ?? '', /\.merged\.txt/)
+    assert.ok(uploadStep)
+    assert.equal(
+      uploadStep.with?.name,
+      'apply-plans-${{ env.TF_WORKSPACE }}-${{ needs.prepare.outputs.sha }}'
+    )
+    assert.match(String(uploadStep.with?.path), /\.reviewed\.txt/)
+    assert.match(String(uploadStep.with?.path), /\.merged\.txt/)
+    assert.ok(compareStep)
+    assert.equal(
+      compareStep.run,
+      'diff -u "${TF_WORKSPACE}.reviewed.txt" "${TF_WORKSPACE}.merged.txt"\n'
+    )
+  })
 })

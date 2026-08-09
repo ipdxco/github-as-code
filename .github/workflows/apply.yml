@@ -140,19 +140,66 @@ jobs:
             exit 1
           fi
           cp allow_destroy_override.tf.disabled allow_destroy_override.tf
+      - name: Summarize apply target
+        env:
+          REVIEWED_SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          {
+            echo '## Apply target'
+            echo ''
+            echo "- Reviewed SHA: \`${REVIEWED_SHA}\`"
+            echo "- Workspace: \`${TF_WORKSPACE}\`"
+            echo "- Environment: \`${{ matrix.environment }}\`"
+            echo "- Reviewed plan artifact: \`${TF_WORKSPACE}_${REVIEWED_SHA}.tfplan\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Download reviewed terraform plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ needs.prepare.outputs.sha }}
         run: gh run download -n "${TF_WORKSPACE}_${SHA}.tfplan" --repo "${GITHUB_REPOSITORY}"
+      - name: Show reviewed terraform plan
+        run: |
+          terraform show -no-color "${TF_WORKSPACE}.tfplan" > "${TF_WORKSPACE}.reviewed.txt"
+          {
+            echo '## Reviewed Terraform plan'
+            echo ''
+            echo "<details><summary>${TF_WORKSPACE}.tfplan</summary>"
+            echo ''
+            echo '~~~~terraform'
+            sed 's/^~~~~/~~~~ /' "${TF_WORKSPACE}.reviewed.txt"
+            echo '~~~~'
+            echo ''
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Replan merged commit
         run: |
           terraform show -json > "$TF_WORKSPACE.tfstate.json"
           terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.merged.tfplan" -no-color
+      - name: Show merged terraform plan
+        run: |
+          terraform show -no-color "${TF_WORKSPACE}.merged.tfplan" > "${TF_WORKSPACE}.merged.txt"
+          {
+            echo '## Merged Terraform plan'
+            echo ''
+            echo "<details><summary>${TF_WORKSPACE}.merged.tfplan</summary>"
+            echo ''
+            echo '~~~~terraform'
+            sed 's/^~~~~/~~~~ /' "${TF_WORKSPACE}.merged.txt"
+            echo '~~~~'
+            echo ''
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload apply plan summaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apply-plans-${{ env.TF_WORKSPACE }}-${{ needs.prepare.outputs.sha }}
+          path: |
+            terraform/${{ env.TF_WORKSPACE }}.reviewed.txt
+            terraform/${{ env.TF_WORKSPACE }}.merged.txt
+          if-no-files-found: error
+          retention-days: 14
       - name: Compare reviewed and merged plans
         run: |
-          terraform show -no-color "${TF_WORKSPACE}.tfplan" > "${TF_WORKSPACE}.reviewed.txt"
-          terraform show -no-color "${TF_WORKSPACE}.merged.tfplan" > "${TF_WORKSPACE}.merged.txt"
           diff -u "${TF_WORKSPACE}.reviewed.txt" "${TF_WORKSPACE}.merged.txt"
       - name: Terraform Apply
         run: |

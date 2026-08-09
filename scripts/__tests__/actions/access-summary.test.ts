@@ -140,7 +140,14 @@ repositories:
       changes,
       /will change from having direct pull permission to public-repo \(public\) to having direct push permission to public-repo \(public\)/
     )
-    assert.match(report, /<summary>Potential outside collaborators<\/summary>/)
+    assert.match(
+      report,
+      /The sections below describe effective access after these config changes are applied:/
+    )
+    assert.match(
+      report,
+      /<summary>Post-change potential outside collaborators<\/summary>/
+    )
     assert.match(report, /Affected users: alice/)
     assert.match(report, /User alice \(member\):/)
     assert.match(report, /has direct push permission to public-repo \(public\)/)
@@ -252,7 +259,10 @@ members:
 
       assert.match(comment, /<details><summary>Access Changes<\/summary>/)
       assert.doesNotMatch(comment, /Potential no members/)
-      assert.match(report, /<summary>Potential no members<\/summary>/)
+      assert.match(
+        report,
+        /<summary>Post-change potential no members<\/summary>/
+      )
     } finally {
       if (originalPath === undefined) {
         delete process.env.ACCESS_REPORT_PATH

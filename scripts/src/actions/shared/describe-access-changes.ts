@@ -85,26 +85,28 @@ export function describeAccessReport(state: State, config: Config): string {
     '',
     '</details>',
     '',
+    'The sections below describe effective access after these config changes are applied:',
+    '',
     formatAccessSummarySection(
-      'Outside collaborators',
+      'Post-change outside collaborators',
       categories.outsideCollaborators,
       after
     ),
     '',
     formatAccessSummarySection(
-      'Potential outside collaborators',
+      'Post-change potential outside collaborators',
       categories.potentialOutsideCollaborators,
       after
     ),
     '',
     formatAccessSummarySection(
-      'Potential no members',
+      'Post-change potential no members',
       categories.potentialNoMembers,
       after
     ),
     '',
     formatAccessSummarySection(
-      'Any other members',
+      'Post-change any other members',
       categories.anyOtherMembers,
       after
     )

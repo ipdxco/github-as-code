@@ -150,6 +150,22 @@ jobs:
           fi
           cp allow_destroy_override.tf.disabled allow_destroy_override.tf
         working-directory: terraform
+      - name: Summarize plan target
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || '' }}
+        run: |
+          {
+            echo '## Plan target'
+            echo ''
+            if [[ -n "${PULL_REQUEST_NUMBER}" ]]; then
+              echo "- Pull request: #${PULL_REQUEST_NUMBER}"
+            fi
+            echo "- Source SHA: \`${SOURCE_SHA}\`"
+            echo "- Workspace: \`${TF_WORKSPACE}\`"
+            echo "- Environment: \`${{ matrix.environment }}\`"
+            echo "- Terraform plan artifact: \`${TF_WORKSPACE}_${SOURCE_SHA}.tfplan\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Plan terraform
         run: |
           terraform show -json > "$TF_WORKSPACE.tfstate.json"
@@ -210,6 +226,16 @@ jobs:
           done
           cat TERRAFORM_PLANS.md
         working-directory: terraform
+      - name: Publish terraform plans summary
+        run: cat TERRAFORM_PLANS.md >> "$GITHUB_STEP_SUMMARY"
+        working-directory: terraform
+      - name: Upload terraform plans summary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: terraform-plans-${{ github.event.pull_request.head.sha || github.sha }}
+          path: terraform/TERRAFORM_PLANS.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Prepare comment
         run: |
           delimiter="$(uuidgen)"
