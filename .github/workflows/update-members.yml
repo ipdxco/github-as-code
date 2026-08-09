@@ -34,6 +34,11 @@ on:
         options:
           - keep
           - remove
+      draft-run:
+        description: Only summarize the member update without creating a pull request
+        required: true
+        default: false
+        type: boolean
 
 defaults:
   run:
@@ -42,18 +47,33 @@ defaults:
 jobs:
   update:
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      pull-requests: read
     name: Update members
     runs-on: ubuntu-latest
-    environment: push
+    environment: ${{ github.event.inputs['draft-run'] == 'true' && 'read' || 'push' }}
     env:
       GITHUB_APP_ID: ${{ secrets.RO_GITHUB_APP_ID }}
       GITHUB_APP_INSTALLATION_ID: ${{ secrets[format('RO_GITHUB_APP_INSTALLATION_ID_{0}', github.event.inputs.organization)] || secrets.RO_GITHUB_APP_INSTALLATION_ID }}
       GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
       TF_WORKSPACE: ${{ github.event.inputs.organization }}
     steps:
+      - name: Generate app token
+        if: github.event.inputs['draft-run'] != 'true'
+        id: token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.RW_GITHUB_APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets[format('RW_GITHUB_APP_INSTALLATION_ID_{0}', github.repository_owner)] || secrets.RW_GITHUB_APP_INSTALLATION_ID }}
+          private_key: ${{ secrets.RW_GITHUB_APP_PEM_FILE }}
+      - name: Checkout with app token
+        if: github.event.inputs['draft-run'] != 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.token.outputs.token }}
       - name: Checkout
+        if: github.event.inputs['draft-run'] == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install pnpm
         uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
@@ -88,10 +108,60 @@ jobs:
           else
             echo "this=true" >> $GITHUB_OUTPUT
           fi
-      - uses: ./.github/actions/git-config-user
-        if: steps.config-modified.outputs.this == 'true'
+      - name: Summarize member update
+        env:
+          ORGANIZATION: ${{ github.event.inputs.organization }}
+          CUTOFF_DATE: ${{ github.event.inputs['cutoff-date'] }}
+          LIMIT: ${{ github.event.inputs.limit }}
+          IGNORE: ${{ github.event.inputs.ignore }}
+          ONLY: ${{ github.event.inputs.only }}
+          PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
+          ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
+          DRAFT_RUN: ${{ github.event.inputs['draft-run'] }}
+          AFFECTED_USERS: ${{ steps.update.outputs.affected-users }}
+          CONFIG_MODIFIED: ${{ steps.config-modified.outputs.this }}
+        run: |
+          {
+            echo '## Update members'
+            echo
+            echo "- Organization: \`${ORGANIZATION}\`"
+            echo "- Cutoff date: \`${CUTOFF_DATE:-not set}\`"
+            echo "- Limit: \`${LIMIT:-not set}\`"
+            echo "- Ignore: \`${IGNORE:-not set}\`"
+            echo "- Only: \`${ONLY:-not set}\`"
+            echo "- Public repo access: \`${PUBLIC_REPO_ACCESS}\`"
+            echo "- Organization membership: \`${ORGANIZATION_MEMBERSHIP}\`"
+            echo "- Draft run: \`${DRAFT_RUN}\`"
+            echo "- Affected users: \`${AFFECTED_USERS:-none}\`"
+            echo "- Config modified: \`${CONFIG_MODIFIED}\`"
+            if [[ "${DRAFT_RUN}" == 'true' ]]; then
+              echo "- Pull request: not created because draft run is enabled"
+            elif [[ "${CONFIG_MODIFIED}" == 'true' ]]; then
+              echo "- Pull request: will be created"
+            else
+              echo "- Pull request: not created because there are no config changes"
+            fi
+
+            if [[ "${CONFIG_MODIFIED}" == 'true' ]]; then
+              echo
+              echo '<details><summary>Config diff</summary>'
+              echo
+              echo '```diff'
+              git diff -- "github/${ORGANIZATION}.yml" | sed 's/^```/``` /'
+              echo '```'
+              echo
+              echo '</details>'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Configure git user
+        if: steps.config-modified.outputs.this == 'true' && github.event.inputs['draft-run'] != 'true'
+        env:
+          GITHUB_MGMT_APP_ID: ${{ secrets.RW_GITHUB_APP_ID }}
+        run: |
+          git config --global user.name "github-mgmt[bot]"
+          git config --global user.email "${GITHUB_MGMT_APP_ID}+github-mgmt[bot]@users.noreply.github.com"
       - name: Create draft pull request
-        if: steps.config-modified.outputs.this == 'true'
+        if: steps.config-modified.outputs.this == 'true' && github.event.inputs['draft-run'] != 'true'
         env:
           ORGANIZATION: ${{ github.event.inputs.organization }}
           CUTOFF_DATE: ${{ github.event.inputs['cutoff-date'] }}
@@ -101,7 +171,7 @@ jobs:
           PUBLIC_REPO_ACCESS: ${{ github.event.inputs['public-repo-access'] }}
           ORGANIZATION_MEMBERSHIP: ${{ github.event.inputs['organization-membership'] }}
           AFFECTED_USERS: ${{ steps.update.outputs.affected-users }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           branch="update-members-${ORGANIZATION}-${GITHUB_RUN_ID}"
           body="$(mktemp)"
