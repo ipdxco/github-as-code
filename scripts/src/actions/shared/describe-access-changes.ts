@@ -47,9 +47,13 @@ export function describeAccessChangesComment(
   const comment = [
     'The following access changes will be introduced as a result of applying the plan:',
     '',
+    '<details><summary>Access Changes</summary>',
+    '',
     '```',
     accessChangesDescription,
     '```',
+    '',
+    '</details>',
     '',
     `For the full access breakdown, inspect ${reportDestination}.`
   ].join('\n')
