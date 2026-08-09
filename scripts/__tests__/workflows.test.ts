@@ -7,6 +7,7 @@ type WorkflowStep = {
   name?: string
   run?: string
   env?: Record<string, string>
+  with?: Record<string, unknown>
 }
 
 type Workflow = {
@@ -57,5 +58,31 @@ describe('workflows', () => {
 
     assert.ok(steps.includes('Publish access report summary'))
     assert.ok(steps.includes('Upload access report'))
+  })
+
+  it('downloads only fixed YAML config artifacts before pushing fix changes', () => {
+    const fix = workflow('fix.yml')
+    const fixSteps = fix.jobs.fix.steps
+    const pushSteps = fix.jobs.push.steps
+    const uploadYamlStep = fixSteps.find(
+      step => step.name === 'Upload YAML config'
+    )
+    const downloadYamlStep = pushSteps.find(
+      step => step.name === 'Download YAML configs'
+    )
+    const copyYamlStep = pushSteps.find(
+      step => step.name === 'Copy YAML configs'
+    )
+
+    assert.ok(uploadYamlStep)
+    assert.ok(downloadYamlStep)
+    assert.ok(copyYamlStep)
+    assert.equal(
+      uploadYamlStep.with?.name,
+      'fixed-config-${{ env.TF_WORKSPACE }}'
+    )
+    assert.equal(downloadYamlStep.with?.pattern, 'fixed-config-*')
+    assert.equal(downloadYamlStep.with?.['merge-multiple'], true)
+    assert.equal(copyYamlStep.run, 'cp artifacts/*.yml head/github')
   })
 })
