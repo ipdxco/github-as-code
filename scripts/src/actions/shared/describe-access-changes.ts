@@ -40,28 +40,25 @@ export function describeAccessChangesComment(
   runUrl = workflowRunUrl()
 ): string {
   const accessChangesDescription = describeAccessChanges(state, config)
+  const reportDestination =
+    runUrl === undefined
+      ? 'the Fix workflow summary or access report artifact'
+      : `[the Fix workflow summary or access report artifact](${runUrl})`
   const comment = [
     'The following access changes will be introduced as a result of applying the plan:',
-    '',
-    '<details><summary>Access Changes</summary>',
     '',
     '```',
     accessChangesDescription,
     '```',
     '',
-    '</details>'
+    `For the full access breakdown, inspect ${reportDestination}.`
   ].join('\n')
 
   if (Buffer.byteLength(comment, 'utf8') < maxLength) {
     return comment
   }
 
-  const destination =
-    runUrl === undefined
-      ? 'the Fix workflow summary or the access report artifact'
-      : `[the Fix workflow summary or access report artifact](${runUrl})`
-
-  return `Access changes are too long to post as a comment. Please inspect ${destination} instead.`
+  return `Access changes are too long to post as a comment. Please inspect ${reportDestination} instead.`
 }
 
 export function describeAccessReport(state: State, config: Config): string {

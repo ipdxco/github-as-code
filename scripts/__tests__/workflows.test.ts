@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import {readFileSync} from 'node:fs'
+import {existsSync, readFileSync} from 'node:fs'
 import {describe, it} from 'node:test'
 import * as YAML from 'yaml'
 
@@ -47,13 +47,14 @@ describe('workflows', () => {
     assert.match(applyStep.run ?? '', /allow_destroy_override\.tf\.disabled/)
   })
 
-  it('provides a manual access report workflow with summary and artifact output', () => {
-    const report = workflow('access-report.yml')
-    const steps = report.jobs.report.steps.map(step => step.name)
+  it('does not provide a manual access report workflow', () => {
+    assert.equal(existsSync('../.github/workflows/access-report.yml'), false)
+  })
 
-    assert.ok(report.on.workflow_dispatch)
-    assert.equal(report.jobs.report.environment, 'read')
-    assert.ok(steps.includes('Generate access report'))
+  it('publishes the full access report from the fix workflow', () => {
+    const fix = workflow('fix.yml')
+    const steps = fix.jobs.fix.steps.map(step => step.name)
+
     assert.ok(steps.includes('Publish access report summary'))
     assert.ok(steps.includes('Upload access report'))
   })
