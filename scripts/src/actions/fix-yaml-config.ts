@@ -1,26 +1,15 @@
 import 'reflect-metadata'
 
-import * as fs from 'fs'
 import {runToggleArchivedRepos} from './shared/toggle-archived-repos.js'
-import {
-  describeAccessChangesComment,
-  describeAccessReport
-} from './shared/describe-access-changes.js'
-import {Config} from '../yaml/config.js'
-import {State} from '../terraform/state.js'
+import {runDescribeAccessChanges} from './shared/describe-access-changes.js'
 
 import * as core from '@actions/core'
 
 async function run(): Promise<void> {
   await runToggleArchivedRepos()
 
-  const state = await State.New()
-  const config = Config.FromPath()
-  const accessChangesComment = describeAccessChangesComment(state, config)
-  const accessReport = describeAccessReport(state, config)
-  const accessReportPath = process.env.ACCESS_REPORT_PATH ?? 'ACCESS_REPORT.md'
+  const accessChangesComment = await runDescribeAccessChanges()
 
-  fs.writeFileSync(accessReportPath, accessReport)
   core.setOutput('comment', accessChangesComment)
 }
 

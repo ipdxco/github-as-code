@@ -1,7 +1,10 @@
 import 'reflect-metadata'
 
 import assert from 'node:assert'
+import {mkdtempSync, readFileSync, rmSync} from 'node:fs'
+import {join} from 'node:path'
 import {describe, it} from 'node:test'
+import {tmpdir} from 'node:os'
 import {Config} from '../../src/yaml/config.js'
 import {State} from '../../src/terraform/state.js'
 import {
@@ -11,7 +14,8 @@ import {
 import {
   describeAccessChanges,
   describeAccessChangesComment,
-  describeAccessReport
+  describeAccessReport,
+  runDescribeAccessChanges
 } from '../../src/actions/shared/describe-access-changes.js'
 import {StateSchema} from '../../src/terraform/schema.js'
 
@@ -234,5 +238,28 @@ members:
       comment,
       'Access changes are too long to post as a comment. Please inspect [the Fix workflow summary or access report artifact](https://github.example/runs/1) instead.'
     )
+  })
+
+  it('writes the full access report as a side effect of the action helper', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'access-report-'))
+    const reportPath = join(dir, 'ACCESS_REPORT.md')
+    const originalPath = process.env.ACCESS_REPORT_PATH
+
+    try {
+      process.env.ACCESS_REPORT_PATH = reportPath
+      const comment = await runDescribeAccessChanges()
+      const report = readFileSync(reportPath, 'utf8')
+
+      assert.match(comment, /<details><summary>Access Changes<\/summary>/)
+      assert.doesNotMatch(comment, /Potential no members/)
+      assert.match(report, /<summary>Potential no members<\/summary>/)
+    } finally {
+      if (originalPath === undefined) {
+        delete process.env.ACCESS_REPORT_PATH
+      } else {
+        process.env.ACCESS_REPORT_PATH = originalPath
+      }
+      rmSync(dir, {recursive: true, force: true})
+    }
   })
 })

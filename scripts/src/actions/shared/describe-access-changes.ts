@@ -1,6 +1,7 @@
 import {Config} from '../../yaml/config.js'
 import {State} from '../../terraform/state.js'
 import * as core from '@actions/core'
+import * as fs from 'fs'
 import {
   categorizeAccessSummary,
   formatAccessSummarySection,
@@ -13,7 +14,10 @@ const GITHUB_COMMENT_LENGTH_LIMIT = 65000
 export async function runDescribeAccessChanges(): Promise<string> {
   const state = await State.New()
   const config = Config.FromPath()
+  const accessReport = describeAccessReport(state, config)
+  const accessReportPath = process.env.ACCESS_REPORT_PATH ?? 'ACCESS_REPORT.md'
 
+  fs.writeFileSync(accessReportPath, accessReport)
   return describeAccessChangesComment(state, config)
 }
 
