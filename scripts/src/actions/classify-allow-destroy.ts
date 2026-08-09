@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import * as core from '@actions/core'
 import {pathToFileURL} from 'url'
+import * as fs from 'fs'
 import {Config} from '../yaml/config.js'
 import {State} from '../terraform/state.js'
 import {
@@ -25,6 +26,7 @@ type Matrix = {
   include: {
     workspace: string
     environment: string
+    environmentReasons: string[]
   }[]
 }
 
@@ -32,34 +34,58 @@ function getStateAddress(resource: Resource): string {
   return resource.getStateAddress().toLowerCase()
 }
 
-function hasMissingResources<T extends Resource>(
+function formatAllowDestroyReason(resource: Resource): string {
+  if (resource instanceof Member) {
+    return `removes organization member ${resource.username.toLowerCase()}`
+  }
+
+  if (resource instanceof Repository) {
+    return `removes repository ${resource.name.toLowerCase()}`
+  }
+
+  return `removes ${resource.getStateAddress().toLowerCase()}`
+}
+
+function getMissingResources<T extends Resource>(
   config: Config,
   state: State,
   resourceClass: ResourceConstructor<T>
-): boolean {
+): T[] {
   const desiredAddresses = new Set(
     config.getResources(resourceClass).map(getStateAddress)
   )
   return state
     .getResources(resourceClass)
-    .some(resource => !desiredAddresses.has(getStateAddress(resource)))
+    .filter(resource => !desiredAddresses.has(getStateAddress(resource)))
+}
+
+export async function getAllowDestroyReasons(
+  config: Config,
+  state: State
+): Promise<string[]> {
+  const reasons = []
+
+  for (const resourceClass of ALLOW_DESTROY_RESOURCE_CLASSES) {
+    if (
+      ResourceConstructors.includes(resourceClass) &&
+      !(await state.isIgnored(resourceClass))
+    ) {
+      reasons.push(
+        ...getMissingResources(config, state, resourceClass).map(
+          formatAllowDestroyReason
+        )
+      )
+    }
+  }
+
+  return reasons.sort()
 }
 
 export async function hasAllowDestroyChange(
   config: Config,
   state: State
 ): Promise<boolean> {
-  for (const resourceClass of ALLOW_DESTROY_RESOURCE_CLASSES) {
-    if (
-      ResourceConstructors.includes(resourceClass) &&
-      !(await state.isIgnored(resourceClass)) &&
-      hasMissingResources(config, state, resourceClass)
-    ) {
-      return true
-    }
-  }
-
-  return false
+  return (await getAllowDestroyReasons(config, state)).length > 0
 }
 
 export async function validateRemovedMembersHaveNoDanglingAccess(
@@ -140,6 +166,32 @@ export function getEnvironment(mode: Mode, allowDestroy: boolean): string {
   return allowDestroy ? `${mode}-allow-destroy` : mode
 }
 
+export function describeWorkspaceClassification(matrix: Matrix): string {
+  const lines = [
+    '## Workspace classification',
+    '',
+    '| Workspace | Environment | Reason |',
+    '| --- | --- | --- |'
+  ]
+
+  for (const item of matrix.include) {
+    const reasons =
+      item.environmentReasons.length === 0
+        ? 'No allow-destroy changes detected.'
+        : item.environmentReasons.join('<br>')
+    lines.push(`| ${item.workspace} | ${item.environment} | ${reasons} |`)
+  }
+
+  return lines.join('\n')
+}
+
+function writeStepSummary(markdown: string): void {
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY
+  if (summaryPath !== undefined) {
+    fs.appendFileSync(summaryPath, `${markdown}\n`)
+  }
+}
+
 export async function classifyWorkspaces({
   mode,
   workspaces,
@@ -158,10 +210,13 @@ export async function classifyWorkspaces({
       const config = Config.FromPath(`${githubDir}/${workspace}.yml`)
       const state = await State.New()
       await validateRemovedMembersHaveNoDanglingAccess(config, state)
-      const allowDestroy = await hasAllowDestroyChange(config, state)
-      const environment = getEnvironment(mode, allowDestroy)
+      const environmentReasons = await getAllowDestroyReasons(config, state)
+      const environment = getEnvironment(mode, environmentReasons.length > 0)
       core.info(`${workspace}: ${environment}`)
-      include.push({workspace, environment})
+      for (const reason of environmentReasons) {
+        core.info(`- ${reason}`)
+      }
+      include.push({workspace, environment, environmentReasons})
     }
   } finally {
     if (originalWorkspace === undefined) {
@@ -191,6 +246,7 @@ async function run(): Promise<void> {
     githubDir: process.env.GITHUB_DIR ?? '../github'
   })
 
+  writeStepSummary(describeWorkspaceClassification(matrix))
   core.setOutput('matrix', JSON.stringify(matrix))
 }
 

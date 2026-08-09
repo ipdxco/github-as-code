@@ -154,6 +154,7 @@ jobs:
         env:
           SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || '' }}
+          ENVIRONMENT_REASONS: ${{ toJson(matrix.environmentReasons) }}
         run: |
           {
             echo '## Plan target'
@@ -164,6 +165,12 @@ jobs:
             echo "- Source SHA: \`${SOURCE_SHA}\`"
             echo "- Workspace: \`${TF_WORKSPACE}\`"
             echo "- Environment: \`${{ matrix.environment }}\`"
+            if [[ "$(jq 'length' <<< "${ENVIRONMENT_REASONS}")" == '0' ]]; then
+              echo "- Environment reason: no allow-destroy changes detected"
+            else
+              echo "- Environment reason:"
+              jq -r '.[] | "  - " + .' <<< "${ENVIRONMENT_REASONS}"
+            fi
             echo "- Terraform plan artifact: \`${TF_WORKSPACE}_${SOURCE_SHA}.tfplan\`"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Plan terraform

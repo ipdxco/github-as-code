@@ -101,9 +101,14 @@ describe('workflows', () => {
     )
 
     assert.ok(targetStep)
+    assert.equal(
+      targetStep.env?.ENVIRONMENT_REASONS,
+      '${{ toJson(matrix.environmentReasons) }}'
+    )
     assert.match(targetStep.run ?? '', /## Plan target/)
     assert.match(targetStep.run ?? '', /Pull request/)
     assert.match(targetStep.run ?? '', /Source SHA/)
+    assert.match(targetStep.run ?? '', /Environment reason/)
     assert.match(targetStep.run ?? '', /Terraform plan artifact/)
     assert.ok(publishStep)
     assert.equal(
@@ -138,8 +143,13 @@ describe('workflows', () => {
     )
 
     assert.ok(targetStep)
+    assert.equal(
+      targetStep.env?.ENVIRONMENT_REASONS,
+      '${{ toJson(matrix.environmentReasons) }}'
+    )
     assert.match(targetStep.run ?? '', /## Apply target/)
     assert.match(targetStep.run ?? '', /Reviewed SHA/)
+    assert.match(targetStep.run ?? '', /Environment reason/)
     assert.match(targetStep.run ?? '', /Reviewed plan artifact/)
     assert.ok(reviewedStep)
     assert.match(reviewedStep.run ?? '', /## Reviewed Terraform plan/)

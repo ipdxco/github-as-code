@@ -138,7 +138,11 @@ export function describeAccessChanges(state: State, config: Config): string {
         beforeAccess?.role !== undefined &&
         afterAccess?.role === undefined
       ) {
-        userLines.push('  - will leave the organization')
+        if (afterAccess?.isOutsideCollaborator) {
+          userLines.push('  - will become an outside collaborator')
+        } else {
+          userLines.push('  - will leave the organization')
+        }
       } else {
         userLines.push(
           `  - will have the role in the organization change from ${beforeAccess?.role} to ${afterAccess?.role}`

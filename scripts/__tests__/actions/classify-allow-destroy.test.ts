@@ -3,7 +3,9 @@ import 'reflect-metadata'
 import {describe, it} from 'node:test'
 import assert from 'node:assert'
 import {
+  describeWorkspaceClassification,
   getEnvironment,
+  getAllowDestroyReasons,
   hasAllowDestroyChange,
   validateRemovedMembersHaveNoDanglingAccess
 } from '../../src/actions/classify-allow-destroy.js'
@@ -90,6 +92,66 @@ members:
     )
 
     assert.equal(allowDestroy, true)
+  })
+
+  it('describes why allow-destroy environments are selected', async () => {
+    setManagedResourceTypes(['github_repository', 'github_membership'])
+
+    const reasons = await getAllowDestroyReasons(
+      new Config(`
+members:
+  admin:
+    - kept
+repositories:
+  kept: {}
+`),
+      state({
+        values: {
+          root_module: {
+            resources: [
+              {
+                mode: 'managed',
+                type: 'github_membership',
+                values: {username: 'kept', role: 'admin'}
+              },
+              {
+                mode: 'managed',
+                type: 'github_membership',
+                values: {username: 'removed', role: 'admin'}
+              },
+              {
+                mode: 'managed',
+                type: 'github_repository',
+                values: {name: 'kept'}
+              },
+              {
+                mode: 'managed',
+                type: 'github_repository',
+                values: {name: 'removed'}
+              }
+            ]
+          }
+        }
+      })
+    )
+    const summary = describeWorkspaceClassification({
+      include: [
+        {
+          workspace: 'default',
+          environment: 'read-allow-destroy',
+          environmentReasons: reasons
+        }
+      ]
+    })
+
+    assert.deepEqual(reasons, [
+      'removes organization member removed',
+      'removes repository removed'
+    ])
+    assert.match(summary, /Workspace classification/)
+    assert.match(summary, /read-allow-destroy/)
+    assert.match(summary, /removes organization member removed/)
+    assert.match(summary, /removes repository removed/)
   })
 
   it('keeps repository and membership updates in normal environments', async () => {

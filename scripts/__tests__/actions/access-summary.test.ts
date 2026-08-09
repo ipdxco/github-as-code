@@ -205,6 +205,47 @@ teams:
     )
   })
 
+  it('describes member removal with retained public access as outside collaborator transition', () => {
+    const state = new State(
+      JSON.stringify({
+        values: {
+          root_module: {
+            resources: [
+              {
+                mode: 'managed',
+                index: 'alice',
+                address: 'github_membership.this["alice"]',
+                type: 'github_membership',
+                values: {
+                  username: 'alice',
+                  role: 'member'
+                }
+              }
+            ]
+          }
+        }
+      } satisfies StateSchema)
+    )
+    const config = new Config(`
+repositories:
+  public-repo:
+    collaborators:
+      pull:
+        - alice
+    visibility: public
+`)
+
+    const changes = describeAccessChanges(state, config)
+
+    assert.match(changes, /User alice:/)
+    assert.match(changes, /will become an outside collaborator/)
+    assert.doesNotMatch(changes, /will leave the organization/)
+    assert.match(
+      changes,
+      /will gain direct pull permission to public-repo \(public\)/
+    )
+  })
+
   it('keeps routine comments to access changes only', () => {
     const state = new State(
       JSON.stringify({values: {root_module: {resources: []}}})

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - plan/apply workflows now publish planned/applied commit, workspace, environment, and rendered terraform plan details to workflow summaries and artifacts
+- allow-destroy workspace classification now reports which member or repository removals require guarded environments
 - access report member classifications now explicitly describe the post-change access state
 - workflows: added separate GitHub Actions environments for reading organization state, writing organization state, and pushing repository changes
 - **BREAKING**: access changes action now emits only the access change comment by default; update custom usage to avoid nesting the full access breakdown in PR comments

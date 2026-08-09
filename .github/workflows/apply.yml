@@ -143,6 +143,7 @@ jobs:
       - name: Summarize apply target
         env:
           REVIEWED_SHA: ${{ needs.prepare.outputs.sha }}
+          ENVIRONMENT_REASONS: ${{ toJson(matrix.environmentReasons) }}
         run: |
           {
             echo '## Apply target'
@@ -150,6 +151,12 @@ jobs:
             echo "- Reviewed SHA: \`${REVIEWED_SHA}\`"
             echo "- Workspace: \`${TF_WORKSPACE}\`"
             echo "- Environment: \`${{ matrix.environment }}\`"
+            if [[ "$(jq 'length' <<< "${ENVIRONMENT_REASONS}")" == '0' ]]; then
+              echo "- Environment reason: no allow-destroy changes detected"
+            else
+              echo "- Environment reason:"
+              jq -r '.[] | "  - " + .' <<< "${ENVIRONMENT_REASONS}"
+            fi
             echo "- Reviewed plan artifact: \`${TF_WORKSPACE}_${REVIEWED_SHA}.tfplan\`"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Download reviewed terraform plan
