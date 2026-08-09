@@ -117,7 +117,7 @@
 ## GitHub Actions Environments and Secrets
 
 - [ ] Create GitHub Actions environments named `read`, `read-allow-destroy`, `write`, `write-allow-destroy`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
-- [ ] Configure `read-allow-destroy` and `write-allow-destroy` with stricter protection rules for repository and membership deletion plans/applies:
+- [ ] Configure `read-allow-destroy` and `write-allow-destroy` with stricter protection rules for repository and membership deletion plans/applies, and set an environment variable named `ALLOW_DESTROY` to `true` in each environment:
     - [ ] Require reviewers
     - [ ] Prevent self-review
     - [ ] Restrict deployment branches to `master`

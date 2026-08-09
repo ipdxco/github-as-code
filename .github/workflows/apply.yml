@@ -132,7 +132,14 @@ jobs:
         run: terraform init
       - name: Allow destroy in guarded environment
         if: matrix.environment == 'write-allow-destroy'
-        run: cp allow_destroy_override.tf.disabled allow_destroy_override.tf
+        env:
+          ALLOW_DESTROY: ${{ vars.ALLOW_DESTROY }}
+        run: |
+          if [[ "${ALLOW_DESTROY}" != "true" ]]; then
+            echo "The write-allow-destroy environment must define ALLOW_DESTROY=true."
+            exit 1
+          fi
+          cp allow_destroy_override.tf.disabled allow_destroy_override.tf
       - name: Download reviewed terraform plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

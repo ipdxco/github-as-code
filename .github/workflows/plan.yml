@@ -141,7 +141,14 @@ jobs:
         working-directory: terraform
       - name: Allow destroy in guarded environment
         if: matrix.environment == 'read-allow-destroy'
-        run: cp allow_destroy_override.tf.disabled allow_destroy_override.tf
+        env:
+          ALLOW_DESTROY: ${{ vars.ALLOW_DESTROY }}
+        run: |
+          if [[ "${ALLOW_DESTROY}" != "true" ]]; then
+            echo "The read-allow-destroy environment must define ALLOW_DESTROY=true."
+            exit 1
+          fi
+          cp allow_destroy_override.tf.disabled allow_destroy_override.tf
         working-directory: terraform
       - name: Plan terraform
         run: |

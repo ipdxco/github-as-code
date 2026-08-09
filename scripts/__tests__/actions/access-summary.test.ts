@@ -10,6 +10,7 @@ import {
 } from '../../src/actions/shared/access-summary.js'
 import {
   describeAccessChanges,
+  describeAccessChangesComment,
   describeAccessReport
 } from '../../src/actions/shared/describe-access-changes.js'
 import {StateSchema} from '../../src/terraform/schema.js'
@@ -22,6 +23,7 @@ members:
     - alice
     - carol
     - dave
+    - frank
     - kept # KEEP: manual exception
 repositories:
   private-repo:
@@ -45,6 +47,10 @@ repositories:
         - maintainers
     visibility: public
 teams:
+  empty:
+    members:
+      member:
+        - frank
   guests:
     members:
       member:
@@ -64,11 +70,11 @@ teams:
     assert.equal(summary['team-only-non-member'].isOutsideCollaborator, false)
     assert.deepEqual(categories.outsideCollaborators, ['outside'])
     assert.deepEqual(categories.potentialOutsideCollaborators, ['alice'])
-    assert.deepEqual(categories.potentialNoMembers, ['carol'])
+    assert.deepEqual(categories.potentialNoMembers, ['carol', 'frank'])
     assert.deepEqual(categories.anyOtherMembers, ['dave', 'kept'])
   })
 
-  it('annotates repository visibility in access changes and summaries', () => {
+  it('annotates repository visibility and access path in access changes and summaries', () => {
     const state = new State(
       JSON.stringify({
         values: {
@@ -128,11 +134,103 @@ repositories:
 
     assert.match(
       changes,
-      /will have the permission to public-repo \(public\) change from pull to push/
+      /will change from having direct pull permission to public-repo \(public\) to having direct push permission to public-repo \(public\)/
     )
     assert.match(report, /<summary>Potential outside collaborators<\/summary>/)
     assert.match(report, /Affected users: alice/)
     assert.match(report, /User alice \(member\):/)
-    assert.match(report, /has push permission to public-repo \(public\)/)
+    assert.match(report, /has direct push permission to public-repo \(public\)/)
+  })
+
+  it('describes team and mixed repository access paths', () => {
+    const state = new State(
+      JSON.stringify({values: {root_module: {resources: []}}})
+    )
+    const config = new Config(`
+members:
+  member:
+    - alice
+    - bob
+repositories:
+  private-repo:
+    collaborators:
+      pull:
+        - bob
+    teams:
+      admin:
+        - owners
+      push:
+        - maintainers
+    visibility: private
+teams:
+  maintainers:
+    members:
+      member:
+        - alice
+  owners:
+    members:
+      member:
+        - bob
+`)
+
+    const changes = describeAccessChanges(state, config)
+    const report = describeAccessReport(state, config)
+
+    assert.match(
+      changes,
+      /will gain push permission to private-repo \(private\) through team maintainers/
+    )
+    assert.match(
+      changes,
+      /will gain effective admin permission to private-repo \(private\) through direct pull permission and team owners/
+    )
+    assert.match(
+      report,
+      /has push permission to private-repo \(private\) through team maintainers/
+    )
+    assert.match(
+      report,
+      /has effective admin permission to private-repo \(private\) through direct pull permission and team owners/
+    )
+  })
+
+  it('keeps routine comments to access changes only', () => {
+    const state = new State(
+      JSON.stringify({values: {root_module: {resources: []}}})
+    )
+    const config = new Config(`
+members:
+  member:
+    - alice
+`)
+
+    const comment = describeAccessChangesComment(state, config)
+
+    assert.match(comment, /<summary>Access Changes<\/summary>/)
+    assert.doesNotMatch(comment, /Potential no members/)
+    assert.doesNotMatch(comment, /Any other members/)
+  })
+
+  it('falls back to workflow output when access change comments are too long', () => {
+    const state = new State(
+      JSON.stringify({values: {root_module: {resources: []}}})
+    )
+    const config = new Config(`
+members:
+  member:
+    - alice
+`)
+
+    const comment = describeAccessChangesComment(
+      state,
+      config,
+      10,
+      'https://github.example/runs/1'
+    )
+
+    assert.equal(
+      comment,
+      'Access changes are too long to post as a comment. Please inspect [the Fix workflow summary or access report artifact](https://github.example/runs/1) instead.'
+    )
   })
 })

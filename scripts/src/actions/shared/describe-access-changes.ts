@@ -1,38 +1,67 @@
 import {Config} from '../../yaml/config.js'
 import {State} from '../../terraform/state.js'
-import diff from 'deep-diff'
 import * as core from '@actions/core'
 import {
   categorizeAccessSummary,
   formatAccessSummarySection,
-  formatRepositoryAccess,
-  getAccessSummaryFrom,
-  getComparableAccessSummary,
-  RepositoryAccess
+  formatRepositoryAccessDescription,
+  getAccessSummaryFrom
 } from './access-summary.js'
 
-function repositoryLabel(
-  repository: string,
-  afterSummary: ReturnType<typeof getAccessSummaryFrom>,
-  beforeSummary: ReturnType<typeof getAccessSummaryFrom>
-): string {
-  const access =
-    Object.values(afterSummary)
-      .map(user => user.repositories[repository])
-      .find(Boolean) ??
-    Object.values(beforeSummary)
-      .map(user => user.repositories[repository])
-      .find(Boolean) ??
-    ({permission: 'pull', visibility: 'private'} as RepositoryAccess)
-
-  return formatRepositoryAccess(repository, access)
-}
+const GITHUB_COMMENT_LENGTH_LIMIT = 65000
 
 export async function runDescribeAccessChanges(): Promise<string> {
   const state = await State.New()
   const config = Config.FromPath()
 
-  return describeAccessReport(state, config)
+  return describeAccessChangesComment(state, config)
+}
+
+export function workflowRunUrl(): string | undefined {
+  const serverUrl = process.env.GITHUB_SERVER_URL
+  const repository = process.env.GITHUB_REPOSITORY
+  const runId = process.env.GITHUB_RUN_ID
+
+  if (
+    serverUrl === undefined ||
+    repository === undefined ||
+    runId === undefined
+  ) {
+    return undefined
+  }
+
+  return `${serverUrl}/${repository}/actions/runs/${runId}`
+}
+
+export function describeAccessChangesComment(
+  state: State,
+  config: Config,
+  maxLength = GITHUB_COMMENT_LENGTH_LIMIT,
+  runUrl = workflowRunUrl()
+): string {
+  const accessChangesDescription = describeAccessChanges(state, config)
+  const comment = [
+    'The following access changes will be introduced as a result of applying the plan:',
+    '',
+    '<details><summary>Access Changes</summary>',
+    '',
+    '```',
+    accessChangesDescription,
+    '```',
+    '',
+    '</details>'
+  ].join('\n')
+
+  if (Buffer.byteLength(comment, 'utf8') < maxLength) {
+    return comment
+  }
+
+  const destination =
+    runUrl === undefined
+      ? 'the Fix workflow summary or the access report artifact'
+      : `[the Fix workflow summary or access report artifact](${runUrl})`
+
+  return `Access changes are too long to post as a comment. Please inspect ${destination} instead.`
 }
 
 export function describeAccessReport(state: State, config: Config): string {
@@ -78,133 +107,95 @@ export function describeAccessReport(state: State, config: Config): string {
 }
 
 export function describeAccessChanges(state: State, config: Config): string {
-  const before = getComparableAccessSummary(state)
-  const after = getComparableAccessSummary(config)
-  const beforeWithVisibility = getAccessSummaryFrom(state)
-  const afterWithVisibility = getAccessSummaryFrom(config)
+  const before = getAccessSummaryFrom(state)
+  const after = getAccessSummaryFrom(config)
 
   core.info(JSON.stringify({before, after}, null, 2))
 
-  const changes = diff(before, after) || []
-
-  core.debug(JSON.stringify(changes, null, 2))
-
-  const changesByUser: Record<string, typeof changes> = {}
-  for (const change of changes) {
-    if (change.path === undefined) {
-      throw new Error(`Change ${change.kind} has no path`)
-    }
-    const path = change.path
-    changesByUser[String(path[0])] = changesByUser[String(path[0])] || []
-    changesByUser[String(path[0])].push(change)
-  }
-
   const lines = []
-  for (const [username, userChanges] of Object.entries(changesByUser)) {
-    lines.push(`User ${username}:`)
-    for (const change of userChanges) {
-      if (change.path === undefined) {
-        throw new Error(`Change ${change.kind} has no path`)
+  const usernames = Array.from(
+    new Set([...Object.keys(before), ...Object.keys(after)])
+  ).sort()
+
+  for (const username of usernames) {
+    const beforeAccess = before[username]
+    const afterAccess = after[username]
+    const userLines = []
+
+    if (beforeAccess?.role !== afterAccess?.role) {
+      if (beforeAccess?.role === undefined && afterAccess?.role !== undefined) {
+        userLines.push(
+          `  - will join the organization as a ${afterAccess.role} (remind them to accept the email invitation)`
+        )
+      } else if (
+        beforeAccess?.role !== undefined &&
+        afterAccess?.role === undefined
+      ) {
+        userLines.push('  - will leave the organization')
+      } else {
+        userLines.push(
+          `  - will have the role in the organization change from ${beforeAccess?.role} to ${afterAccess?.role}`
+        )
       }
-      const path = change.path
-      switch (change.kind) {
-        case 'E':
-          if (path[1] === 'role') {
-            if (change.lhs === undefined) {
-              lines.push(
-                `  - will join the organization as a ${change.rhs} (remind them to accept the email invitation)`
-              )
-            } else if (change.rhs === undefined) {
-              lines.push('  - will leave the organization')
-            } else {
-              lines.push(
-                `  - will have the role in the organization change from ${change.lhs} to ${change.rhs}`
-              )
-            }
-          } else {
-            const repository = String(path[2])
-            lines.push(
-              `  - will have the permission to ${repositoryLabel(
-                repository,
-                afterWithVisibility,
-                beforeWithVisibility
-              )} change from ${change.lhs} to ${change.rhs}`
-            )
-          }
-          break
-        case 'N':
-          if (path.length === 1) {
-            if (change.rhs.role) {
-              lines.push(
-                `  - will join the organization as a ${change.rhs.role} (remind them to accept the email invitation)`
-              )
-            }
-            if (change.rhs.repositories) {
-              const repositories = change.rhs.repositories as unknown as Record<
-                string,
-                {permission: string}
-              >
-              for (const [repository, {permission}] of Object.entries(
-                repositories
-              )) {
-                lines.push(
-                  `  - will gain ${permission} permission to ${repositoryLabel(
-                    repository,
-                    afterWithVisibility,
-                    beforeWithVisibility
-                  )}`
-                )
-              }
-            }
-          } else {
-            const repository = String(path[2])
-            lines.push(
-              `  - will gain ${change.rhs.permission} permission to ${repositoryLabel(
-                repository,
-                afterWithVisibility,
-                beforeWithVisibility
-              )}`
-            )
-          }
-          break
-        case 'D':
-          if (path.length === 1) {
-            if (change.lhs.role) {
-              lines.push('  - will leave the organization')
-            }
-            if (change.lhs.repositories) {
-              const repositories = change.lhs.repositories as unknown as Record<
-                string,
-                {permission: string}
-              >
-              for (const [repository, {permission}] of Object.entries(
-                repositories
-              )) {
-                lines.push(
-                  `  - will lose ${permission} permission to ${repositoryLabel(
-                    repository,
-                    afterWithVisibility,
-                    beforeWithVisibility
-                  )}`
-                )
-              }
-            }
-          } else {
-            const repository = String(path[2])
-            lines.push(
-              `  - will lose ${change.lhs.permission} permission to ${repositoryLabel(
-                repository,
-                afterWithVisibility,
-                beforeWithVisibility
-              )}`
-            )
-          }
-          break
+    }
+
+    const repositories = Array.from(
+      new Set([
+        ...Object.keys(beforeAccess?.repositories ?? {}),
+        ...Object.keys(afterAccess?.repositories ?? {})
+      ])
+    ).sort()
+
+    for (const repository of repositories) {
+      const beforeRepositoryAccess = beforeAccess?.repositories[repository]
+      const afterRepositoryAccess = afterAccess?.repositories[repository]
+      if (
+        JSON.stringify(beforeRepositoryAccess) ===
+        JSON.stringify(afterRepositoryAccess)
+      ) {
+        continue
       }
+
+      if (
+        beforeRepositoryAccess === undefined &&
+        afterRepositoryAccess !== undefined
+      ) {
+        userLines.push(
+          `  - will gain ${formatRepositoryAccessDescription(
+            repository,
+            afterRepositoryAccess
+          )}`
+        )
+      } else if (
+        beforeRepositoryAccess !== undefined &&
+        afterRepositoryAccess === undefined
+      ) {
+        userLines.push(
+          `  - will lose ${formatRepositoryAccessDescription(
+            repository,
+            beforeRepositoryAccess
+          )}`
+        )
+      } else if (
+        beforeRepositoryAccess !== undefined &&
+        afterRepositoryAccess !== undefined
+      ) {
+        userLines.push(
+          `  - will change from having ${formatRepositoryAccessDescription(
+            repository,
+            beforeRepositoryAccess
+          )} to having ${formatRepositoryAccessDescription(
+            repository,
+            afterRepositoryAccess
+          )}`
+        )
+      }
+    }
+
+    if (userLines.length > 0) {
+      lines.push(`User ${username}:`, ...userLines)
     }
   }
 
-  return changes.length > 0
-    ? lines.join('\n')
-    : 'There will be no access changes'
+  return lines.length > 0 ? lines.join('\n') : 'There will be no access changes'
 }

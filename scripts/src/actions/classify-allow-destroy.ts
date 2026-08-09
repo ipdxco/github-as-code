@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import * as core from '@actions/core'
 import {pathToFileURL} from 'url'
 import {Config} from '../yaml/config.js'
@@ -8,7 +10,9 @@ import {
   ResourceConstructors
 } from '../resources/resource.js'
 import {Member} from '../resources/member.js'
-import {Repository} from '../resources/repository.js'
+import {Repository, Visibility} from '../resources/repository.js'
+import {TeamMember} from '../resources/team-member.js'
+import {RepositoryCollaborator} from '../resources/repository-collaborator.js'
 
 const ALLOW_DESTROY_RESOURCE_CLASSES: ResourceConstructor<Resource>[] = [
   Member,
@@ -58,6 +62,80 @@ export async function hasAllowDestroyChange(
   return false
 }
 
+export async function validateRemovedMembersHaveNoDanglingAccess(
+  config: Config,
+  state: State
+): Promise<void> {
+  if (await state.isIgnored(Member)) {
+    return
+  }
+
+  const desiredMembers = new Set(
+    config.getResources(Member).map(member => member.username.toLowerCase())
+  )
+  const removedMembers = state
+    .getResources(Member)
+    .map(member => member.username.toLowerCase())
+    .filter(username => !desiredMembers.has(username))
+
+  if (removedMembers.length === 0) {
+    return
+  }
+
+  const repositoryVisibility = new Map(
+    [...state.getResources(Repository), ...config.getResources(Repository)].map(
+      repository => [
+        repository.name.toLowerCase(),
+        repository.visibility ?? Visibility.Private
+      ]
+    )
+  )
+  const teamMembers = config.getResources(TeamMember)
+  const repositoryCollaborators = config.getResources(RepositoryCollaborator)
+  const errors: string[] = []
+
+  for (const username of removedMembers.sort()) {
+    const teams = teamMembers
+      .filter(teamMember => teamMember.username.toLowerCase() === username)
+      .map(teamMember => teamMember.team.toLowerCase())
+      .sort()
+    const privateRepositories = repositoryCollaborators
+      .filter(collaborator => collaborator.username.toLowerCase() === username)
+      .filter(
+        collaborator =>
+          (repositoryVisibility.get(collaborator.repository.toLowerCase()) ??
+            Visibility.Private) === Visibility.Private
+      )
+      .map(collaborator => collaborator.repository.toLowerCase())
+      .sort()
+
+    if (teams.length > 0) {
+      errors.push(
+        `${username} is still a member of ${teams.length === 1 ? 'team' : 'teams'} ${teams.join(
+          ', '
+        )}`
+      )
+    }
+
+    if (privateRepositories.length > 0) {
+      errors.push(
+        `${username} still has direct access to private ${privateRepositories.length === 1 ? 'repository' : 'repositories'} ${privateRepositories.join(
+          ', '
+        )}`
+      )
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      [
+        'Cannot remove organization members while leaving dangling access:',
+        ...errors.map(error => `- ${error}`)
+      ].join('\n')
+    )
+  }
+}
+
 export function getEnvironment(mode: Mode, allowDestroy: boolean): string {
   return allowDestroy ? `${mode}-allow-destroy` : mode
 }
@@ -79,6 +157,7 @@ export async function classifyWorkspaces({
       process.env.TF_WORKSPACE = workspace
       const config = Config.FromPath(`${githubDir}/${workspace}.yml`)
       const state = await State.New()
+      await validateRemovedMembersHaveNoDanglingAccess(config, state)
       const allowDestroy = await hasAllowDestroyChange(config, state)
       const environment = getEnvironment(mode, allowDestroy)
       core.info(`${workspace}: ${environment}`)

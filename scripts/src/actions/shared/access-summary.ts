@@ -9,6 +9,13 @@ import {Repository, Visibility} from '../../resources/repository.js'
 export type RepositoryAccess = {
   permission: string
   visibility: Visibility
+  grants: RepositoryAccessGrant[]
+}
+
+export type RepositoryAccessGrant = {
+  source: 'direct' | 'team'
+  permission: string
+  team?: string
 }
 
 export type UserAccess = {
@@ -37,6 +44,45 @@ export function betterPermission(current: string, next: string): string {
   return permissions.indexOf(next) < permissions.indexOf(current)
     ? next
     : current
+}
+
+function betterGrant(
+  current: RepositoryAccessGrant | undefined,
+  next: RepositoryAccessGrant
+): RepositoryAccessGrant {
+  return current === undefined ||
+    permissions.indexOf(next.permission) <
+      permissions.indexOf(current.permission)
+    ? next
+    : current
+}
+
+function addRepositoryGrant(
+  repositories: Record<string, RepositoryAccess>,
+  repository: string,
+  visibility: Visibility,
+  grant: RepositoryAccessGrant
+): void {
+  const current = repositories[repository]
+  if (current === undefined) {
+    repositories[repository] = {
+      permission: grant.permission,
+      visibility,
+      grants: [grant]
+    }
+  } else {
+    current.permission = betterPermission(current.permission, grant.permission)
+    current.grants.push(grant)
+  }
+}
+
+function sortRepositoryAccess(access: RepositoryAccess): RepositoryAccess {
+  return {
+    ...access,
+    grants: access.grants.sort((a, b) =>
+      JSON.stringify(a).localeCompare(JSON.stringify(b))
+    )
+  }
 }
 
 export function parseUserList(source?: string): string[] {
@@ -114,43 +160,49 @@ export function getAccessSummaryFrom(source: State | Config): AccessSummary {
       const repository = rc.repository.toLowerCase()
       const access = {
         permission: rc.permission,
-        visibility: repositoryVisibility.get(repository) ?? Visibility.Private
+        visibility: repositoryVisibility.get(repository) ?? Visibility.Private,
+        grants: [
+          {
+            source: 'direct' as const,
+            permission: rc.permission
+          }
+        ]
       }
-      directRepositories[repository] = directRepositories[repository]
-        ? {
-            ...access,
-            permission: betterPermission(
+      directRepositories[repository] = {
+        ...access,
+        grants: [
+          betterGrant(
+            directRepositories[repository]?.grants[0],
+            access.grants[0]
+          )
+        ],
+        permission: directRepositories[repository]
+          ? betterPermission(
               directRepositories[repository].permission,
               access.permission
             )
-          }
-        : access
-      repositories[repository] = repositories[repository]
-        ? {
-            ...access,
-            permission: betterPermission(
-              repositories[repository].permission,
-              access.permission
-            )
-          }
-        : access
+          : access.permission
+      }
+      addRepositoryGrant(
+        repositories,
+        repository,
+        access.visibility,
+        access.grants[0]
+      )
     }
 
     for (const tr of teamRepository) {
       const repository = tr.repository.toLowerCase()
-      const access = {
-        permission: tr.permission,
-        visibility: repositoryVisibility.get(repository) ?? Visibility.Private
-      }
-      repositories[repository] = repositories[repository]
-        ? {
-            ...access,
-            permission: betterPermission(
-              repositories[repository].permission,
-              access.permission
-            )
-          }
-        : access
+      addRepositoryGrant(
+        repositories,
+        repository,
+        repositoryVisibility.get(repository) ?? Visibility.Private,
+        {
+          source: 'team',
+          permission: tr.permission,
+          team: tr.team.toLowerCase()
+        }
+      )
     }
 
     const hasKeep =
@@ -168,10 +220,20 @@ export function getAccessSummaryFrom(source: State | Config): AccessSummary {
         isMember,
         isOutsideCollaborator,
         repositories,
-        directRepositories,
+        directRepositories: Object.fromEntries(
+          Object.entries(directRepositories).map(([repository, access]) => [
+            repository,
+            sortRepositoryAccess(access)
+          ])
+        ),
         teams,
         hasKeepComment: hasKeep
       }
+      accessSummary[username].repositories = Object.fromEntries(
+        Object.entries(accessSummary[username].repositories).map(
+          ([repository, access]) => [repository, sortRepositoryAccess(access)]
+        )
+      )
     }
   }
 
@@ -182,7 +244,10 @@ export function getComparableAccessSummary(source: State | Config): Record<
   string,
   {
     role?: string
-    repositories: Record<string, {permission: string}>
+    repositories: Record<
+      string,
+      {permission: string; grants: RepositoryAccessGrant[]}
+    >
   }
 > {
   return Object.fromEntries(
@@ -193,7 +258,10 @@ export function getComparableAccessSummary(source: State | Config): Record<
         repositories: Object.fromEntries(
           Object.entries(access.repositories).map(([repository, value]) => [
             repository,
-            {permission: value.permission}
+            {
+              permission: value.permission,
+              grants: value.grants
+            }
           ])
         )
       }
@@ -213,7 +281,6 @@ export function categorizeAccessSummary(
 
   for (const [username, access] of Object.entries(summary)) {
     const repositories = Object.values(access.repositories)
-    const directRepositories = Object.values(access.directRepositories)
     if (access.isOutsideCollaborator) {
       categories.outsideCollaborators.push(username)
     } else if (
@@ -229,8 +296,7 @@ export function categorizeAccessSummary(
     } else if (
       access.isMember &&
       !access.hasKeepComment &&
-      directRepositories.length === 0 &&
-      access.teams.length === 0
+      repositories.length === 0
     ) {
       categories.potentialNoMembers.push(username)
     } else if (access.isMember) {
@@ -250,6 +316,39 @@ export function formatRepositoryAccess(
   access: RepositoryAccess
 ): string {
   return `${repository} (${access.visibility})`
+}
+
+function formatTeams(teams: string[]): string {
+  return teams.length === 1 ? `team ${teams[0]}` : `teams ${teams.join(', ')}`
+}
+
+export function formatRepositoryAccessDescription(
+  repository: string,
+  access: RepositoryAccess
+): string {
+  const directGrant = access.grants.find(grant => grant.source === 'direct')
+  const teamGrants = access.grants.filter(grant => grant.source === 'team')
+  const repositoryLabel = formatRepositoryAccess(repository, access)
+
+  if (directGrant !== undefined && teamGrants.length === 0) {
+    return `direct ${directGrant.permission} permission to ${repositoryLabel}`
+  }
+
+  if (directGrant === undefined) {
+    const teams = Array.from(
+      new Set(teamGrants.map(grant => grant.team).filter(Boolean) as string[])
+    ).sort()
+    return `${access.permission} permission to ${repositoryLabel} through ${formatTeams(
+      teams
+    )}`
+  }
+
+  const teams = Array.from(
+    new Set(teamGrants.map(grant => grant.team).filter(Boolean) as string[])
+  ).sort()
+  return `effective ${access.permission} permission to ${repositoryLabel} through direct ${directGrant.permission} permission and ${formatTeams(
+    teams
+  )}`
 }
 
 export function formatAccessSummarySection(
@@ -281,7 +380,7 @@ export function formatAccessSummarySection(
     } else {
       for (const [repository, repositoryAccess] of repositories) {
         lines.push(
-          `  - has ${repositoryAccess.permission} permission to ${formatRepositoryAccess(
+          `  - has ${formatRepositoryAccessDescription(
             repository,
             repositoryAccess
           )}`

@@ -117,6 +117,19 @@ jobs:
         id: fix
         run: node lib/actions/fix-yaml-config.js
         working-directory: scripts
+        env:
+          ACCESS_REPORT_PATH: ../ACCESS_REPORT.md
+      - name: Publish access report summary
+        if: always() && hashFiles('ACCESS_REPORT.md') != ''
+        run: cat ACCESS_REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload access report
+        if: always() && hashFiles('ACCESS_REPORT.md') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: access-report-${{ env.TF_WORKSPACE }}
+          path: ACCESS_REPORT.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload YAML config
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
