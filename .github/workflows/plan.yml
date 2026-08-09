@@ -47,18 +47,69 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         timeout-minutes: 10
-  plan:
+  classify:
     needs: [prepare]
+    permissions:
+      contents: read
+      pull-requests: read
+    name: Classify
+    runs-on: ubuntu-latest
+    environment: read
+    outputs:
+      matrix: ${{ steps.classify.outputs.matrix }}
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      AWS_ACCESS_KEY_ID: ${{ secrets.RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
+      WORKSPACES: ${{ needs.prepare.outputs.workspaces }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: github.event_name == 'pull_request_target'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "pull/${NUMBER}/head"
+          rm -rf github && git checkout "${SHA}" -- github
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
+        with:
+          terraform_version: 1.12.0
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: terraform
+      - name: Install pnpm
+        uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
+        with:
+          version: 10
+      - name: Use Node.js lts/*
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: lts/*
+          cache: ''
+      - run: pnpm install --frozen-lockfile && pnpm run build
+        working-directory: scripts
+      - name: Classify workspaces
+        id: classify
+        env:
+          MODE: read
+        run: node lib/actions/classify-allow-destroy.js
+        working-directory: scripts
+  plan:
+    needs: [prepare, classify]
     permissions:
       contents: read
       pull-requests: read
     strategy:
       fail-fast: false
-      matrix:
-        workspace: ${{ fromJson(needs.prepare.outputs.workspaces || '[]') }}
+      matrix: ${{ fromJson(needs.classify.outputs.matrix) }}
     name: Plan
     runs-on: ubuntu-latest
-    environment: read
+    environment: ${{ matrix.environment }}
     env:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
@@ -88,9 +139,43 @@ jobs:
       - name: Initialize terraform
         run: terraform init
         working-directory: terraform
+      - name: Allow destroy in guarded environment
+        if: matrix.environment == 'read-allow-destroy'
+        env:
+          ALLOW_DESTROY: ${{ vars.ALLOW_DESTROY }}
+        run: |
+          if [[ "${ALLOW_DESTROY}" != "true" ]]; then
+            echo "The read-allow-destroy environment must define ALLOW_DESTROY=true."
+            exit 1
+          fi
+          cp allow_destroy_override.tf.disabled allow_destroy_override.tf
+        working-directory: terraform
+      - name: Summarize plan target
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || '' }}
+          ENVIRONMENT_REASONS: ${{ toJson(matrix.environmentReasons) }}
+        run: |
+          {
+            echo '## Plan target'
+            echo ''
+            if [[ -n "${PULL_REQUEST_NUMBER}" ]]; then
+              echo "- Pull request: #${PULL_REQUEST_NUMBER}"
+            fi
+            echo "- Source SHA: \`${SOURCE_SHA}\`"
+            echo "- Workspace: \`${TF_WORKSPACE}\`"
+            echo "- Environment: \`${{ matrix.environment }}\`"
+            if [[ "$(jq 'length' <<< "${ENVIRONMENT_REASONS}")" == '0' ]]; then
+              echo "- Environment reason: no allow-destroy changes detected"
+            else
+              echo "- Environment reason:"
+              jq -r '.[] | "  - " + .' <<< "${ENVIRONMENT_REASONS}"
+            fi
+            echo "- Terraform plan artifact: \`${TF_WORKSPACE}_${SOURCE_SHA}.tfplan\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Plan terraform
         run: |
-          terraform show -json > $TF_WORKSPACE.tfstate.json
+          terraform show -json > "$TF_WORKSPACE.tfstate.json"
           terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.tfplan" -no-color
         working-directory: terraform
       - name: Upload terraform plan
@@ -148,6 +233,16 @@ jobs:
           done
           cat TERRAFORM_PLANS.md
         working-directory: terraform
+      - name: Publish terraform plans summary
+        run: cat TERRAFORM_PLANS.md >> "$GITHUB_STEP_SUMMARY"
+        working-directory: terraform
+      - name: Upload terraform plans summary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: terraform-plans-${{ github.event.pull_request.head.sha || github.sha }}
+          path: terraform/TERRAFORM_PLANS.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Prepare comment
         run: |
           delimiter="$(uuidgen)"

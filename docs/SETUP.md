@@ -116,7 +116,12 @@
 
 ## GitHub Actions Environments and Secrets
 
-- [ ] Create GitHub Actions environments named `read`, `write`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
+- [ ] Create GitHub Actions environments named `read`, `read-allow-destroy`, `write`, `write-allow-destroy`, and `push`, and configure protection rules such as required reviewers. Workflows that read organization state reference `read`; workflows that write organization state reference `write`; workflows that push generated changes to the GitHub Management repository reference `push`.
+- [ ] Configure `read-allow-destroy` and `write-allow-destroy` with stricter protection rules for repository and membership deletion plans/applies, and set an environment variable named `ALLOW_DESTROY` to `true` in each environment:
+    - [ ] Require reviewers
+    - [ ] Prevent self-review
+    - [ ] Restrict deployment branches to `master`
+    - [ ] Disable administrator bypass where available
 - [ ] [Create encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization) for the GitHub organization and allow the repository to access them (\*replace `$GITHUB_ORGANIZATION_NAME` with the GitHub organization name) - *these secrets are read by the GitHub Action workflows*
     - [ ] Go to `https://github.com/organizations/$GITHUB_ORGANIZATION_NAME/settings/apps/$GITHUB_APP_NAME` and copy the `App ID`
        - [ ] `RO_GITHUB_APP_ID`
@@ -149,6 +154,11 @@
 ## GitHub Management Sync Flow
 
 - [ ] Follow [How to synchronize GitHub Management with GitHub?](HOWTOS.md#synchronize-github-management-with-github) to commit the terraform lock and initialize terraform state
+
+## Member Update Workflows
+
+- [ ] Use `Update Members` to create a draft PR that removes selected members from teams and repository collaborators in `github/$ORGANIZATION_NAME.yml`. The workflow requires either `cutoff-date` or `only`, supports `ignore` and `limit`, can retain effective public repository access by converting that access to direct public repository collaborators, and can optionally remove selected users from organization membership in the YAML config.
+- [ ] Review and merge the draft PR through the normal GitHub Management PR flow.
 
 ## GitHub Management Repository Protections
 

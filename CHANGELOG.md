@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- allow-destroy workflow environments for guarded repository and membership deletion plans/applies
 - shared action for adding a collaborator to all repositories
 - clean workflow which removes resources from state
 - information on how to handle private GitHub Management repository
@@ -23,7 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - new args for repositories and branch protection rules
 
 ### Changed
+- plan/apply workflows now publish planned/applied commit, workspace, environment, and rendered terraform plan details to workflow summaries and artifacts
+- manual access report workflow for generating the full access breakdown on demand
+- update members workflow draft run mode for summarizing member updates without creating a pull request
+- allow-destroy workspace classification now reports which member or repository removals require guarded environments
+- access report member classifications now explicitly describe the post-change access state
 - workflows: added separate GitHub Actions environments for reading organization state, writing organization state, and pushing repository changes
+- update members workflow now creates branches and pull requests with the configured GitHub App token so follow-up workflows are triggered
+- **BREAKING**: access changes action now emits only the access change comment by default; update custom usage to avoid nesting the full access breakdown in PR comments
 - workflows: pin third-party actions to latest release SHAs and replan from the merged commit before applying
 - docs: update template repository references from `github-mgmt-template` to `github-as-code`
 - scripts: update dependencies with security advisories

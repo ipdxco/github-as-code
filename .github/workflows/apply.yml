@@ -47,19 +47,65 @@ jobs:
           GITHUB_APP_PEM_FILE: ${{ secrets.RO_GITHUB_APP_PEM_FILE }}
         run: node lib/actions/find-sha-for-plan.js
         working-directory: scripts
-  apply:
+  classify:
     needs: [prepare]
+    if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''
+    permissions:
+      contents: read
+    name: Classify
+    runs-on: ubuntu-latest
+    environment: read
+    outputs:
+      matrix: ${{ steps.classify.outputs.matrix }}
+    env:
+      TF_IN_AUTOMATION: 1
+      TF_INPUT: 0
+      AWS_ACCESS_KEY_ID: ${{ secrets.RO_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RO_AWS_SECRET_ACCESS_KEY }}
+      WORKSPACES: ${{ needs.prepare.outputs.workspaces }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
+        with:
+          terraform_version: 1.12.0
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: terraform
+      - name: Install pnpm
+        uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
+        with:
+          version: 10
+      - name: Use Node.js lts/*
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: lts/*
+          cache: ''
+      - run: pnpm install --frozen-lockfile && pnpm run build
+        working-directory: scripts
+      - name: Classify workspaces
+        id: classify
+        env:
+          MODE: write
+        run: node lib/actions/classify-allow-destroy.js
+        working-directory: scripts
+  apply:
+    needs: [prepare, classify]
     if: needs.prepare.outputs.sha != '' && needs.prepare.outputs.workspaces != ''
     permissions:
       actions: read
       contents: read
     strategy:
       fail-fast: false
-      matrix:
-        workspace: ${{ fromJson(needs.prepare.outputs.workspaces) }}
+      matrix: ${{ fromJson(needs.classify.outputs.matrix) }}
     name: Apply
     runs-on: ubuntu-latest
-    environment: write
+    environment: ${{ matrix.environment }}
     env:
       TF_IN_AUTOMATION: 1
       TF_INPUT: 0
@@ -84,19 +130,83 @@ jobs:
           terraform_wrapper: false
       - name: Initialize terraform
         run: terraform init
+      - name: Allow destroy in guarded environment
+        if: matrix.environment == 'write-allow-destroy'
+        env:
+          ALLOW_DESTROY: ${{ vars.ALLOW_DESTROY }}
+        run: |
+          if [[ "${ALLOW_DESTROY}" != "true" ]]; then
+            echo "The write-allow-destroy environment must define ALLOW_DESTROY=true."
+            exit 1
+          fi
+          cp allow_destroy_override.tf.disabled allow_destroy_override.tf
+      - name: Summarize apply target
+        env:
+          REVIEWED_SHA: ${{ needs.prepare.outputs.sha }}
+          ENVIRONMENT_REASONS: ${{ toJson(matrix.environmentReasons) }}
+        run: |
+          {
+            echo '## Apply target'
+            echo ''
+            echo "- Reviewed SHA: \`${REVIEWED_SHA}\`"
+            echo "- Workspace: \`${TF_WORKSPACE}\`"
+            echo "- Environment: \`${{ matrix.environment }}\`"
+            if [[ "$(jq 'length' <<< "${ENVIRONMENT_REASONS}")" == '0' ]]; then
+              echo "- Environment reason: no allow-destroy changes detected"
+            else
+              echo "- Environment reason:"
+              jq -r '.[] | "  - " + .' <<< "${ENVIRONMENT_REASONS}"
+            fi
+            echo "- Reviewed plan artifact: \`${TF_WORKSPACE}_${REVIEWED_SHA}.tfplan\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Download reviewed terraform plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ needs.prepare.outputs.sha }}
         run: gh run download -n "${TF_WORKSPACE}_${SHA}.tfplan" --repo "${GITHUB_REPOSITORY}"
-      - name: Replan merged commit
-        run: |
-          terraform show -json > $TF_WORKSPACE.tfstate.json
-          terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.merged.tfplan" -no-color
-      - name: Compare reviewed and merged plans
+      - name: Show reviewed terraform plan
         run: |
           terraform show -no-color "${TF_WORKSPACE}.tfplan" > "${TF_WORKSPACE}.reviewed.txt"
+          {
+            echo '## Reviewed Terraform plan'
+            echo ''
+            echo "<details><summary>${TF_WORKSPACE}.tfplan</summary>"
+            echo ''
+            echo '~~~~terraform'
+            sed 's/^~~~~/~~~~ /' "${TF_WORKSPACE}.reviewed.txt"
+            echo '~~~~'
+            echo ''
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Replan merged commit
+        run: |
+          terraform show -json > "$TF_WORKSPACE.tfstate.json"
+          terraform plan -refresh=false -lock=false -out="${TF_WORKSPACE}.merged.tfplan" -no-color
+      - name: Show merged terraform plan
+        run: |
           terraform show -no-color "${TF_WORKSPACE}.merged.tfplan" > "${TF_WORKSPACE}.merged.txt"
+          {
+            echo '## Merged Terraform plan'
+            echo ''
+            echo "<details><summary>${TF_WORKSPACE}.merged.tfplan</summary>"
+            echo ''
+            echo '~~~~terraform'
+            sed 's/^~~~~/~~~~ /' "${TF_WORKSPACE}.merged.txt"
+            echo '~~~~'
+            echo ''
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload apply plan summaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apply-plans-${{ env.TF_WORKSPACE }}-${{ needs.prepare.outputs.sha }}
+          path: |
+            terraform/${{ env.TF_WORKSPACE }}.reviewed.txt
+            terraform/${{ env.TF_WORKSPACE }}.merged.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Compare reviewed and merged plans
+        run: |
           diff -u "${TF_WORKSPACE}.reviewed.txt" "${TF_WORKSPACE}.merged.txt"
       - name: Terraform Apply
         run: |
